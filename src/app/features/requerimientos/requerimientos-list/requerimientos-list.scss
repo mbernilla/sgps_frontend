@@ -1,0 +1,171 @@
+/* src/app/features/requerimientos/requerimientos-list/requerimientos-list.scss */
+
+:host {
+  --brand:        #3B4FC8;
+  --brand-dark:   #2d3fb0;
+  --brand-light:  #eef0fb;
+  --header-bg:    #4a5568;   /* slate-600ish */
+  --header-text:  #ffffff;
+  --row-border:   #e2e8f0;
+  --row-hover:    #f8fafc;
+  --text-main:    #1e293b;
+  --text-muted:   #64748b;
+  --link-blue:    #3B4FC8;
+  --badge-alta:   #ef4444;
+  --badge-media:  #f59e0b;
+  --badge-baja:   #22c55e;
+  --radius:       6px;
+  --shadow:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+}
+
+.page-wrapper {
+  padding: 28px 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-main);
+}
+
+.custom-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  gap: 16px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.search-wrap {
+  padding: 0 24px 16px;
+}
+
+.search-input-wrap {
+  position: relative;
+  width: 300px;
+}
+
+.search-input-wrap i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  outline: none;
+  transition: all .15s;
+}
+
+.search-input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(59,79,200,.1);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 9px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.btn-primary:hover { background: var(--brand-dark); }
+
+/* Badges personalizados de Claude */
+.badge-custom {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+.badge-info { background: #e0f2fe; color: #0284c7; }
+.badge-warn { background: #fef3c7; color: #d97706; }
+.badge-success { background: #dcfce7; color: #166534; }
+.badge-danger { background: #fee2e2; color: #b91c1c; }
+.badge-secondary { background: #f1f5f9; color: #475569; }
+
+.link-ver {
+  color: var(--link-blue);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.link-ver:hover { text-decoration: underline; }
+
+/* Inyección profunda a PrimeNG para forzar el diseño calcado */
+::ng-deep {
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--header-bg) !important;
+    color: var(--header-text) !important;
+    padding: 12px 16px !important;
+    font-size: 13px;
+    font-weight: 600;
+    border: none !important;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 11px 16px !important;
+    border-bottom: 1px solid var(--row-border) !important;
+    font-size: 13.5px;
+    color: var(--text-main);
+  }
+
+  .p-datatable .p-datatable-tbody > tr:hover > td {
+    background: var(--row-hover) !important;
+  }
+}
+
+/* =========================================================
+   🌟 OVERRIDE DE PRIMENG: Animación de Fila Nueva
+   ========================================================= */
+:host ::ng-deep {
+
+  @keyframes flashFadeOut {
+    0%   { background-color: #fef08a !important; }
+    60%  { background-color: #fef08a !important; }
+    100% { background-color: transparent !important; }
+  }
+
+  /* Le disparamos directamente a las filas (incluso si son cebradas/striped) */
+  .p-datatable.p-datatable-striped .p-datatable-tbody > tr.flash-row > td,
+  .p-datatable.p-datatable-striped .p-datatable-tbody > tr.flash-row:nth-child(even) > td,
+  .p-datatable.p-datatable-striped .p-datatable-tbody > tr.flash-row:nth-child(odd) > td {
+    animation: flashFadeOut 5s ease-in-out forwards !important;
+  }
+
+  /* Reforzar el hover y click nativo por si Tailwind lo rompe */
+  .p-datatable .p-datatable-tbody > tr.p-highlight > td {
+    background-color: #eff6ff !important;
+    color: #1e3a8a !important;
+  }
+}

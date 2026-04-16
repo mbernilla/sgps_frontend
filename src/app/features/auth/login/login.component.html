@@ -1,0 +1,69 @@
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900">
+  <div class="w-full max-w-sm px-4">
+
+    <!-- Marca -->
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center size-14 bg-blue-500 rounded-full mb-3 shadow-lg">
+        <i class="pi pi-database text-white text-2xl"></i>
+      </div>
+      <h1 class="text-2xl font-bold text-white tracking-wide">SGPS</h1>
+      <p class="text-slate-400 text-sm mt-1">Sistema de Gestión de Proyectos y Servicios</p>
+    </div>
+
+    <!-- Card -->
+    <p-card styleClass="shadow-2xl">
+
+      @if (errorMsg()) {
+        <p-message severity="error" [text]="errorMsg()!" styleClass="w-full block mb-4" />
+      }
+
+      <form [formGroup]="form" (ngSubmit)="login()" class="flex flex-col gap-7 py-1">
+
+        <!-- Correo -->
+        <p-floatlabel variant="in">
+          <p-iconfield>
+            <p-inputicon class="pi pi-envelope" />
+            <input
+              pInputText
+              id="correo"
+              formControlName="correo"
+              type="email"
+              autocomplete="email"
+              class="w-full"
+            />
+          </p-iconfield>
+          <label for="correo">Correo electrónico</label>
+        </p-floatlabel>
+
+        <!-- Clave -->
+        <p-floatlabel variant="in">
+          <p-password
+            inputId="clave"
+            formControlName="clave"
+            [feedback]="false"
+            [toggleMask]="true"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            autocomplete="current-password"
+          />
+          <label for="clave">Contraseña</label>
+        </p-floatlabel>
+
+        <!-- Botón -->
+        <p-button
+          type="submit"
+          label="Ingresar"
+          icon="pi pi-sign-in"
+          styleClass="w-full mt-1"
+          [loading]="loading()"
+        />
+
+      </form>
+    </p-card>
+
+    <p class="text-center text-slate-500 text-xs mt-4">
+      SEDAPAL &copy; {{ currentYear }} &mdash; Uso exclusivo de personal autorizado
+    </p>
+
+  </div>
+</div>

@@ -1,0 +1,5 @@
+// Host ocupa toda la pantalla para que el gradiente cubra el viewport
+:host {
+  display: block;
+  height: 100%;
+}

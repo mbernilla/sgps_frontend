@@ -1,3 +1,40 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
+import { RequerimientosFormComponent } from './features/requerimientos/requerimientos-form/requerimientos-form';
+//import { RequerimientosListComponent } from './features/requerimientos/requerimientos-list/requerimientos-list';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  // Raíz: el guard de requerimientos redirige a /login si no hay sesión
+  { path: '', redirectTo: 'requerimientos', pathMatch: 'full' },
+
+  // Login (público)
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then(m => m.LoginComponent),
+  },
+
+  // Requerimientos (protegido)
+  {
+    path: 'requerimientos',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/requerimientos/requerimientos-list/requerimientos-list').then(
+        m => m.RequerimientosListComponent
+      ),
+  },
+  {
+    path: 'requerimientos/nuevo',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/requerimientos/requerimientos-form/requerimientos-form').then(
+        m => m.RequerimientosFormComponent
+      ),
+  },
+
+  { path: 'requerimientos/editar/:id', component: RequerimientosFormComponent, canActivate: [authGuard] },
+  { path: 'requerimientos/ver/:id', component: RequerimientosFormComponent, canActivate: [authGuard] },
+
+  // Wildcard
+  { path: '**', redirectTo: 'login' },
+];

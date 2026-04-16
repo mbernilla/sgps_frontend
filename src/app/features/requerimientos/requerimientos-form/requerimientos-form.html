@@ -1,0 +1,287 @@
+<p-toast position="top-right" />
+
+<div class="p-6 space-y-6 max-w-6xl mx-auto">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-800">
+        {{ modo === 'VER' ? 'Detalle de' : (modo === 'EDITAR' ? 'Editar' : 'Nuevo') }} Requerimiento
+      </h2>
+      <p class="text-sm text-slate-500 mt-0.5">
+        {{ modo === 'VER' ? 'Modo de solo lectura' : 'Complete todos los campos requeridos (*)' }}
+      </p>
+    </div>
+    <p-button label="← Volver" severity="secondary" [text]="true" (click)="cancelar()" />
+  </div>
+
+  <form [formGroup]="form" class="space-y-6">
+
+    <section class="bg-white rounded-lg shadow-md p-6 space-y-4">
+      <h3 class="text-base font-semibold text-slate-700 border-b border-slate-100 pb-3">
+        <i class="pi pi-file-edit mr-2 text-blue-500"></i>Datos Generales
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <app-form-select label="Contrato *" controlName="idContrato" [options]="contratos()" optionLabel="nombre"
+          optionValue="id" placeholder="Seleccione contrato" />
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium text-slate-600">Fábrica <span
+              class="text-slate-400 text-xs">(automático)</span></label>
+          <input pInputText [value]="nombreFabricaVisual()" class="w-full bg-slate-50" readonly tabindex="-1" [disabled]="modo === 'VER'" readonly tabindex="-1"/>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium text-slate-600">Nombre *</label>
+          <input pInputText formControlName="nombre" class="w-full" placeholder="Ej. Desarrollo módulo de reportes" />
+          @if (fc('nombre')?.hasError('required') && fc('nombre')?.touched) {
+          <small class="text-red-500">El nombre es requerido.</small>
+          }
+          @if (fc('nombre')?.hasError('maxlength') && fc('nombre')?.touched) {
+          <small class="text-red-500">Máximo 200 caracteres.</small>
+          }
+        </div>
+
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label class="text-sm font-medium text-slate-600">Descripción *</label>
+          <textarea pTextarea formControlName="descripcion" rows="3" class="w-full"
+            placeholder="Descripción detallada del requerimiento..."></textarea>
+          @if (fc('descripcion')?.invalid && fc('descripcion')?.touched) {
+          <small class="text-red-500">La descripción es requerida.</small>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-lg shadow-md p-6 space-y-4">
+      <h3 class="text-base font-semibold text-slate-700 border-b border-slate-100 pb-3">
+        <i class="pi pi-sitemap mr-2 text-blue-500"></i>Clasificación Organizacional
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <app-form-select label="Gerencia *" controlName="idGerencia" [options]="gerencias()" optionLabel="nombre"
+          optionValue="id" placeholder="Seleccione gerencia" />
+
+        <app-form-select label="Equipo *" controlName="idEquipo" [options]="equipos()" optionLabel="nombre"
+          optionValue="id" [placeholder]="equipos().length ? 'Seleccione equipo' : 'Primero seleccione gerencia'" />
+
+        <app-form-select label="Sistema *" controlName="idSistema" [options]="sistemas()" optionLabel="nombre"
+          optionValue="id" placeholder="Seleccione sistema" />
+
+        <app-form-select label="Módulo *" controlName="idModulo" [options]="modulos()" optionLabel="nombre"
+          optionValue="id" [placeholder]="modulos().length ? 'Seleccione módulo' : 'Primero seleccione sistema'" />
+      </div>
+    </section>
+
+    <section class="bg-white rounded-lg shadow-md p-6 space-y-4">
+      <h3 class="text-base font-semibold text-slate-700 border-b border-slate-100 pb-3">
+        <i class="pi pi-calendar mr-2 text-blue-500"></i>Fechas y Clasificación Técnica
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium text-slate-600">Fecha Solicitud *</label>
+          <p-datepicker formControlName="fechaSolicitud" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium text-slate-600">Fecha Inicio</label>
+          <p-datepicker formControlName="fechaInicio" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium text-slate-600">Código Externo</label>
+          <input pInputText formControlName="codExterno" placeholder="Ej. TK-1000" class="w-full" />
+        </div>
+
+        <app-form-select label="Tipo Requerimiento *" controlName="tipoRequerimiento" [options]="tiposReq()"
+          optionLabel="nombre" optionValue="id" />
+
+        <app-form-select label="Prioridad *" controlName="prioridad" [options]="prioridades()" optionLabel="nombre"
+          optionValue="id" />
+
+        <app-form-select label="Criticidad *" controlName="codCriticidad" [options]="criticidades()"
+          optionLabel="nombre" optionValue="id" />
+
+        <app-form-select label="Grupo Tecnológico *" controlName="codGrupoTecnologico" [options]="gruposTec()"
+          optionLabel="nombre" optionValue="id" />
+
+        <app-form-select label="Estado Registro *" controlName="estado" [options]="estadoOpts" optionLabel="label"
+          optionValue="value" />
+      </div>
+    </section>
+
+    <section class="bg-white rounded-lg shadow-md p-6 space-y-4">
+      <h3 class="text-base font-semibold text-slate-700 border-b border-slate-100 pb-3">
+        <i class="pi pi-server mr-2 text-blue-500"></i>Tecnologías Involucradas
+      </h3>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-slate-600">Seleccione las tecnologías *</label>
+        <p-multiSelect [options]="listaTecnologias()" formControlName="tecnologias" optionLabel="nombre"
+          optionValue="id" defaultLabel="Ej. Angular, Spring Boot, Sharepoint..." display="chip" styleClass="w-full"
+          appendTo="body">
+          <ng-template let-tech pTemplate="item">
+            <div class="flex flex-col">
+              <span class="font-semibold">{{ tech.nombre }}</span>
+              <span class="text-xs text-gray-500">{{ tech.descripcion }} (v{{ tech.version }})</span>
+            </div>
+          </ng-template>
+        </p-multiSelect>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-lg shadow-md p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-semibold text-slate-700">
+          <i class="pi pi-percentage mr-2 text-blue-500"></i>Distribución de Costos
+        </h3>
+        @if (modo !== 'VER') {
+        <p-button type="button" label="+ Agregar fila" severity="secondary" size="small" icon="pi pi-plus"
+          (click)="agregarCosto()" />
+        }
+      </div>
+
+      @if (costosArr.length > 0 && costosArr.errors?.['sumaPorcentaje'] && modo !== 'VER') {
+      <div class="flex items-center gap-2 bg-red-50 border border-red-300 rounded-md px-4 py-3 text-sm text-red-700">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>La suma debe ser <strong>100%</strong>. Actual: <strong>{{ sumaPorcentajes }}%</strong></span>
+      </div>
+      }
+
+      @if (costosArr.length > 0) {
+      <div class="overflow-x-auto rounded-md border border-slate-200">
+        <table class="min-w-full text-sm">
+          <thead class="bg-slate-50 text-slate-600">
+            <tr>
+              <th class="px-4 py-2.5 text-left font-medium w-48">Gerencia</th>
+              <th class="px-4 py-2.5 text-left font-medium w-48">Equipo</th>
+              <th class="px-4 py-2.5 text-left font-medium">Código C.C.</th>
+              <th class="px-4 py-2.5 text-left font-medium w-36">Porcentaje (%)</th>
+              @if (modo !== 'VER') { <th class="px-4 py-2.5 text-center font-medium w-20">Quitar</th> }
+            </tr>
+          </thead>
+          <tbody formArrayName="distribucionCostos" class="divide-y divide-slate-100">
+            @for (c of costosArr.controls; track $index; let i = $index) {
+            <tr [formGroupName]="i" class="hover:bg-slate-50 transition-colors">
+              <td class="px-4 py-2">
+                <p-select formControlName="idGerencia" [options]="gerencias()" optionLabel="nombre" optionValue="id"
+                  placeholder="Gerencia" styleClass="w-full" appendTo="body"
+                  (onChange)="alCambiarGerenciaFila(i, $event.value)" />
+              </td>
+              <td class="px-4 py-2">
+                <p-select formControlName="idEquipo" [options]="equiposPorGerencia()[c.value.idGerencia] || []"
+                  optionLabel="nombre" optionValue="id" placeholder="Equipo" styleClass="w-full" appendTo="body"
+                  (onChange)="alCambiarEquipoFila(i, $event.value)" />
+              </td>
+              <td class="px-4 py-2">
+                <input pInputText formControlName="codigoCentroCosto" class="w-full bg-slate-50"
+                  placeholder="Automático" readonly />
+              </td>
+              <td class="px-4 py-2">
+                <input pInputText type="number" formControlName="porcentaje" class="w-full" placeholder="0" min="0.01"
+                  max="100" />
+              </td>
+              @if (modo !== 'VER') {
+              <td class="px-4 py-2 text-center">
+                <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" size="small"
+                  (click)="eliminarCosto(i)" />
+              </td>
+              }
+            </tr>
+            }
+          </tbody>
+          <tfoot class="bg-slate-50 border-t border-slate-200">
+            <tr>
+              <td colspan="2" class="px-4 py-2 text-right text-sm font-medium text-slate-600">Suma total:</td>
+              <td class="px-4 py-2 text-sm font-bold" [class.text-green-600]="sumaPorcentajes === 100"
+                [class.text-red-600]="sumaPorcentajes !== 100 && costosArr.length > 0 && modo !== 'VER'">
+                {{ sumaPorcentajes }}%
+                @if (sumaPorcentajes === 100) { <i class="pi pi-check-circle ml-1"></i> }
+              </td>
+              @if (modo !== 'VER') { <td></td> }
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      } @else {
+      <p class="text-slate-400 text-sm text-center py-6">Sin filas. Haz clic en "+ Agregar fila".</p>
+      }
+    </section>
+
+    <section class="bg-white rounded-lg shadow-md p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-semibold text-slate-700">
+          <i class="pi pi-users mr-2 text-blue-500"></i>Personal Asignado
+        </h3>
+        @if (modo !== 'VER') {
+        <p-button type="button" label="+ Agregar" severity="secondary" size="small" icon="pi pi-plus"
+          (click)="agregarFilaPersonal()" />
+        }
+      </div>
+
+      @if (personalArr.length > 0) {
+      <div class="overflow-x-auto rounded-md border border-slate-200">
+        <table class="min-w-full text-sm">
+          <thead class="bg-slate-50 text-slate-600">
+            <tr>
+              <th class="px-4 py-2.5 text-left font-medium min-w-[250px]">Colaborador *</th>
+              <th class="px-4 py-2.5 text-center font-medium w-32">¿Responsable?</th>
+              <th class="px-4 py-2.5 text-left font-medium w-40">F. Inicio * </th>
+              <th class="px-4 py-2.5 text-left font-medium w-40">F. Fin</th>
+              @if (modo !== 'VER') { <th class="px-4 py-2.5 text-center font-medium w-20">Quitar</th> }
+            </tr>
+          </thead>
+          <tbody formArrayName="personal" class="divide-y divide-slate-100">
+            @for (p of personalArr.controls; track $index; let i = $index) {
+            <tr [formGroupName]="i" class="hover:bg-slate-50 transition-colors">
+              <td class="px-4 py-2">
+                <p-autoComplete formControlName="personalObj" [suggestions]="personalFiltrado()"
+                  (completeMethod)="filtrarPersonal($event)" optionLabel="nombresApellidos" dataKey="id"
+                  field="nombresApellidos" [dropdown]="true" placeholder="Buscar colaborador..." styleClass="w-full"
+                  [forceSelection]="true" appendTo="body">
+                  <ng-template let-per pTemplate="item">
+                    <div>
+                      <div class="font-medium">{{ per.nombresApellidos }}</div>
+                      <div class="text-xs text-gray-500">{{ per.correo }} - {{ per.rolProyectoDescripcion }}</div>
+                    </div>
+                  </ng-template>
+                </p-autoComplete>
+              </td>
+              <td class="px-4 py-2 text-center">
+                <p-checkbox formControlName="esResponsablePrincipal" [binary]="true"></p-checkbox>
+              </td>
+              <td class="px-4 py-2">
+                <p-datepicker formControlName="fechaInicioAsignacion" dateFormat="dd/mm/yy" appendTo="body"
+                  styleClass="w-full" placeholder="Inicio" />
+              </td>
+              <td class="px-4 py-2">
+                <p-datepicker formControlName="fechaFinAsignacion" dateFormat="dd/mm/yy" appendTo="body"
+                  styleClass="w-full" placeholder="Fin" />
+              </td>
+              @if (modo !== 'VER') {
+              <td class="px-4 py-2 text-center">
+                <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" size="small"
+                  (click)="eliminarFilaPersonal(i)" />
+              </td>
+              }
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      } @else {
+      <p class="text-slate-400 text-sm text-center py-4">Sin personal asignado.</p>
+      }
+    </section>
+
+    <div class="flex justify-end gap-3 pb-4">
+      <p-button type="button" [label]="modo === 'VER' ? 'Volver al listado' : 'Cancelar'" severity="secondary"
+        [icon]="modo === 'VER' ? 'pi pi-arrow-left' : 'pi pi-times'" (click)="cancelar()" />
+
+      @if (modo !== 'VER') {
+      <p-button type="button" label="Guardar Requerimiento" icon="pi pi-save" (click)="guardar()" />
+      }
+    </div>
+
+  </form>
+</div>

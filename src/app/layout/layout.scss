@@ -1,0 +1,5 @@
+/* Evita el salto de línea del texto durante la animación del sidebar */
+.menu-text-container {
+  white-space: nowrap;
+  overflow: hidden;
+}
