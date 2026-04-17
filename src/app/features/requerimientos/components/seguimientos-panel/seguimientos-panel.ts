@@ -23,7 +23,7 @@ import { Button } from 'primeng/button';
 import { Timeline } from 'primeng/timeline';
 import { Tag } from 'primeng/tag';
 import { Toast } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { MessageService, PrimeTemplate } from 'primeng/api';
 
 import { MaestraService } from '../../../../core/services/maestra.service';
 import { PersonalDTO } from '../../../../core/models/maestra.model';
@@ -74,6 +74,7 @@ interface SeguimientoCreateDTO {
     Timeline,
     Tag,
     Toast,
+    PrimeTemplate,  // Requerido para que <ng-template pTemplate="..."> funcione en componentes standalone
   ],
   providers: [MessageService],
   templateUrl: './seguimientos-panel.html',
