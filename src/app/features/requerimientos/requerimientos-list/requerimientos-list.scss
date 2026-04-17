@@ -7,7 +7,7 @@
   --header-bg:    #4a5568;   /* slate-600ish */
   --header-text:  #ffffff;
   --row-border:   #e2e8f0;
-  --row-hover:    #f8fafc;
+  --row-hover:    #e6f2fa;  /* MBS: mouse encima grilla*/
   --text-main:    #1e293b;
   --text-muted:   #64748b;
   --link-blue:    #3B4FC8;
@@ -140,32 +140,43 @@
     color: var(--text-main);
   }
 
-  .p-datatable .p-datatable-tbody > tr:hover > td {
+  /* :not() espeja la lógica interna de PrimeNG 20: el hover solo aplica
+     a filas NO seleccionadas, igual que su propia regla interna. */
+  .p-datatable .p-datatable-tbody > tr:hover:not(.p-datatable-row-selected) > td {
     background: var(--row-hover) !important;
   }
 }
 
 /* =========================================================
-   🌟 OVERRIDE DE PRIMENG: Animación de Fila Nueva
+   OVERRIDE DE PRIMENG: Animación de Fila Nueva
+   ─────────────────────────────────────────────────────────
+   @keyframes DEBE declararse en el scope global (fuera de
+   :host / ::ng-deep).  Dos razones:
+   1. CSS no permite !important dentro de @keyframes; si lo
+      ponemos dentro de ::ng-deep el animador pierde la
+      cascada frente a cualquier regla !important de PrimeNG.
+   2. Usamos box-shadow inset en lugar de background-color
+      para NO competir con las reglas de background de PrimeNG
+      (que actúan sobre <tr>) ni con nuestros propios overrides
+      de <td>.  Un inset de spread enorme cubre toda la celda
+      visualmente sin tocar background-color.
    ========================================================= */
+@keyframes flashFadeOut {
+  0%, 60% { box-shadow: inset 0 0 0 9999px rgba(194, 241, 220, 0.85); } /*MBS: Nuevo registro se desvanece*/
+  100%    { box-shadow: inset 0 0 0 9999px rgba(254, 240, 138, 0); }
+}
+
 :host ::ng-deep {
-
-  @keyframes flashFadeOut {
-    0%   { background-color: #fef08a !important; }
-    60%  { background-color: #fef08a !important; }
-    100% { background-color: transparent !important; }
+  /* Una sola regla alcanza filas pares, impares y cualquier otra
+     variante de striped porque box-shadow no pelea con background. */
+  .p-datatable .p-datatable-tbody > tr.flash-row > td {
+    animation: flashFadeOut 2s ease-out forwards !important; /*MBS: Tiempo que dura color nuevo registro*/
   }
 
-  /* Le disparamos directamente a las filas (incluso si son cebradas/striped) */
-  .p-datatable.p-datatable-striped .p-datatable-tbody > tr.flash-row > td,
-  .p-datatable.p-datatable-striped .p-datatable-tbody > tr.flash-row:nth-child(even) > td,
-  .p-datatable.p-datatable-striped .p-datatable-tbody > tr.flash-row:nth-child(odd) > td {
-    animation: flashFadeOut 5s ease-in-out forwards !important;
-  }
-
-  /* Reforzar el hover y click nativo por si Tailwind lo rompe */
-  .p-datatable .p-datatable-tbody > tr.p-highlight > td {
-    background-color: #eff6ff !important;
-    color: #1e3a8a !important;
+  /* [pSelectableRow] agrega .p-datatable-row-selected al <tr>, NO .p-highlight
+     (confirmado en primeng-table.mjs línea 260). Esta es la regla correcta. */
+  .p-datatable .p-datatable-tbody > tr.p-datatable-row-selected > td {
+    background-color: #cde6f7 !important; /*MBS: seleccionar una fila en la grilla*/
+    color: #2b79b1 !important; /*MBS: Texto en la fila seleccionada*/
   }
 }

@@ -58,10 +58,8 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
     if (state && state['nuevoIdDestacado']) {
       this.idResaltado.set(Number(state['nuevoIdDestacado']));
       console.log('🐞 [LIST] ID atrapado en el constructor:', this.idResaltado());
-
-      // Limpiamos la señal después de 4 segundos para que la clase se quite
-      // y no interfiera si el usuario navega de ida y vuelta después.
-      setTimeout(() => this.idResaltado.set(null), 4000);
+      // El temporizador de limpieza se inicia en cargarData() para que
+      // el reloj arranque cuando la fila ya está renderizada en el DOM.
     }
   }
 
@@ -125,6 +123,13 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
         this.requerimientos.set(res.data.contenido); // Mapeo al array del JSON de Spring Boot
         this.totalRegistros.set(res.data.totalElementos);
         this.cargando.set(false);
+
+        // Iniciamos el temporizador de limpieza AQUÍ, cuando los datos
+        // ya llegaron y Angular renderizará la fila en el siguiente ciclo.
+        // 5500 ms > duración de la animación (5 s) para no cortarla.
+        if (this.idResaltado() !== null) {
+          setTimeout(() => this.idResaltado.set(null), 5500);
+        }
       },
       error: (err) => {
         console.error('Error al cargar la grilla de requerimientos', err);
