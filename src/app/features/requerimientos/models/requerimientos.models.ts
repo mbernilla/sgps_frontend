@@ -45,3 +45,16 @@ export interface ApiResponse<T> {
   mensaje: string;
   data: T;
 }
+
+export interface SeguimientoDTO {
+  id: number;
+  idRequerimiento: number;
+  codTipoSeguimiento: string;
+  codEstado: string;
+  descripcion: string;
+  fechaRegistro: string;
+  fechaReal: string;
+  fechaPlazo: string | null;
+  fechaAtencion: string | null;
+  idPersonalResponsable: number;
+}

@@ -20,40 +20,38 @@
       </div>
     </div>
 
-    <p-table [value]="requerimientos()"
-    selectionMode="single"
-  [(selection)]="requerimientoSeleccionado"
-    [lazy]="true"
-    (onLazyLoad)="onLazyLoad($event)"
-    dataKey="id"
-    [paginator]="true"
-    [rows]="10"
-    [totalRecords]="totalRegistros()"
-    [loading]="cargando()"
-    [rowsPerPageOptions]="[5, 10, 20, 50]"
-    sortMode="multiple"
-    styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
-    responsiveLayout="scroll">
+    <p-table
+      [value]="requerimientos()"
+      selectionMode="single"
+      [(selection)]="requerimientoSeleccionado"
+      [lazy]="true"
+      (onLazyLoad)="onLazyLoad($event)"
+      dataKey="id"
+      [paginator]="true"
+      [rows]="10"
+      [totalRecords]="totalRegistros()"
+      [loading]="cargando()"
+      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      sortMode="multiple"
+      styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
+      responsiveLayout="scroll">
 
       <ng-template pTemplate="header">
         <tr>
-          <th pSortableColumn="codigo" class="w-32">Código Int. <p-sortIcon field="codigo"></p-sortIcon></th>
-          <th pSortableColumn="codExterno" class="w-32">Ticket Ext. <p-sortIcon field="codExterno"></p-sortIcon></th>
-          <th pSortableColumn="nombre" class="min-w-[15rem]">Nombre del Proyecto <p-sortIcon
-              field="nombre"></p-sortIcon></th>
-          <th pSortableColumn="sistema" class="w-48">Sistema <p-sortIcon field="sistema"></p-sortIcon></th>
-          <th pSortableColumn="tipoRequerimiento" class="w-40">Tipo <p-sortIcon field="tipoRequerimiento"></p-sortIcon>
-          </th>
-          <th pSortableColumn="estado" class="w-40 text-center">Estado <p-sortIcon field="estado"></p-sortIcon></th>
-          <th pSortableColumn="fechaSolicitud" class="w-32 text-center">Fecha Sol. <p-sortIcon
-              field="fechaSolicitud"></p-sortIcon></th>
-          <th class="w-32 text-center">Acciones</th>
+          <th pSortableColumn="codigo"          class="w-32">Código Int.          <p-sortIcon field="codigo"></p-sortIcon></th>
+          <th pSortableColumn="codExterno"       class="w-32">Ticket Ext.          <p-sortIcon field="codExterno"></p-sortIcon></th>
+          <th pSortableColumn="nombre"           class="min-w-[15rem]">Nombre del Proyecto <p-sortIcon field="nombre"></p-sortIcon></th>
+          <th pSortableColumn="sistema"          class="w-48">Sistema              <p-sortIcon field="sistema"></p-sortIcon></th>
+          <th pSortableColumn="tipoRequerimiento" class="w-40">Tipo               <p-sortIcon field="tipoRequerimiento"></p-sortIcon></th>
+          <th pSortableColumn="estado"           class="w-40 text-center">Estado  <p-sortIcon field="estado"></p-sortIcon></th>
+          <th pSortableColumn="fechaSolicitud"   class="w-32 text-center">Fecha Sol. <p-sortIcon field="fechaSolicitud"></p-sortIcon></th>
+          <th                                    class="w-36 text-center">Acciones</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-req>
         <tr [pSelectableRow]="req"
-            [ngClass]="{'flash-row': req.id == idResaltado()}">
+            [ngClass]="{'flash-row': req.id === idResaltado()}">
 
           <td class="font-medium text-gray-700">{{ req.codigoInternoFormateado }}</td>
           <td>{{ req.codExterno || '-' }}</td>
@@ -69,44 +67,51 @@
 
           <td class="text-center text-gray-600">{{ req.fechaSolicitud | date:'dd/MM/yyyy' }}</td>
 
-
-
           <td class="text-center">
-  <div class="flex justify-center items-center gap-2">
+            <div class="flex justify-center items-center gap-1">
 
-    <p-button
-      icon="pi pi-pencil"
-      [text]="true"
-      [rounded]="true"
-      severity="info"
-      pTooltip="Editar"
-      tooltipPosition="top"
-      [routerLink]="['/requerimientos/editar', req.id]"
-    />
+              <p-button
+                icon="pi pi-pencil"
+                [text]="true"
+                [rounded]="true"
+                severity="info"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                [routerLink]="['/requerimientos/editar', req.id]"
+              />
 
-    <p-button
-      icon="pi pi-trash"
-      [text]="true"
-      [rounded]="true"
-      severity="danger"
-      (click)="confirmarEliminacion(req.id, req.nombre)"
-      pTooltip="Eliminar"
-      tooltipPosition="top"
-    />
+              <p-button
+                icon="pi pi-history"
+                [text]="true"
+                [rounded]="true"
+                severity="success"
+                pTooltip="Seguimientos"
+                tooltipPosition="top"
+                (click)="abrirSeguimientos(req)"
+              />
 
-    <p-button
-      icon="pi pi-eye"
-      [text]="true"
-      [rounded]="true"
-      severity="secondary"
-      pTooltip="Ver Detalle"
-      tooltipPosition="top"
-      [routerLink]="['/requerimientos/ver', req.id]"
-    />
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                [rounded]="true"
+                severity="danger"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="confirmarEliminacion(req.id, req.nombre)"
+              />
 
-  </div>
-</td>
+              <p-button
+                icon="pi pi-eye"
+                [text]="true"
+                [rounded]="true"
+                severity="secondary"
+                pTooltip="Ver Detalle"
+                tooltipPosition="top"
+                [routerLink]="['/requerimientos/ver', req.id]"
+              />
 
+            </div>
+          </td>
 
         </tr>
       </ng-template>
@@ -118,9 +123,36 @@
           </td>
         </tr>
       </ng-template>
+
     </p-table>
 
   </div>
 </div>
 
+<!-- ── Diálogo de confirmación de eliminación ────────────────────────── -->
 <p-confirmDialog [style]="{width: '450px'}" />
+
+<!-- ── Panel lateral de seguimientos ────────────────────────────────── -->
+<p-drawer
+  [visible]="mostrarSidebarSeguimientos()"
+  (visibleChange)="mostrarSidebarSeguimientos.set($event)"
+  position="right"
+  [style]="{ width: '520px' }">
+
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2">
+      <i class="pi pi-history text-green-600"></i>
+      <span class="font-semibold text-slate-700">
+        Seguimientos
+        @if (reqSeleccionadoParaSeguimiento(); as req) {
+          <span class="text-slate-400 font-normal"> — {{ req.codigoInternoFormateado }}</span>
+        }
+      </span>
+    </div>
+  </ng-template>
+
+  @if (reqSeleccionadoParaSeguimiento(); as req) {
+    <app-seguimientos-panel [idRequerimiento]="req.id" />
+  }
+
+</p-drawer>

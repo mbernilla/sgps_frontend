@@ -1,0 +1,212 @@
+<!-- Toast local al panel (MessageService provisto en el propio componente) -->
+<p-toast position="top-right" />
+
+<div class="flex flex-col gap-5">
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SECCIÓN SUPERIOR: Formulario de registro
+       ═══════════════════════════════════════════════════════════════════ -->
+  <form [formGroup]="form" class="space-y-3">
+
+    <!-- Fila 1: Tipo de Seguimiento + Responsable -->
+    <div class="grid grid-cols-2 gap-3">
+
+      <!-- Tipo de Seguimiento -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-slate-600">Tipo *</label>
+        <p-select
+          formControlName="codTipoSeguimiento"
+          [options]="tipoOpts()"
+          optionValue="id"
+          optionLabel="nombre"
+          placeholder="Seleccione tipo"
+          styleClass="w-full"
+          appendTo="body" />
+        @if (form.controls.codTipoSeguimiento.invalid && form.controls.codTipoSeguimiento.touched) {
+          <small class="text-red-500 text-xs">Campo requerido.</small>
+        }
+      </div>
+
+      <!-- Responsable -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-slate-600">Responsable *</label>
+        <p-select
+          formControlName="idPersonalResponsable"
+          [options]="personalOpts()"
+          optionValue="id"
+          optionLabel="nombresApellidos"
+          placeholder="Buscar responsable..."
+          [filter]="true"
+          filterPlaceholder="Nombre o correo..."
+          styleClass="w-full"
+          appendTo="body" />
+        @if (form.controls.idPersonalResponsable.invalid && form.controls.idPersonalResponsable.touched) {
+          <small class="text-red-500 text-xs">Campo requerido.</small>
+        }
+      </div>
+
+    </div>
+
+    <!-- Fila 2: Descripción (ancho completo) -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Descripción *</label>
+      <textarea
+        pTextarea
+        formControlName="descripcion"
+        rows="3"
+        class="w-full resize-none"
+        placeholder="Detalle del seguimiento, nota o tarea...">
+      </textarea>
+      @if (form.controls.descripcion.invalid && form.controls.descripcion.touched) {
+        <small class="text-red-500 text-xs">Campo requerido (máx. 500 caracteres).</small>
+      }
+    </div>
+
+    <!-- Fila 3: Fechas -->
+    <div class="grid gap-3" [class]="mostrarFechasPlazo() ? 'grid-cols-2' : 'grid-cols-1'">
+
+      <!-- Fecha Real: siempre visible y siempre obligatoria -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-slate-600">Fecha Real *</label>
+        <p-datepicker
+          formControlName="fechaReal"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          appendTo="body"
+          styleClass="w-full" />
+        @if (form.controls.fechaReal.invalid && form.controls.fechaReal.touched) {
+          <small class="text-red-500 text-xs">Campo requerido.</small>
+        }
+      </div>
+
+      <!-- Fecha Plazo: solo cuando tipo != SEG_NOT -->
+      @if (mostrarFechasPlazo()) {
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold text-slate-600">
+            Fecha Plazo
+            @if (form.controls.codTipoSeguimiento.value === 'SEG_TAR') {
+              <span class="text-red-500">*</span>
+            }
+          </label>
+          <p-datepicker
+            formControlName="fechaPlazo"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            appendTo="body"
+            styleClass="w-full" />
+          @if (form.controls.fechaPlazo.invalid && form.controls.fechaPlazo.touched) {
+            <small class="text-red-500 text-xs">Campo requerido para tareas.</small>
+          }
+        </div>
+      }
+
+    </div>
+
+    <!-- Botones -->
+    <div class="flex justify-end gap-2 pt-1 border-t border-slate-100">
+      <p-button
+        type="button"
+        label="Limpiar"
+        severity="secondary"
+        icon="pi pi-refresh"
+        [text]="true"
+        [disabled]="guardando()"
+        (click)="limpiar()" />
+      <p-button
+        type="button"
+        label="Registrar"
+        icon="pi pi-save"
+        [loading]="guardando()"
+        (click)="guardar()" />
+    </div>
+
+  </form>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SECCIÓN INFERIOR: Historial de seguimientos
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div>
+
+    <!-- Cabecera del historial -->
+    <div class="flex items-center gap-2 mb-3">
+      <i class="pi pi-history text-slate-400 text-sm"></i>
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Historial</span>
+      <div class="flex-1 border-t border-slate-200"></div>
+      @if (cargandoHistorial()) {
+        <i class="pi pi-spin pi-spinner text-slate-400 text-xs"></i>
+      } @else {
+        <span class="text-xs text-slate-400">{{ seguimientos().length }} registro(s)</span>
+      }
+    </div>
+
+    <!-- Estado vacío -->
+    @if (!cargandoHistorial() && seguimientos().length === 0) {
+      <div class="text-center py-10 text-slate-400">
+        <i class="pi pi-inbox text-4xl block mb-2 opacity-40"></i>
+        <p class="text-sm">Sin seguimientos registrados aún.</p>
+      </div>
+    }
+
+    <!-- Timeline -->
+    @if (!cargandoHistorial() && seguimientos().length > 0) {
+      <p-timeline [value]="seguimientos()" align="left">
+
+        <!-- Marcador con color según estado del registro -->
+        <ng-template pTemplate="marker" let-seg>
+          <span
+            class="flex items-center justify-center w-7 h-7 rounded-full border-2 text-xs flex-shrink-0"
+            [class]="seg.fechaAtencion
+              ? 'bg-green-50 border-green-400 text-green-600'
+              : seg.fechaPlazo
+                ? 'bg-amber-50 border-amber-400 text-amber-600'
+                : 'bg-blue-50 border-blue-300 text-blue-500'">
+            <i [class]="seg.fechaAtencion
+              ? 'pi pi-check'
+              : 'pi pi-circle-fill text-[6px]'">
+            </i>
+          </span>
+        </ng-template>
+
+        <!-- Tarjeta de contenido -->
+        <ng-template pTemplate="content" let-seg>
+          <div class="bg-white border border-slate-100 rounded-lg shadow-sm p-3 mb-4 space-y-1.5">
+
+            <!-- Descripción -->
+            <p class="text-sm text-slate-700 leading-relaxed">{{ seg.descripcion }}</p>
+
+            <!-- Fecha de registro -->
+            <p class="text-xs text-slate-400">
+              <i class="pi pi-calendar mr-1"></i>
+              {{ seg.fechaRegistro | date:'dd/MM/yyyy HH:mm' }}
+            </p>
+
+            <!-- Badges condicionales -->
+            @if (seg.fechaPlazo || seg.fechaAtencion) {
+              <div class="flex flex-wrap gap-1.5 pt-0.5">
+
+                @if (seg.fechaPlazo) {
+                  <p-tag
+                    severity="warn"
+                    icon="pi pi-clock"
+                    [value]="'Plazo: ' + (seg.fechaPlazo | date:'dd/MM/yyyy')" />
+                }
+
+                @if (seg.fechaAtencion) {
+                  <p-tag
+                    severity="success"
+                    icon="pi pi-check-circle"
+                    [value]="'Atendido: ' + (seg.fechaAtencion | date:'dd/MM/yyyy')" />
+                }
+
+              </div>
+            }
+
+          </div>
+        </ng-template>
+
+      </p-timeline>
+    }
+
+  </div>
+
+</div>
