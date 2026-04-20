@@ -33,7 +33,16 @@ export const routes: Routes = [
   },
 
   { path: 'requerimientos/editar/:id', component: RequerimientosFormComponent, canActivate: [authGuard] },
-  { path: 'requerimientos/ver/:id', component: RequerimientosFormComponent, canActivate: [authGuard] },
+  { path: 'requerimientos/ver/:id',   component: RequerimientosFormComponent, canActivate: [authGuard] },
+
+  {
+    path: 'requerimientos/:id/estimaciones',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/requerimientos/components/estimaciones-panel/estimaciones-panel').then(
+        m => m.EstimacionesPanelComponent
+      ),
+  },
 
   // Maestros
   {

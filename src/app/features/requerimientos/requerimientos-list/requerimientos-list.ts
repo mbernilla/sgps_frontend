@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -9,9 +9,10 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Drawer } from 'primeng/drawer';
+import { Menu } from 'primeng/menu';
 
 import { RequerimientosService } from '../services/requerimientos.service';
 import { RequerimientoGridDTO, RequerimientoFiltroDTO, OrdenDTO } from '../models/requerimientos.models';
@@ -30,6 +31,7 @@ import { SeguimientosPanel } from '../components/seguimientos-panel/seguimientos
     ConfirmDialog,
     RouterModule,
     Drawer,
+    Menu,
     SeguimientosPanel,
   ],
   providers: [ConfirmationService, MessageService],
@@ -57,6 +59,10 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
   // Para el panel lateral de seguimientos
   mostrarSidebarSeguimientos      = signal(false);
   reqSeleccionadoParaSeguimiento  = signal<RequerimientoGridDTO | null>(null);
+
+  // Menú contextual de acciones por fila
+  menuItems                           = signal<MenuItem[]>([]);
+  private readonly accioesMenu        = viewChild.required<Menu>('accioesMenu');
 
   // ── Filtros ────────────────────────────────────────────────────────────
   filtroActual: RequerimientoFiltroDTO = {
@@ -119,6 +125,37 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
     }
 
     this.cargarData();
+  }
+
+  // ── Menú contextual ────────────────────────────────────────────────────
+  abrirMenu(event: Event, req: RequerimientoGridDTO): void {
+    this.menuItems.set(this.buildMenuItems(req));
+    this.accioesMenu().toggle(event);
+  }
+
+  private buildMenuItems(req: RequerimientoGridDTO): MenuItem[] {
+    return [
+      {
+        label: 'Consultas',
+        items: [
+          { label: 'Ver Detalle',   icon: 'pi pi-eye',     command: () => this.router.navigate(['/requerimientos/ver', req.id]) },
+          { label: 'Seguimientos',  icon: 'pi pi-history',  command: () => this.abrirSeguimientos(req) },
+        ],
+      },
+      {
+        label: 'Gestión',
+        items: [
+          { label: 'Gestionar Estimaciones', icon: 'pi pi-calculator', command: () => this.router.navigate(['/requerimientos', req.id, 'estimaciones']) },
+        ],
+      },
+      {
+        label: 'Configuración',
+        items: [
+          { label: 'Editar Datos', icon: 'pi pi-pencil', command: () => this.router.navigate(['/requerimientos/editar', req.id]) },
+          { label: 'Eliminar',     icon: 'pi pi-trash',  styleClass: 'menu-danger', command: () => this.confirmarEliminacion(req.id, req.nombre) },
+        ],
+      },
+    ];
   }
 
   // ── Sidebar de seguimientos ────────────────────────────────────────────

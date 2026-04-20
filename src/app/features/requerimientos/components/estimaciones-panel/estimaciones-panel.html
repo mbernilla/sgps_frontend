@@ -1,0 +1,374 @@
+<p-toast key="est" />
+
+<!-- ════════════════════════════════════════════════════════════
+     PÁGINA COMPLETA — Gestión de Estimaciones
+════════════════════════════════════════════════════════════ -->
+<div class="est-page">
+
+  <!-- ── Topbar de navegación ─────────────────────────────────────────── -->
+  <div class="est-topbar">
+    <div class="est-topbar__inner">
+
+      <div class="flex items-center gap-3">
+        <p-button
+          label="Volver a Requerimientos"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [text]="true"
+          (click)="volverALista()" />
+
+        <span class="est-topbar__divider"></span>
+
+        <nav class="est-breadcrumb" aria-label="breadcrumb">
+          <span class="est-breadcrumb__item est-breadcrumb__item--link" (click)="volverALista()">
+            Bandeja de Requerimientos
+          </span>
+          <i class="pi pi-angle-right est-breadcrumb__sep"></i>
+          <span class="est-breadcrumb__item est-breadcrumb__item--active">
+            Gestión de Estimaciones
+          </span>
+        </nav>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Contenido principal ───────────────────────────────────────────── -->
+  <div class="est-content">
+
+    <!-- ════════════════════════════════════════════════════════════
+         VISTA 1 — LECTURA
+         (Botonera + Panel Rechazo Inline + Historial)
+    ════════════════════════════════════════════════════════════ -->
+    @if (vistaActual() === 'lectura') {
+
+      <div class="est-card">
+
+        <!-- Cabecera de la tarjeta -->
+        <div class="est-card__header">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-calculator text-blue-600 text-lg"></i>
+            <h2 class="est-card__title">Historial de Estimaciones</h2>
+          </div>
+
+          <!-- Smart Buttons / WIP Gate -->
+          <div class="lectura-actions">
+            @if (alertaBorrador()) {
+
+              <p-message
+                severity="warn"
+                [text]="'Existe un documento en evaluación. Complete, apruebe o anule el borrador antes de crear una nueva estimación.'" />
+
+            } @else {
+
+              @if (btnRegistrarINI()) {
+                <p-button label="Registrar EST-INI"          icon="pi pi-plus-circle"    severity="primary"   (click)="abrirCrear('EST-INI')" />
+              }
+              @if (btnAnalisis()) {
+                <p-button label="Estimar Análisis"           icon="pi pi-chart-bar"       severity="secondary" (click)="abrirCrear('EST-ANA')" />
+              }
+              @if (btnDiseno()) {
+                <p-button label="Estimar Diseño"             icon="pi pi-objects-column"  severity="secondary" (click)="abrirCrear('EST-DIS')" />
+              }
+              @if (btnRFC()) {
+                <p-button label="Control de Cambios (RFC)"   icon="pi pi-sync"            severity="help"      (click)="abrirCrear('RFC')" />
+              }
+
+            }
+          </div>
+        </div>
+
+        <!-- Panel Rechazo Inline -->
+        @if (panelRechazoVisible()) {
+          <div class="rechazo-panel">
+            <div class="rechazo-panel__header">
+              <div class="flex items-center gap-2">
+                <i class="pi pi-times-circle text-red-500"></i>
+                <span class="font-semibold text-red-700 text-sm">Motivo de Rechazo</span>
+              </div>
+              <button class="rechazo-panel__close" (click)="cerrarPanelRechazo()" type="button"
+                aria-label="Cerrar panel de rechazo">
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+
+            <textarea
+              pTextarea
+              [formControl]="motivoCtrl"
+              rows="3"
+              class="w-full mt-2"
+              placeholder="Describa con claridad la razón del rechazo...">
+            </textarea>
+
+            @if (motivoCtrl.invalid && motivoCtrl.touched) {
+              <small class="text-red-500 text-xs mt-1 block">El motivo es requerido.</small>
+            }
+
+            <div class="flex justify-end gap-2 mt-3">
+              <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true" size="small"
+                [disabled]="rechazando()" (click)="cerrarPanelRechazo()" />
+              <p-button label="Confirmar Rechazo" icon="pi pi-ban" severity="danger" size="small"
+                [loading]="rechazando()" (click)="confirmarRechazo()" />
+            </div>
+          </div>
+        }
+
+        <!-- Tabla historial -->
+        <p-table
+          [value]="estimaciones()"
+          [loading]="cargando()"
+          styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
+          responsiveLayout="scroll">
+
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="w-28">Código</th>
+              <th class="w-32 text-center">Estado</th>
+              <th class="min-w-[160px]">Modificador Tarifa</th>
+              <th class="w-28 text-center">Fecha</th>
+              <th>Comentario</th>
+              <th class="w-44 text-center">Acciones</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-est>
+            <tr>
+              <td>
+                <span class="est-code-tag" [ngClass]="'tag-' + est.codigoEstimacion.toLowerCase().replace('-','')">
+                  {{ est.codigoEstimacion }}
+                </span>
+              </td>
+              <td class="text-center">
+                <span class="badge-custom" [ngClass]="getBadgeClass(est.codEstado)">
+                  {{ est.estadoDescripcion }}
+                </span>
+              </td>
+              <td class="text-gray-600 text-sm">{{ est.modificadorTarifaDescripcion }}</td>
+              <td class="text-center text-gray-600">{{ est.fechaEstimacion | date:'dd/MM/yyyy' }}</td>
+              <td class="text-gray-500 text-sm" [title]="est.comentario">
+                {{ est.comentario || '—' }}
+              </td>
+              <td class="text-center">
+                @if (est.codEstado === 'EST_BOR') {
+                  <div class="flex justify-center gap-1">
+                    <p-button icon="pi pi-pencil"       [text]="true" [rounded]="true" severity="info"    size="small" pTooltip="Editar"   tooltipPosition="top" (click)="abrirEditar(est)" />
+                    <p-button icon="pi pi-check-circle"  [text]="true" [rounded]="true" severity="success" size="small" pTooltip="Aprobar"  tooltipPosition="top" (click)="aprobar(est.id)" />
+                    <p-button icon="pi pi-times-circle"  [text]="true" [rounded]="true" severity="warn"    size="small" pTooltip="Rechazar" tooltipPosition="top" (click)="abrirRechazo(est.id)" />
+                    <p-button icon="pi pi-ban"           [text]="true" [rounded]="true" severity="danger"  size="small" pTooltip="Anular"   tooltipPosition="top" (click)="anular(est.id)" />
+                  </div>
+                }
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="text-center py-12 text-gray-400">
+                <i class="pi pi-inbox text-4xl block mb-3 opacity-30"></i>
+                No hay estimaciones registradas para este requerimiento.
+              </td>
+            </tr>
+          </ng-template>
+
+        </p-table>
+
+      </div>
+
+    }
+
+
+    <!-- ════════════════════════════════════════════════════════════
+         VISTA 2 — FORMULARIO
+         (pantalla completa, inline toggle)
+    ════════════════════════════════════════════════════════════ -->
+    @if (vistaActual() === 'formulario') {
+
+      <div class="est-card est-card--formulario">
+
+        <!-- Cabecera sticky del formulario -->
+        <div class="form-header-bar">
+
+          <div class="flex items-center gap-3">
+            <p-button
+              icon="pi pi-arrow-left"
+              [text]="true"
+              [rounded]="true"
+              severity="secondary"
+              pTooltip="Volver al historial"
+              tooltipPosition="right"
+              (click)="cancelar()" />
+
+            <div class="flex flex-col gap-0.5">
+              <div class="flex items-center gap-2">
+                <span class="form-code-badge" [ngClass]="badgeCodigoClass()">
+                  {{ codigoEnCurso() }}
+                </span>
+                <h3 class="text-base font-bold text-slate-800 m-0">
+                  {{ tituloFormulario() }}
+                </h3>
+              </div>
+              <span class="text-xs text-slate-400 leading-none">
+                @if (modoEdicion() === 'POST') { Nuevo registro } @else { Editando borrador existente }
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cuerpo del formulario -->
+        <form [formGroup]="mainForm" class="form-body" (ngSubmit)="guardar()">
+
+          <!-- Datos generales -->
+          <div class="form-section">
+            <p class="form-section__title">
+              <i class="pi pi-sliders-h"></i> Datos generales
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+              <div class="flex flex-col gap-1.5">
+                <label class="form-label">Modificador de Tarifa <span class="text-red-400">*</span></label>
+                <p-select
+                  formControlName="idModificadorTarifa"
+                  [options]="opcionesModificadorTarifa()"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccione un modificador..."
+                  styleClass="w-full" />
+                @if (mainForm.get('idModificadorTarifa')?.invalid && mainForm.get('idModificadorTarifa')?.touched) {
+                  <small class="text-red-400 text-xs">Campo requerido.</small>
+                }
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="form-label">Fecha de Estimación <span class="text-red-400">*</span></label>
+                <p-datepicker
+                  formControlName="fechaEstimacion"
+                  dateFormat="dd/mm/yy"
+                  [showIcon]="true"
+                  styleClass="w-full" />
+                @if (mainForm.get('fechaEstimacion')?.invalid && mainForm.get('fechaEstimacion')?.touched) {
+                  <small class="text-red-400 text-xs">Campo requerido.</small>
+                }
+              </div>
+
+            </div>
+
+            <div class="flex flex-col gap-1.5 mt-5">
+              <label class="form-label">Comentario / Observaciones</label>
+              <textarea
+                pTextarea
+                formControlName="comentario"
+                rows="3"
+                class="w-full resize-none"
+                placeholder="Incluya observaciones relevantes para la evaluación...">
+              </textarea>
+            </div>
+
+          </div>
+
+          <!-- Fases del proyecto -->
+          <div class="form-section mt-3">
+
+            <div class="form-section__header">
+              <p class="form-section__title mb-0">
+                <i class="pi pi-list-check"></i> Fases del Proyecto
+              </p>
+              <p-button
+                label="Agregar fase"
+                icon="pi pi-plus"
+                [text]="true"
+                size="small"
+                severity="secondary"
+                (click)="addFase()" />
+            </div>
+
+            @if (fasesArray.length === 0) {
+              <div class="empty-fases">
+                <i class="pi pi-inbox text-2xl opacity-30 mb-1 block"></i>
+                <span>Sin fases configuradas. Use "Agregar fase" para incorporar una.</span>
+              </div>
+            } @else {
+
+              <div class="fases-scroll-area" formArrayName="fases">
+
+                <div class="fases-thead">
+                  <div class="fases-th fases-col-fase">Fase</div>
+                  <div class="fases-th fases-col-horas">Horas Est.</div>
+                  <div class="fases-th fases-col-fecha">Inicio Plan</div>
+                  <div class="fases-th fases-col-fecha">Fin Plan</div>
+                  <div class="fases-th fases-col-del"></div>
+                </div>
+
+                @for (faseCtrl of fasesArray.controls; track $index; let i = $index; let par = $even) {
+                  <div class="fases-row" [class.fases-row--alt]="par" [formGroupName]="i">
+
+                    <div class="fases-col-fase">
+                      <p-select
+                        formControlName="codFase"
+                        [options]="fasesOpciones()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione..."
+                        styleClass="w-full" />
+                    </div>
+
+                    <div class="fases-col-horas">
+                      <p-inputnumber
+                        formControlName="horasEstimadas"
+                        [min]="0"
+                        styleClass="w-full"
+                        inputStyleClass="text-center w-full" />
+                    </div>
+
+                    <div class="fases-col-fecha">
+                      <p-datepicker
+                        formControlName="fechaInicioPlan"
+                        dateFormat="dd/mm/yy"
+                        [showIcon]="true"
+                        styleClass="w-full" />
+                    </div>
+
+                    <div class="fases-col-fecha">
+                      <p-datepicker
+                        formControlName="fechaFinPlan"
+                        dateFormat="dd/mm/yy"
+                        [showIcon]="true"
+                        styleClass="w-full" />
+                    </div>
+
+                    <div class="fases-col-del">
+                      <p-button
+                        icon="pi pi-trash"
+                        [text]="true" [rounded]="true" severity="danger" size="small"
+                        pTooltip="Quitar fase" tooltipPosition="top"
+                        (click)="removeFase(i)" />
+                    </div>
+
+                  </div>
+                }
+
+              </div>
+
+            }
+
+          </div>
+
+          <!-- Footer del formulario -->
+          <div class="form-footer">
+            <p-button label="Cancelar"            icon="pi pi-times"  severity="secondary" [text]="true" [disabled]="guardando()" (click)="cancelar()" />
+            <p-button
+  type="submit"
+  label="Guardar estimación"
+  icon="pi pi-check"
+  [loading]="guardando()" />
+          </div>
+
+        </form>
+
+      </div>
+
+    }
+
+  </div><!-- /est-content -->
+
+</div><!-- /est-page -->

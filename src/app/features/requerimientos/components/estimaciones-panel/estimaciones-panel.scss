@@ -1,0 +1,376 @@
+/* ════════════════════════════════════════════════════════════
+   ESTIMACIONES — Full-Page View  +  Inline Toggle Design
+   ════════════════════════════════════════════════════════════ */
+
+:host {
+  display: block;
+
+  --ep-brand:      #3B4FC8;
+  --ep-brand-soft: #eef0fb;
+  --ep-border:     #e2e8f0;
+  --ep-text:       #1e293b;
+  --ep-muted:      #64748b;
+  --ep-radius:     8px;
+  --ep-radius-sm:  5px;
+  --ep-shadow:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+}
+
+/* ══════════════════════════════════════════════════════════
+   LAYOUT DE PÁGINA COMPLETA
+   ══════════════════════════════════════════════════════════ */
+
+.est-page {
+  min-height: calc(100vh - 64px);
+  background: #f1f5f9;
+}
+
+/* ── Topbar de navegación ────────────────────────────────────────────── */
+.est-topbar {
+  background: #fff;
+  border-bottom: 1px solid var(--ep-border);
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.est-topbar__inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+}
+
+.est-topbar__divider {
+  width: 1px;
+  height: 20px;
+  background: var(--ep-border);
+  flex-shrink: 0;
+}
+
+/* ── Breadcrumb ──────────────────────────────────────────────────────── */
+.est-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.est-breadcrumb__item--link {
+  color: var(--ep-brand);
+  cursor: pointer;
+  transition: opacity 120ms;
+
+  &:hover { opacity: 0.7; text-decoration: underline; }
+}
+
+.est-breadcrumb__item--active {
+  color: var(--ep-muted);
+  font-weight: 500;
+}
+
+.est-breadcrumb__sep {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+/* ── Área de contenido ───────────────────────────────────────────────── */
+.est-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 28px 32px 48px;
+}
+
+/* ── Tarjeta principal ───────────────────────────────────────────────── */
+.est-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: var(--ep-shadow);
+  overflow: hidden;
+}
+
+.est-card__header {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--ep-border);
+}
+
+.est-card__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ep-text);
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* ── Smart buttons área ──────────────────────────────────────────────── */
+.lectura-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+/* ── Panel de rechazo inline ──────────────────────────────────────────── */
+.rechazo-panel {
+  border-left: 4px solid #f87171;
+  background: #fff5f5;
+  border-radius: 0 var(--ep-radius) var(--ep-radius) 0;
+  padding: 14px 16px;
+  margin: 0 24px 0;
+  animation: slideDown 200ms ease-out;
+}
+
+.rechazo-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rechazo-panel__close {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--ep-muted);
+  cursor: pointer;
+  border-radius: var(--ep-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms;
+
+  &:hover { background: #fee2e2; color: #b91c1c; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Overrides PrimeNG tabla historial ───────────────────────────────── */
+::ng-deep {
+  .p-datatable .p-datatable-thead > tr > th {
+    background: #4a5568 !important;
+    color: #fff !important;
+    padding: 11px 16px !important;
+    font-size: 12.5px;
+    font-weight: 600;
+    border: none !important;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 11px 16px !important;
+    font-size: 13.5px;
+  }
+}
+
+/* ── Badge de código (tabla historial) ───────────────────────────────── */
+.est-code-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--ep-radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  font-family: ui-monospace, monospace;
+}
+
+.tag-estini  { background: #dbeafe; color: #1d4ed8; }
+.tag-estana  { background: #fef3c7; color: #92400e; }
+.tag-estdis  { background: #f3e8ff; color: #6b21a8; }
+.tag-rfc     { background: #dcfce7; color: #15803d; }
+
+/* ── Badge de estado ─────────────────────────────────────────────────── */
+.badge-custom {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.badge-warn      { background: #fef3c7; color: #d97706; }
+.badge-success   { background: #dcfce7; color: #166534; }
+.badge-danger    { background: #fee2e2; color: #b91c1c; }
+.badge-secondary { background: #f1f5f9; color: #475569; }
+
+/* ══════════════════════════════════════════════════════════
+   VISTA FORMULARIO (dentro de est-card--formulario)
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Barra de cabecera sticky ────────────────────────────────────────── */
+.form-header-bar {
+  position: sticky;
+  top: 52px; /* altura del est-topbar */
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff;
+  border-bottom: 2px solid var(--ep-border);
+  padding: 14px 24px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Badge de código en cabecera formulario ──────────────────────────── */
+.form-code-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--ep-radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-family: ui-monospace, monospace;
+}
+
+.code-ini { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.code-ana { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.code-dis { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+.code-rfc { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+
+/* ── Cuerpo del formulario ───────────────────────────────────────────── */
+.form-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 160ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Sección del formulario ──────────────────────────────────────────── */
+.form-section {
+  background: #fafbfd;
+  border: 1px solid var(--ep-border);
+  border-radius: var(--ep-radius);
+  padding: 20px 24px;
+  margin-bottom: 0;
+}
+
+.form-section__title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ep-brand);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 0 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  i { font-size: 13px; }
+}
+
+.form-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.form-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* ── Tabla de fases (grid custom) ────────────────────────────────────── */
+.fases-scroll-area {
+  border: 1px solid var(--ep-border);
+  border-radius: var(--ep-radius-sm);
+  overflow: hidden;
+}
+
+.fases-thead {
+  display: grid;
+  grid-template-columns: 1fr 120px 180px 180px 48px;
+  background: #f1f5f9;
+  border-bottom: 1px solid var(--ep-border);
+}
+
+.fases-th {
+  padding: 9px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.fases-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 180px 180px 48px;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 100ms;
+
+  &:last-child  { border-bottom: none; }
+  &:hover       { background: #f8f9fc !important; }
+  &--alt        { background: #fafbfd; }
+}
+
+.fases-col-fase,
+.fases-col-horas,
+.fases-col-fecha,
+.fases-col-del {
+  padding: 7px 10px;
+}
+
+.fases-col-del {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-fases {
+  text-align: center;
+  padding: 32px;
+  color: #94a3b8;
+  font-size: 13px;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--ep-radius-sm);
+}
+
+/* ── Footer del formulario ───────────────────────────────────────────── */
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 0 4px;
+  border-top: 1px solid var(--ep-border);
+  margin-top: 16px;
+}
+
+/* ── Reduce controles dentro de fases ────────────────────────────────── */
+::ng-deep {
+  .fases-row .p-datepicker-input,
+  .fases-row .p-inputnumber-input {
+    font-size: 12.5px;
+    padding: 4px 8px;
+    height: 33px;
+  }
+
+  .fases-row .p-select {
+    font-size: 12.5px;
+    min-height: 33px;
+  }
+
+  .fases-row .p-datepicker .p-datepicker-trigger {
+    width: 30px;
+    height: 33px;
+  }
+}

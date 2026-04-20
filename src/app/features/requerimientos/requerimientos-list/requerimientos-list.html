@@ -68,49 +68,15 @@
           <td class="text-center text-gray-600">{{ req.fechaSolicitud | date:'dd/MM/yyyy' }}</td>
 
           <td class="text-center">
-            <div class="flex justify-center items-center gap-1">
-
-              <p-button
-                icon="pi pi-pencil"
-                [text]="true"
-                [rounded]="true"
-                severity="info"
-                pTooltip="Editar"
-                tooltipPosition="top"
-                [routerLink]="['/requerimientos/editar', req.id]"
-              />
-
-              <p-button
-                icon="pi pi-history"
-                [text]="true"
-                [rounded]="true"
-                severity="success"
-                pTooltip="Seguimientos"
-                tooltipPosition="top"
-                (click)="abrirSeguimientos(req)"
-              />
-
-              <p-button
-                icon="pi pi-trash"
-                [text]="true"
-                [rounded]="true"
-                severity="danger"
-                pTooltip="Eliminar"
-                tooltipPosition="top"
-                (click)="confirmarEliminacion(req.id, req.nombre)"
-              />
-
-              <p-button
-                icon="pi pi-eye"
-                [text]="true"
-                [rounded]="true"
-                severity="secondary"
-                pTooltip="Ver Detalle"
-                tooltipPosition="top"
-                [routerLink]="['/requerimientos/ver', req.id]"
-              />
-
-            </div>
+            <p-button
+              icon="pi pi-ellipsis-v"
+              [text]="true"
+              [rounded]="true"
+              severity="secondary"
+              pTooltip="Acciones"
+              tooltipPosition="top"
+              (click)="abrirMenu($event, req)"
+            />
           </td>
 
         </tr>
@@ -128,6 +94,9 @@
 
   </div>
 </div>
+
+<!-- ── Menú contextual compartido por todas las filas ─────────────────── -->
+<p-menu #accioesMenu [model]="menuItems()" [popup]="true" appendTo="body" />
 
 <!-- ── Diálogo de confirmación de eliminación ────────────────────────── -->
 <p-confirmDialog [style]="{width: '450px'}" />
@@ -161,3 +130,4 @@
   }
 
 </p-drawer>
+
