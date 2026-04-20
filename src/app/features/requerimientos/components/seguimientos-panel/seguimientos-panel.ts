@@ -1,5 +1,6 @@
 import {
   Component,
+  computed,
   DestroyRef,
   Input,
   OnChanges,
@@ -10,7 +11,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs/operators';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -23,7 +24,9 @@ import { Button } from 'primeng/button';
 import { Timeline } from 'primeng/timeline';
 import { Tag } from 'primeng/tag';
 import { Toast } from 'primeng/toast';
-import { MessageService, PrimeTemplate } from 'primeng/api';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
 
 import { MaestraService } from '../../../../core/services/maestra.service';
 import { PersonalDTO } from '../../../../core/models/maestra.model';
@@ -53,7 +56,6 @@ interface SeguimientoCreateDTO {
   fechaReal:            string;        // YYYY-MM-DD
   fechaPlazo:           string | null; // YYYY-MM-DD
   idPersonalResponsable: number;
-  visibleEnReporte:     boolean;
   codEstado:            string;
 }
 
@@ -66,6 +68,7 @@ interface SeguimientoCreateDTO {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     Select,
     DatePicker,
@@ -74,9 +77,11 @@ interface SeguimientoCreateDTO {
     Timeline,
     Tag,
     Toast,
+    ToggleSwitchModule,
+    ConfirmDialog,
     PrimeTemplate,  // Requerido para que <ng-template pTemplate="..."> funcione en componentes standalone
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './seguimientos-panel.html',
   styleUrl:    './seguimientos-panel.scss',
 })
@@ -88,8 +93,9 @@ export class SeguimientosPanel implements OnInit, OnChanges {
   private readonly fb         = inject(FormBuilder);
   private readonly http       = inject(HttpClient);
   private readonly maestra    = inject(MaestraService);
-  private readonly msg        = inject(MessageService);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly msg                 = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly destroyRef          = inject(DestroyRef);
 
   private readonly apiBase = environment.baseUrl;
 
@@ -102,14 +108,21 @@ export class SeguimientosPanel implements OnInit, OnChanges {
   readonly personalOpts = signal<PersonalDTO[]>([]);
 
   // ── Datos del timeline ────────────────────────────────────────────────
-  readonly seguimientos = signal<SeguimientoDTO[]>([]);
+  readonly seguimientos          = signal<SeguimientoDTO[]>([]);
+  readonly mostrarAtendidos      = signal<boolean>(false);
+  readonly seguimientosFiltrados = computed(() =>
+    this.mostrarAtendidos()
+      ? this.seguimientos()
+      : this.seguimientos().filter(s => s.codEstado === 'SEG_PEN')
+  );
+  readonly seguimientoEnEdicion  = signal<SeguimientoDTO | null>(null);
 
   // ── Formulario de registro ────────────────────────────────────────────
   readonly form = this.fb.group({
     codTipoSeguimiento:    this.fb.nonNullable.control('',       Validators.required),
     idPersonalResponsable: this.fb.control<number | null>(null,  Validators.required),
     descripcion:           this.fb.nonNullable.control('',       [Validators.required, Validators.maxLength(500)]),
-    fechaReal:             this.fb.control<Date | null>(null,    Validators.required),
+    fechaReal:             this.fb.control<Date | null>(new Date(), Validators.required),
     fechaPlazo:            this.fb.control<Date | null>(null),   // validación dinámica
   });
 
@@ -145,50 +158,149 @@ export class SeguimientosPanel implements OnInit, OnChanges {
       return;
     }
 
-    const raw = this.form.getRawValue();
+    const raw      = this.form.getRawValue();
+    const editando = this.seguimientoEnEdicion();
 
     const payload: SeguimientoCreateDTO = {
-      idRequerimiento:      this.idRequerimiento,
-      codTipoSeguimiento:   raw.codTipoSeguimiento,
-      descripcion:          raw.descripcion,
-      fechaReal:            this.toDateStr(raw.fechaReal)!,
-      fechaPlazo:           this.toDateStr(raw.fechaPlazo),
+      idRequerimiento:       this.idRequerimiento,
+      codTipoSeguimiento:    raw.codTipoSeguimiento,
+      descripcion:           raw.descripcion,
+      fechaReal:             this.toDateStr(raw.fechaReal)!,
+      fechaPlazo:            this.toDateStr(raw.fechaPlazo),
       idPersonalResponsable: raw.idPersonalResponsable!,
-      visibleEnReporte:     false,
-      codEstado:            'SEG_PEN',  // siempre "Pendiente" al crear
+      codEstado:             editando ? editando.codEstado : 'SEG_PEN',
     };
 
     this.guardando.set(true);
 
+    const request$ = editando
+      ? this.http.put<ApiResponse<SeguimientoDTO>>(`${this.apiBase}/v1/seguimientos/${editando.id}`, payload)
+      : this.http.post<ApiResponse<SeguimientoDTO>>(`${this.apiBase}/v1/seguimientos`, payload);
+
+    request$.subscribe({
+      next: () => {
+        this.msg.add({
+          severity: 'success',
+          summary:  editando ? 'Actualizado' : 'Registrado',
+          detail:   editando
+            ? 'El seguimiento fue actualizado correctamente.'
+            : 'El seguimiento fue guardado correctamente.',
+          life: 3000,
+        });
+        if (editando) {
+          this.cancelarEdicion();
+        } else {
+          this.limpiarManteniendo();
+        }
+        this.cargarHistorial();
+      },
+      error: (err) => {
+        this.msg.add({
+          severity: 'error',
+          summary:  'Error al guardar',
+          detail:   err.error?.mensaje ?? 'No se pudo guardar el seguimiento.',
+          life:     5000,
+        });
+        this.guardando.set(false);
+      },
+      complete: () => this.guardando.set(false),
+    });
+  }
+
+  /** Limpia el formulario completo (botón manual del usuario). */
+  limpiar(): void {
+    this.form.reset({ fechaReal: new Date() });
+  }
+
+  /** Carga el seguimiento en el formulario para editarlo. */
+  editar(seg: SeguimientoDTO): void {
+    this.seguimientoEnEdicion.set(seg);
+    this.form.patchValue({
+      codTipoSeguimiento:    seg.codTipoSeguimiento,
+      idPersonalResponsable: seg.idPersonalResponsable,
+      descripcion:           seg.descripcion,
+      fechaReal:             this.parseDateStr(seg.fechaReal),
+      fechaPlazo:            this.parseDateStr(seg.fechaPlazo),
+    });
+  }
+
+  /** Cancela la edición y restaura el formulario a estado de creación. */
+  cancelarEdicion(): void {
+    this.seguimientoEnEdicion.set(null);
+    this.form.reset({ fechaReal: new Date() });
+  }
+
+  /** Marca el seguimiento como atendido (SEG_ATE) vía PATCH. */
+  atenderSeguimiento(id: number): void {
     this.http
-      .post<ApiResponse<SeguimientoDTO>>(`${this.apiBase}/v1/seguimientos`, payload)
+      .patch(`${this.apiBase}/v1/seguimientos/${id}/estado`, { codEstado: 'SEG_ATE' })
       .subscribe({
         next: () => {
           this.msg.add({
             severity: 'success',
-            summary:  'Registrado',
-            detail:   'El seguimiento fue guardado correctamente.',
+            summary:  'Atendido',
+            detail:   'El seguimiento fue marcado como atendido.',
             life:     3000,
           });
-          this.limpiarManteniendo();
           this.cargarHistorial();
         },
         error: (err) => {
           this.msg.add({
             severity: 'error',
-            summary:  'Error al guardar',
-            detail:   err.error?.mensaje ?? 'No se pudo registrar el seguimiento.',
+            summary:  'Error al atender',
+            detail:   err.error?.mensaje ?? 'No se pudo actualizar el estado.',
             life:     5000,
           });
-          this.guardando.set(false);
         },
-        complete: () => this.guardando.set(false),
       });
   }
 
-  /** Limpia el formulario completo (botón manual del usuario). */
-  limpiar(): void {
-    this.form.reset();
+  /** Solicita confirmación y elimina el seguimiento por su id. */
+  eliminarSeguimiento(id: number): void {
+    this.confirmationService.confirm({
+      message:               '¿Está seguro que desea anular este seguimiento?',
+      header:                'Confirmar eliminación',
+      icon:                  'pi pi-exclamation-triangle',
+      acceptLabel:           'Sí, anular',
+      rejectLabel:           'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger p-button-sm',
+      rejectButtonStyleClass: 'p-button-text p-button-sm',
+      accept: () => {
+        this.http
+          .delete(`${this.apiBase}/v1/seguimientos/${id}`)
+          .subscribe({
+            next: () => {
+              this.msg.add({
+                severity: 'success',
+                summary:  'Anulado',
+                detail:   'El seguimiento fue anulado correctamente.',
+                life:     3000,
+              });
+              this.cargarHistorial();
+            },
+            error: (err) => {
+              this.msg.add({
+                severity: 'error',
+                summary:  'Error al anular',
+                detail:   err.error?.mensaje ?? 'No se pudo anular el seguimiento.',
+                life:     5000,
+              });
+            },
+          });
+      },
+    });
+  }
+
+  // ── Helpers de resolución de catálogo ─────────────────────────────────
+
+  /** Devuelve el nombre del tipo de seguimiento dado su código (id en el catálogo). */
+  getNombreTipo(cod: string): string {
+    return this.tipoOpts().find(t => t.id === cod)?.nombre ?? cod;
+  }
+
+  /** Devuelve el nombre completo del responsable dado su id numérico. */
+  getNombreResponsable(id: number): string {
+    return this.personalOpts().find(p => p.id === id)?.nombresApellidos ?? 'Desconocido';
   }
 
   // ── Privados ──────────────────────────────────────────────────────────
@@ -266,8 +378,18 @@ private cargarHistorial(): void {
    */
   private limpiarManteniendo(): void {
     const responsable = this.form.controls.idPersonalResponsable.value;
-    this.form.reset();
+    this.form.reset({ fechaReal: new Date() });
     this.form.controls.idPersonalResponsable.setValue(responsable, { emitEvent: false });
+  }
+
+  /**
+   * Convierte un string 'YYYY-MM-DD' a Date usando hora local (T00:00:00)
+   * para evitar el desfase que produciría el constructor Date(string) en UTC.
+   */
+  private parseDateStr(dateStr: string | null): Date | null {
+    if (!dateStr) return null;
+    // Agregamos T00:00:00 para forzar hora local y evitar desfase de timezone
+    return new Date(dateStr + 'T00:00:00');
   }
 
   /**

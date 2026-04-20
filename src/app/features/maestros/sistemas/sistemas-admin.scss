@@ -1,0 +1,7 @@
+// Estilos mínimos — la UI se maneja 100% con Tailwind CSS.
+// Se sobreescribe el borde por defecto de la fila seleccionada de PrimeNG
+// para evitar conflictos con la clase .bg-blue-50 aplicada dinámicamente.
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.p-highlight {
+  background: transparent;
+}

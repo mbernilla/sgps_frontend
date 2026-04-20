@@ -32,6 +32,23 @@
         </div>
       </a>
 
+      <!-- Divisor sección Maestros -->
+      <div class="pt-2 pb-1" *ngIf="!isSidebarCollapsed()">
+        <div class="border-t border-slate-700 mb-2"></div>
+        <p class="px-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Maestros</p>
+      </div>
+      <div *ngIf="isSidebarCollapsed()" class="border-t border-slate-700 my-2 mx-2"></div>
+
+      <a routerLink="/maestros/sistemas" routerLinkActive="bg-slate-700 text-white"
+         class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 cursor-pointer group"
+         [title]="isSidebarCollapsed() ? 'Sistemas y Módulos' : ''">
+        <i class="pi pi-server text-lg min-w-[20px] text-center group-hover:text-blue-400"></i>
+        <div class="menu-text-container transition-opacity duration-300"
+             [ngClass]="isSidebarCollapsed() ? 'opacity-0 w-0' : 'opacity-100'">
+          <span class="text-sm font-medium">Sistemas y Módulos</span>
+        </div>
+      </a>
+
     </nav>
   </aside>
 

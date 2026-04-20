@@ -35,6 +35,14 @@ export const routes: Routes = [
   { path: 'requerimientos/editar/:id', component: RequerimientosFormComponent, canActivate: [authGuard] },
   { path: 'requerimientos/ver/:id', component: RequerimientosFormComponent, canActivate: [authGuard] },
 
+  // Maestros
+  {
+    path: 'maestros/sistemas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/maestros/sistemas/sistemas-admin').then(m => m.SistemasAdminComponent),
+  },
+
   // Wildcard
   { path: '**', redirectTo: 'login' },
 ];

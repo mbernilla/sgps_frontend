@@ -1,0 +1,354 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PAGE HEADER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-5">
+  <div class="flex items-center gap-2">
+    <i class="pi pi-server text-blue-500 text-lg"></i>
+    <h1 class="text-xl font-semibold text-slate-800">Sistemas y Módulos</h1>
+  </div>
+  <p class="text-sm text-slate-400 mt-0.5 ml-7">Gestión maestra de sistemas de información y sus módulos funcionales.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     LAYOUT MAESTRO-DETALLE: 2 columnas
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+  <!-- ══════════════════════════════════════
+       PANEL IZQUIERDO — SISTEMAS
+       ══════════════════════════════════════ -->
+  <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
+
+    <!-- Cabecera del panel -->
+    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-server text-blue-500 text-sm"></i>
+        <span class="text-sm font-semibold text-slate-700">Sistemas</span>
+        <span class="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">
+          {{ sistemas().length }}
+        </span>
+      </div>
+      <p-button
+        label="Nuevo Sistema"
+        icon="pi pi-plus"
+        size="small"
+        (click)="abrirNuevoSistema()" />
+    </div>
+
+    <!-- Tabla de sistemas -->
+    <div class="overflow-auto">
+      <p-table
+        [value]="sistemas()"
+        [loading]="cargandoSistemas()"
+        [rowHover]="true"
+        styleClass="p-datatable-sm">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Nombre</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Grupo Tec.</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Estado</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide w-20 text-center">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-s>
+          <tr
+            class="cursor-pointer transition-colors duration-100"
+            [class.bg-blue-50]="sistemaSeleccionado()?.id === s.id"
+            (click)="seleccionarSistema(s)">
+
+            <td>
+              <div class="flex flex-col">
+                <span class="text-sm font-medium text-slate-700">{{ s.nombre }}</span>
+                <span *ngIf="s.descripcion" class="text-xs text-slate-400 truncate max-w-[180px]">
+                  {{ s.descripcion }}
+                </span>
+              </div>
+            </td>
+
+            <td>
+              <span class="text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                {{ s.grupoTecnologico || s.codGrupoTecnologico }}
+              </span>
+            </td>
+
+            <td>
+              <p-tag
+                [severity]="s.esActivo ? 'success' : 'danger'"
+                [value]="s.esActivo ? 'Activo' : 'Inactivo'"
+                [icon]="s.esActivo ? 'pi pi-check-circle' : 'pi pi-times-circle'" />
+            </td>
+
+            <td>
+              <div class="flex items-center justify-center gap-1">
+                <p-button
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  styleClass="p-0 w-7 h-7"
+                  title="Editar sistema"
+                  (click)="editarSistema(s, $event)" />
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  styleClass="p-0 w-7 h-7"
+                  title="Dar de baja"
+                  (click)="eliminarSistema(s, $event)" />
+              </div>
+            </td>
+
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="4">
+              <div class="text-center py-10 text-slate-400">
+                <i class="pi pi-inbox text-4xl block mb-2 opacity-40"></i>
+                <p class="text-sm">Sin sistemas registrados.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+      </p-table>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PANEL DERECHO — MÓDULOS
+       ══════════════════════════════════════ -->
+  <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
+
+    <!-- Cabecera del panel -->
+    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2 min-w-0">
+        <i class="pi pi-th-large text-indigo-500 text-sm flex-shrink-0"></i>
+        <div class="text-sm font-semibold text-slate-700 truncate">
+          Módulos de:
+          <span class="text-blue-600 font-semibold">
+            {{ sistemaSeleccionado()?.nombre || 'Seleccione un sistema' }}
+          </span>
+        </div>
+      </div>
+      <p-button
+        label="Nuevo Módulo"
+        icon="pi pi-plus"
+        size="small"
+        [disabled]="!sistemaSeleccionado()"
+        (click)="abrirNuevoModulo()" />
+    </div>
+
+    <!-- Empty State: sin sistema seleccionado -->
+    <div *ngIf="!sistemaSeleccionado()"
+         class="flex-1 flex flex-col items-center justify-center py-16 px-6 text-center">
+      <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+        <i class="pi pi-arrow-left text-2xl text-slate-300"></i>
+      </div>
+      <p class="text-sm font-medium text-slate-500">Seleccione un sistema</p>
+      <p class="text-xs text-slate-300 mt-1">Haga clic en una fila de la tabla de sistemas para ver sus módulos.</p>
+    </div>
+
+    <!-- Tabla de módulos -->
+    <div *ngIf="sistemaSeleccionado()" class="overflow-auto">
+      <p-table
+        [value]="modulos()"
+        [loading]="cargandoModulos()"
+        [rowHover]="true"
+        styleClass="p-datatable-sm">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Nombre del Módulo</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Estado</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide w-20 text-center">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-m>
+          <tr>
+            <td class="text-sm text-slate-700 font-medium">{{ m.nombre }}</td>
+            <td>
+              <p-tag
+                [severity]="m.esActivo ? 'success' : 'danger'"
+                [value]="m.esActivo ? 'Activo' : 'Inactivo'"
+                [icon]="m.esActivo ? 'pi pi-check-circle' : 'pi pi-times-circle'" />
+            </td>
+            <td>
+              <div class="flex items-center justify-center gap-1">
+                <p-button
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  styleClass="p-0 w-7 h-7"
+                  title="Editar módulo"
+                  (click)="editarModulo(m)" />
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  styleClass="p-0 w-7 h-7"
+                  title="Dar de baja"
+                  (click)="eliminarModulo(m)" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="3">
+              <div class="text-center py-10 text-slate-400">
+                <i class="pi pi-inbox text-4xl block mb-2 opacity-40"></i>
+                <p class="text-sm">Este sistema no tiene módulos activos.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+      </p-table>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     DIÁLOGO — SISTEMA (Crear / Editar)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  [header]="tituloModalSistema()"
+  [visible]="modalSistema()"
+  (visibleChange)="modalSistema.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [closable]="true"
+  [style]="{ width: '480px' }">
+
+  <form [formGroup]="formSistema" class="flex flex-col gap-4 pt-2">
+
+    <!-- Nombre -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Nombre *</label>
+      <input
+        pInputText
+        formControlName="nombre"
+        class="w-full"
+        placeholder="Nombre del sistema" />
+      @if (formSistema.controls.nombre.invalid && formSistema.controls.nombre.touched) {
+        <small class="text-red-500 text-xs">El nombre es obligatorio.</small>
+      }
+    </div>
+
+    <!-- Descripción -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Descripción</label>
+      <textarea
+        pTextarea
+        formControlName="descripcion"
+        rows="3"
+        class="w-full resize-none"
+        placeholder="Descripción opcional del sistema...">
+      </textarea>
+    </div>
+
+    <!-- Grupo Tecnológico -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Grupo Tecnológico *</label>
+      <p-select
+        formControlName="codGrupoTecnologico"
+        [options]="grupoTecOpts()"
+        optionValue="id"
+        optionLabel="nombre"
+        placeholder="Seleccione un grupo"
+        styleClass="w-full"
+        appendTo="body" />
+      @if (formSistema.controls.codGrupoTecnologico.invalid && formSistema.controls.codGrupoTecnologico.touched) {
+        <small class="text-red-500 text-xs">El grupo tecnológico es obligatorio.</small>
+      }
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2 pt-1">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        icon="pi pi-times"
+        [disabled]="guardandoSistema()"
+        (click)="modalSistema.set(false)" />
+      <p-button
+        [label]="labelBtnSistema()"
+        icon="pi pi-save"
+        [loading]="guardandoSistema()"
+        (click)="guardarSistema()" />
+    </div>
+  </ng-template>
+
+</p-dialog>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     DIÁLOGO — MÓDULO (Crear / Editar)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  [header]="tituloModalModulo()"
+  [visible]="modalModulo()"
+  (visibleChange)="modalModulo.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [closable]="true"
+  [style]="{ width: '400px' }">
+
+  <form [formGroup]="formModulo" class="flex flex-col gap-4 pt-2">
+
+    <!-- Sistema padre (solo lectura, informativo) -->
+    <div class="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-100">
+      <i class="pi pi-server text-blue-400 text-sm"></i>
+      <span class="text-xs text-blue-700 font-medium">Sistema: {{ sistemaSeleccionado()?.nombre }}</span>
+    </div>
+
+    <!-- Nombre del módulo -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Nombre del Módulo *</label>
+      <input
+        pInputText
+        formControlName="nombre"
+        class="w-full"
+        placeholder="Ej: Módulo de Facturación" />
+      @if (formModulo.controls.nombre.invalid && formModulo.controls.nombre.touched) {
+        <small class="text-red-500 text-xs">El nombre es obligatorio.</small>
+      }
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2 pt-1">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        icon="pi pi-times"
+        [disabled]="guardandoModulo()"
+        (click)="modalModulo.set(false)" />
+      <p-button
+        [label]="labelBtnModulo()"
+        icon="pi pi-save"
+        [loading]="guardandoModulo()"
+        (click)="guardarModulo()" />
+    </div>
+  </ng-template>
+
+</p-dialog>

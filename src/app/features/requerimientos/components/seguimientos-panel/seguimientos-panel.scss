@@ -1,0 +1,13 @@
+/* Anulamos el bloque fantasma del Timeline de PrimeNG */
+:host ::ng-deep {
+    .p-timeline-event-opposite {
+        display: none !important;
+        flex: 0 !important;
+        padding: 0 !important;
+    }
+
+    .p-timeline-event-content {
+        width: 100%;
+        padding-right: 0 !important;
+    }
+}

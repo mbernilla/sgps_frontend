@@ -110,7 +110,7 @@ export class RequerimientosFormComponent implements OnInit {
     idEquipo: this.fb.control<number | null>(null, Validators.required),
     idSistema: this.fb.control<number | null>(null, Validators.required),
     idModulo: this.fb.control<number | null>(null, Validators.required),
-    codCriticidad: this.fb.nonNullable.control('NIV_MED', Validators.required),
+    codCriticidad: this.fb.nonNullable.control('CRI_MED', Validators.required),
     codGrupoTecnologico: this.fb.nonNullable.control('GT1', Validators.required),
     codExterno: this.fb.nonNullable.control(''),
     nombre: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(200)]),

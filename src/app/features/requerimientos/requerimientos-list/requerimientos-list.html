@@ -145,7 +145,12 @@
       <span class="font-semibold text-slate-700">
         Seguimientos
         @if (reqSeleccionadoParaSeguimiento(); as req) {
-          <span class="text-slate-400 font-normal"> — {{ req.codigoInternoFormateado }}</span>
+          <span class="text-slate-400 font-normal">
+            — {{ req.codigoInternoFormateado }}
+            @if (req.codExterno) {
+              <span class="text-slate-400 text-sm">({{ req.codExterno }})</span>
+            }
+          </span>
         }
       </span>
     </div>
