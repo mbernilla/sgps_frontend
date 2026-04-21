@@ -176,6 +176,12 @@
                 <p-button icon="pi pi-ban" [text]="true" [rounded]="true" severity="danger" size="small"
                   pTooltip="Anular" tooltipPosition="top" (click)="anular(est.id)" />
               </div>
+              } @else if (est.codEstado === 'EST_REC' && est.id === estimaciones()[0]?.id) {
+              <div class="flex justify-center gap-1">
+                <p-button icon="pi pi-copy" [text]="true" [rounded]="true" severity="secondary" size="small"
+                  [pTooltip]="est.motivoRechazo ? 'Clonar — Motivo: ' + est.motivoRechazo : 'Clonar estimación rechazada'"
+                  tooltipPosition="top" (click)="clonarEstimacion(est)" />
+              </div>
               }
             </td>
           </tr>

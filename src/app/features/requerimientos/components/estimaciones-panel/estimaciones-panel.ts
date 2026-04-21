@@ -121,14 +121,15 @@ export class EstimacionesPanelComponent implements OnInit {
   private readonly _hayBorrador      = computed(() => this.estimaciones().some(e => e.codEstado === 'EST_BOR'));
   private readonly _tieneIniAprobada = computed(() => this.estimaciones().some(e => e.codigoEstimacion === 'EST-INI' && e.codEstado === 'EST_APR'));
   private readonly _tieneRFC         = computed(() => this.estimaciones().some(e => e.codigoEstimacion === 'RFC'));
-  private readonly _tieneAna         = computed(() => this.estimaciones().some(e => e.codigoEstimacion === 'EST-ANA'));
-  private readonly _tieneDis         = computed(() => this.estimaciones().some(e => e.codigoEstimacion === 'EST-DIS'));
+  // "Activa" = en borrador o aprobada; EST_REC no bloquea la creación de una nueva estimación del mismo tipo
+  private readonly _tieneAnaActiva   = computed(() => this.estimaciones().some(e => e.codigoEstimacion === 'EST-ANA' && (e.codEstado === 'EST_BOR' || e.codEstado === 'EST_APR')));
+  private readonly _tieneDisActiva   = computed(() => this.estimaciones().some(e => e.codigoEstimacion === 'EST-DIS' && (e.codEstado === 'EST_BOR' || e.codEstado === 'EST_APR')));
 
   readonly alertaBorrador  = computed(() => this._hayBorrador());
   readonly btnRegistrarINI = computed(() => !this._hayBorrador() && !this._tieneIniAprobada());
-  readonly btnRFC          = computed(() => !this._hayBorrador() && this._tieneIniAprobada());
-  readonly btnAnalisis     = computed(() => !this._hayBorrador() && this._tieneIniAprobada() && !this._tieneRFC() && !this._tieneAna());
-  readonly btnDiseno       = computed(() => !this._hayBorrador() && this._tieneIniAprobada() && !this._tieneRFC() && !this._tieneDis());
+  readonly btnRFC          = computed(() => this._tieneIniAprobada());
+  readonly btnAnalisis     = computed(() => !this._hayBorrador() && this._tieneIniAprobada() && !this._tieneRFC() && !this._tieneAnaActiva());
+  readonly btnDiseno       = computed(() => !this._hayBorrador() && this._tieneIniAprobada() && !this._tieneRFC() && !this._tieneDisActiva());
 
   // ── Computed para cabecera del formulario ─────────────────────────────
   readonly tituloFormulario = computed(() => {
@@ -292,6 +293,43 @@ private cargarModificadores(): void {
         error: () => {
           this.cargandoEdicion.set(false);
           this.toastError('No se pudo cargar las fases para edición.');
+        },
+      });
+  }
+
+  clonarEstimacion(est: EstimacionDTO): void {
+    this.modoEdicion.set('POST');
+    this.codigoEnCurso.set(est.codigoEstimacion);
+    this.idEstimacionEdit.set(null);
+    this.panelRechazoVisible.set(false);
+    this.resetForm();
+
+    this.mainForm.patchValue({
+      idModificadorTarifa: est.idModificadorTarifa,
+      fechaEstimacion:    new Date(),
+      comentario:          '',
+    });
+
+    this.cargandoEdicion.set(true);
+    this.service.getFasesByEstimacion(est.id)
+      .pipe(take(1))
+      .subscribe({
+        next: res => {
+          this.fasesArray.clear();
+          [...res.data]
+            .sort((a, b) => (FASE_PESO[a.codFase] ?? 99) - (FASE_PESO[b.codFase] ?? 99))
+            .forEach(f => this.fasesArray.push(this.buildFaseGroup({
+              codFase:         f.codFase,
+              horasEstimadas:  f.horasEstimadas,
+              fechaInicioPlan: new Date(f.fechaInicioPlan + 'T00:00:00'),
+              fechaFinPlan:    new Date(f.fechaFinPlan    + 'T00:00:00'),
+            })));
+          this.cargandoEdicion.set(false);
+          this.vistaActual.set('formulario');
+        },
+        error: () => {
+          this.cargandoEdicion.set(false);
+          this.toastError('No se pudo cargar las fases para clonar.');
         },
       });
   }
