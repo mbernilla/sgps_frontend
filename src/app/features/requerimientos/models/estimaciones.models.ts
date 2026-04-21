@@ -30,12 +30,14 @@ export interface EstimacionDTO {
   id: number;
   idRequerimiento: number;
   codigoEstimacion: CodigoEstimacion;
-  estimacionDescripcion: string;
-  codEstado: EstadoEstimacion;
-  estadoDescripcion: string;
+  codigoEstimacionDescripcion: string;
   idModificadorTarifa: number;
   modificadorTarifaDescripcion: string;
+  codEstado: EstadoEstimacion;
+  estadoDescripcion: string;
   fechaEstimacion: string;
+  fechaAprobacion: string | null;
+  horasEstimadas: number;
   comentario: string;
   motivoRechazo?: string;
   fases: FaseEstimacionDTO[];

@@ -122,10 +122,12 @@
 
           <ng-template pTemplate="header">
             <tr>
-              <th class="w-28">Código</th>
-              <th class="w-32 text-center">Estado</th>
+              <th class="min-w-[200px]">Tipo de Estimación</th>
               <th class="min-w-[160px]">Modificador Tarifa</th>
-              <th class="w-28 text-center">Fecha</th>
+              <th class="w-28 text-center">Estado</th>
+              <th class="w-28 text-center">Fecha Est.</th>
+              <th class="w-28 text-center">Fecha Aprob.</th>
+              <th class="w-20 text-center">Horas</th>
               <th>Comentario</th>
               <th class="w-44 text-center">Acciones</th>
             </tr>
@@ -135,16 +137,20 @@
             <tr>
               <td>
                 <span class="est-code-tag" [ngClass]="'tag-' + est.codigoEstimacion.toLowerCase().replace('-','')">
-                  {{ est.codigoEstimacion }}
+                  {{ est.codigoEstimacionDescripcion }}
                 </span>
               </td>
+              <td class="text-gray-600 text-sm">{{ est.modificadorTarifaDescripcion }}</td>
               <td class="text-center">
                 <span class="badge-custom" [ngClass]="getBadgeClass(est.codEstado)">
                   {{ est.estadoDescripcion }}
                 </span>
               </td>
-              <td class="text-gray-600 text-sm">{{ est.modificadorTarifaDescripcion }}</td>
               <td class="text-center text-gray-600">{{ est.fechaEstimacion | date:'dd/MM/yyyy' }}</td>
+              <td class="text-center text-gray-600">
+                {{ est.fechaAprobacion ? (est.fechaAprobacion | date:'dd/MM/yyyy') : '—' }}
+              </td>
+              <td class="text-center text-gray-600">{{ est.horasEstimadas | number:'1.2-2' }}</td>
               <td class="text-gray-500 text-sm" [title]="est.comentario">
                 {{ est.comentario || '—' }}
               </td>
@@ -163,7 +169,7 @@
 
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="6" class="text-center py-12 text-gray-400">
+              <td colspan="8" class="text-center py-12 text-gray-400">
                 <i class="pi pi-inbox text-4xl block mb-3 opacity-30"></i>
                 No hay estimaciones registradas para este requerimiento.
               </td>
