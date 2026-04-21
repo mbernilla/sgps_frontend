@@ -1,5 +1,7 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { take } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -14,12 +16,16 @@ import { Textarea } from 'primeng/textarea';
 import { Toast } from 'primeng/toast';
 import { Message } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
+import { ProgressSpinner } from 'primeng/progressspinner';
+import { Dialog } from 'primeng/dialog';
 
 import { EstimacionesService, CONTRATO_ACTIVO_ID } from '../../services/estimaciones.service';
 import {
   CodigoEstimacion,
   EstadoEstimacion,
+  EstimacionActualizacionRequestDTO,
   EstimacionDTO,
+  EstimacionFaseDTO,
   EstimacionRequestDTO,
   FaseMaestraDTO,
   ModificadorTarifaDTO,
@@ -59,6 +65,8 @@ const FASES_MAESTRAS_ORDENADAS = Object.entries(FASE_PESO)
     Toast,
     Message,
     TooltipModule,
+    ProgressSpinner,
+    Dialog,
   ],
   providers: [MessageService],
   templateUrl: './estimaciones-panel.html',
@@ -74,6 +82,7 @@ export class EstimacionesPanelComponent implements OnInit {
 
   private idRequerimiento = 0;
 
+
   // ── Datos ─────────────────────────────────────────────────────────────
   readonly estimaciones        = signal<EstimacionDTO[]>([]);
   readonly cargando            = signal(false);
@@ -86,6 +95,14 @@ export class EstimacionesPanelComponent implements OnInit {
   readonly opcionesModificadorTarifa = computed(() =>
     this.modificadoresTarifa().map(m => ({ value: m.id, label: `${m.descripcion} (${m.porcentaje.toFixed(2)}%)` }))
   );
+
+  // ── Dialog de detalle de fases ───────────────────────────────────────
+  readonly mostrarDetalleDialog = signal(false);
+  readonly fasesDetalleDialog   = signal<EstimacionFaseDTO[]>([]);
+  readonly tituloDialog         = signal('');
+  readonly cargandoDetalle      = signal(false);
+
+  readonly cargandoEdicion = signal(false);
 
   // ── Vista: inline toggle (lectura ↔ formulario) ───────────────────────
   readonly vistaActual     = signal<'lectura' | 'formulario'>('lectura');
@@ -136,7 +153,7 @@ export class EstimacionesPanelComponent implements OnInit {
 
   // ── Formulario (lógica 100% preservada) ──────────────────────────────
   readonly mainForm = this.fb.group({
-    idModificadorTarifa: [null as number | null, Validators.required],
+    idModificadorTarifa: [null as number | null],
     fechaEstimacion:    [null as Date | null,   Validators.required],
     comentario:         [''],
     fases:              this.fb.array([]),
@@ -159,11 +176,7 @@ export class EstimacionesPanelComponent implements OnInit {
   // ── Carga de datos ────────────────────────────────────────────────────
   cargarEstimaciones(): void {
     this.cargando.set(true);
-
-// TODO: Pendiente crear endpoint en Spring Boot
-  //this.estimaciones.set([]); // Simulamos historial vacío
-  //this.cargando.set(false);
-
+    this.estimaciones.set([]);
     this.service.getByRequerimiento(this.idRequerimiento)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -172,11 +185,25 @@ export class EstimacionesPanelComponent implements OnInit {
       });
   }
 
-  private cargarModificadores(): void {
+private cargarModificadores(): void {
     this.service.getModificadoresTarifa(CONTRATO_ACTIVO_ID)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: res => this.modificadoresTarifa.set(res.data),
+        next: (res) => {
+          // 1. Creamos la opción sintética para la UX
+          const opcionPorDefecto = {
+            id: null,
+            descripcion: 'Tarifa Base (Sin modificador)',
+            porcentaje: 0
+            // Agrega aquí cualquier otra propiedad obligatoria de tu ModificadorTarifaDTO
+          } as ModificadorTarifaDTO; // Casteamos para que TypeScript no se queje si 'id' no admite null por defecto
+
+          // 2. Combinamos la opción sintética (primero) con los datos del backend
+          const listaActualizada = [opcionPorDefecto, ...res.data];
+
+          // 3. Actualizamos tu Signal
+          this.modificadoresTarifa.set(listaActualizada);
+        },
         error: () => this.toastError('No se pudo cargar los modificadores de tarifa.'),
       });
   }
@@ -198,6 +225,26 @@ export class EstimacionesPanelComponent implements OnInit {
           })));
         },
         error: () => this.toastError('No se pudo cargar las fases del proyecto.'),
+      });
+  }
+
+  // ── Dialog de detalle de fases ───────────────────────────────────────
+  verDetalle(est: EstimacionDTO): void {
+    this.tituloDialog.set(`Fases — ${est.codigoEstimacionDescripcion}`);
+    this.fasesDetalleDialog.set([]);
+    this.cargandoDetalle.set(true);
+    this.mostrarDetalleDialog.set(true);
+    this.service.getFasesByEstimacion(est.id)
+      .pipe(take(1))
+      .subscribe({
+        next: res => {
+          this.fasesDetalleDialog.set(res.data);
+          this.cargandoDetalle.set(false);
+        },
+        error: () => {
+          this.cargandoDetalle.set(false);
+          this.toastError('No se pudo cargar las fases de la estimación.');
+        },
       });
   }
 
@@ -225,16 +272,28 @@ export class EstimacionesPanelComponent implements OnInit {
       comentario:          est.comentario,
     });
 
-    [...est.fases]
-      .sort((a, b) => (FASE_PESO[a.codFase] ?? 99) - (FASE_PESO[b.codFase] ?? 99))
-      .forEach(f => this.fasesArray.push(this.buildFaseGroup({
-        codFase:         f.codFase,
-        horasEstimadas:  f.horasEstimadas,
-        fechaInicioPlan: new Date(f.fechaInicioPlan + 'T00:00:00'),
-        fechaFinPlan:    new Date(f.fechaFinPlan + 'T00:00:00'),
-      })));
-
-    this.vistaActual.set('formulario');
+    this.cargandoEdicion.set(true);
+    this.service.getFasesByEstimacion(est.id)
+      .pipe(take(1))
+      .subscribe({
+        next: res => {
+          this.fasesArray.clear();
+          [...res.data]
+            .sort((a, b) => (FASE_PESO[a.codFase] ?? 99) - (FASE_PESO[b.codFase] ?? 99))
+            .forEach(f => this.fasesArray.push(this.buildFaseGroup({
+              codFase:         f.codFase,
+              horasEstimadas:  f.horasEstimadas,
+              fechaInicioPlan: new Date(f.fechaInicioPlan + 'T00:00:00'),
+              fechaFinPlan:    new Date(f.fechaFinPlan    + 'T00:00:00'),
+            })));
+          this.cargandoEdicion.set(false);
+          this.vistaActual.set('formulario');
+        },
+        error: () => {
+          this.cargandoEdicion.set(false);
+          this.toastError('No se pudo cargar las fases para edición.');
+        },
+      });
   }
 
   cancelar(): void {
@@ -242,64 +301,172 @@ export class EstimacionesPanelComponent implements OnInit {
     this.vistaActual.set('lectura');
   }
 
-  // ── Guardar (lógica 100% preservada) ──────────────────────────────────
-  guardar(): void {
+  // ── Guardar ───────────────────────────────────────────────────────────
+guardar(): void {
     if (this.mainForm.invalid) {
       this.mainForm.markAllAsTouched();
       this.toastError('Faltan campos requeridos. Revise las fechas y horas de todas las fases.');
-      console.log('ESTADO DEL FORMULARIO:', this.mainForm.value); // Para que lo veas en consola
       return;
     }
 
     const v = this.mainForm.getRawValue() as {
-      idModificadorTarifa: number;
+      idModificadorTarifa: number | null;
       fechaEstimacion: Date;
       comentario: string;
       fases: { codFase: string; horasEstimadas: number; fechaInicioPlan: Date; fechaFinPlan: Date }[];
     };
 
-    const payload: EstimacionRequestDTO = {
-      idModificadorTarifa: v.idModificadorTarifa,
-      fechaEstimacion:    this.toDateStr(v.fechaEstimacion),
-      comentario:          v.comentario ?? '',
-      fases: v.fases.map(f => ({
-        codFase:         f.codFase,
-        horasEstimadas:  f.horasEstimadas ?? 0,
-        fechaInicioPlan: this.toDateStr(f.fechaInicioPlan),
-        fechaFinPlan:    this.toDateStr(f.fechaFinPlan),
-      })),
-    };
-
-    if (this.modoEdicion() === 'POST') {
-      payload.idRequerimiento  = this.idRequerimiento;
-      payload.codigoEstimacion = this.codigoEnCurso();
-    }
+    const fasesFormateadas = v.fases.map(f => ({
+      codFase:         f.codFase,
+      horasEstimadas:  f.horasEstimadas ?? 0,
+      fechaInicioPlan: this.toDateStr(f.fechaInicioPlan),
+      fechaFinPlan:    this.toDateStr(f.fechaFinPlan),
+    }));
 
     this.guardando.set(true);
-    const call$ = this.modoEdicion() === 'POST'
-      ? this.service.crear(payload)
-      : this.service.actualizar(this.idEstimacionEdit()!, payload);
 
-    call$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: res => {
-        this.guardando.set(false);
-        this.vistaActual.set('lectura');
-        this.msg.add({ key: 'est', severity: 'success', summary: 'Guardado', detail: res.mensaje, life: 3000 });
-        this.cargarEstimaciones();
-      },
-      error: err => {
-        this.guardando.set(false);
-        this.toastError(err.error?.mensaje ?? 'No se pudo guardar la estimación.');
-      },
-    });
+    if (this.modoEdicion() === 'POST') {
+      const payload: EstimacionRequestDTO = {
+        idRequerimiento:     this.idRequerimiento,
+        codigoEstimacion:    this.codigoEnCurso(),
+        // Quitamos el "!" para que el null de la Tarifa Base pase limpiamente
+        idModificadorTarifa: v.idModificadorTarifa,
+        fechaEstimacion:     this.toDateStr(v.fechaEstimacion),
+        comentario:          v.comentario ?? '',
+        fases:               fasesFormateadas,
+      };
+
+      this.service.crear(payload)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: res => {
+            this.guardando.set(false);
+            this.vistaActual.set('lectura');
+            this.msg.add({ key: 'est', severity: 'success', summary: 'Guardado', detail: res.mensaje || 'Estimación creada', life: 3000 });
+            this.finalizarGuardado();
+          },
+          // Extraemos el mensaje real del backend (soporta 'mensaje' o 'message')
+          error: err => {
+            this.guardando.set(false);
+            const msg = err.error?.error || err.error?.mensaje || 'No se pudo guardar la estimación.';
+            this.toastError(msg);
+          },
+        });
+    } else {
+      const idEditado = this.idEstimacionEdit()!;
+      const payload: EstimacionActualizacionRequestDTO = {
+        idModificadorTarifa: v.idModificadorTarifa,
+        fechaEstimacion:     this.toDateStr(v.fechaEstimacion),
+        comentario:          v.comentario ?? '',
+        fases:               fasesFormateadas,
+      };
+
+      this.service.actualizar(idEditado, payload)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: res => {
+            this.guardando.set(false);
+            this.vistaActual.set('lectura');
+            this.msg.add({ key: 'est', severity: 'success', summary: 'Actualizado', detail: res.mensaje || 'Estimación actualizada', life: 3000 });
+            this.finalizarGuardado();
+          },
+          // Extraemos el mensaje real del backend
+          error: err => {
+            this.guardando.set(false);
+            const msg = err.error?.error || err.error?.mensaje || 'No se pudo guardar la estimación.';
+            this.toastError(msg);
+          },
+        });
+    }
   }
+
+
+  // guardar(): void {
+  //   if (this.mainForm.invalid) {
+  //     this.mainForm.markAllAsTouched();
+  //     this.toastError('Faltan campos requeridos. Revise las fechas y horas de todas las fases.');
+  //     return;
+  //   }
+
+  //   const v = this.mainForm.getRawValue() as {
+  //     idModificadorTarifa: number | null;
+  //     fechaEstimacion: Date;
+  //     comentario: string;
+  //     fases: { codFase: string; horasEstimadas: number; fechaInicioPlan: Date; fechaFinPlan: Date }[];
+  //   };
+
+  //   const fasesFormateadas = v.fases.map(f => ({
+  //     codFase:         f.codFase,
+  //     horasEstimadas:  f.horasEstimadas ?? 0,
+  //     fechaInicioPlan: this.toDateStr(f.fechaInicioPlan),
+  //     fechaFinPlan:    this.toDateStr(f.fechaFinPlan),
+  //   }));
+
+  //   this.guardando.set(true);
+
+  //   if (this.modoEdicion() === 'POST') {
+  //     const payload: EstimacionRequestDTO = {
+  //       idRequerimiento:     this.idRequerimiento,
+  //       codigoEstimacion:    this.codigoEnCurso(),
+  //       idModificadorTarifa: v.idModificadorTarifa!,
+  //       fechaEstimacion:     this.toDateStr(v.fechaEstimacion),
+  //       comentario:          v.comentario ?? '',
+  //       fases:               fasesFormateadas,
+  //     };
+  //     this.service.crear(payload)
+  //       .pipe(takeUntilDestroyed(this.destroyRef))
+  //       .subscribe({
+  //         next: res => {
+  //           this.guardando.set(false);
+  //           this.vistaActual.set('lectura');
+  //           this.msg.add({ key: 'est', severity: 'success', summary: 'Guardado', detail: res.mensaje, life: 3000 });
+  //           //this.cargarEstimaciones();
+  //           this.finalizarGuardado();
+  //         },
+  //         error: err => { this.guardando.set(false); this.toastError(err.error?.mensaje ?? 'No se pudo guardar la estimación.'); },
+  //       });
+  //   } else {
+  //     const idEditado = this.idEstimacionEdit()!;
+  //     const payload: EstimacionActualizacionRequestDTO = {
+  //       idModificadorTarifa: v.idModificadorTarifa,
+  //       fechaEstimacion:     this.toDateStr(v.fechaEstimacion),
+  //       comentario:          v.comentario ?? '',
+  //       fases:               fasesFormateadas,
+  //     };
+  //     this.service.actualizar(idEditado, payload)
+  //       .pipe(takeUntilDestroyed(this.destroyRef))
+  //       .subscribe({
+  //         next: res => {
+  //           this.guardando.set(false);
+  //           this.vistaActual.set('lectura');
+  //           this.msg.add({ key: 'est', severity: 'success', summary: 'Actualizado', detail: res.mensaje, life: 3000 });
+  //           //this.cargarEstimaciones();
+  //           this.finalizarGuardado();
+  //         },
+  //         error: err => { this.guardando.set(false); this.toastError(err.error?.mensaje ?? 'No se pudo actualizar la estimación.'); },
+  //       });
+  //   }
+  // }
+
+  private finalizarGuardado(): void {
+    this.guardando.set(false);
+    this.vistaActual.set('lectura'); // Regresamos a la tabla
+
+    this.cargarEstimaciones();
+
+    // setTimeout(() => {
+    //   this.cargarEstimaciones();
+    // }, 2500);
+  }
+
 
   // ── Aprobar ───────────────────────────────────────────────────────────
   aprobar(id: number): void {
     this.service.aprobar(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => {
         this.msg.add({ key: 'est', severity: 'success', summary: 'Aprobada', detail: res.mensaje, life: 3000 });
-        this.cargarEstimaciones();
+        //this.cargarEstimaciones();
+        this.finalizarGuardado();
       },
       error: err => this.toastError(err.error?.mensaje ?? 'No se pudo aprobar.'),
     });
@@ -328,7 +495,8 @@ export class EstimacionesPanelComponent implements OnInit {
           this.rechazando.set(false);
           this.panelRechazoVisible.set(false);
           this.msg.add({ key: 'est', severity: 'warn', summary: 'Rechazada', detail: res.mensaje, life: 3000 });
-          this.cargarEstimaciones();
+          //this.cargarEstimaciones();
+          this.finalizarGuardado();
         },
         error: err => { this.rechazando.set(false); this.toastError(err.error?.mensaje ?? 'No se pudo rechazar.'); },
       });
@@ -339,7 +507,8 @@ export class EstimacionesPanelComponent implements OnInit {
     this.service.eliminar(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => {
         this.msg.add({ key: 'est', severity: 'success', summary: 'Anulada', detail: res.mensaje, life: 3000 });
-        this.cargarEstimaciones();
+        //this.cargarEstimaciones();
+        this.finalizarGuardado();
       },
       error: err => this.toastError(err.error?.mensaje ?? 'No se pudo anular.'),
     });

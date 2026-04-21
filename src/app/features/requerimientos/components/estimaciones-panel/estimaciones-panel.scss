@@ -88,7 +88,7 @@
   background: #fff;
   border-radius: 10px;
   box-shadow: var(--ep-shadow);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .est-card__header {
@@ -98,6 +98,8 @@
   gap: 14px;
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--ep-border);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
 }
 
 .est-card__title {

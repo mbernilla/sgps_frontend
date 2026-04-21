@@ -4,7 +4,9 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import {
+  EstimacionActualizacionRequestDTO,
   EstimacionDTO,
+  EstimacionFaseDTO,
   EstimacionRequestDTO,
   FaseMaestraDTO,
   ModificadorTarifaDTO,
@@ -18,8 +20,8 @@ export class EstimacionesService {
   private readonly base = `${environment.baseUrl}/v1`;
 
   getByRequerimiento(idRequerimiento: number): Observable<ApiResponse<EstimacionDTO[]>> {
-
-    const url = `${environment.baseUrl}/v1/estimaciones/requerimiento/${idRequerimiento}`;
+    const timestamp = new Date().getTime();
+    const url = `${environment.baseUrl}/v1/estimaciones/requerimiento/${idRequerimiento}?cb=${timestamp}`;
 
     //console.log('🐞 getByRequerimiento:', url);
 
@@ -31,9 +33,15 @@ export class EstimacionesService {
       `${environment.baseUrl}/v1/estimaciones`, payload);
   }
 
-  actualizar(id: number, payload: EstimacionRequestDTO): Observable<ApiResponse<EstimacionDTO>> {
-    return this.http.put<ApiResponse<EstimacionDTO>>(
+  actualizar(id: number, payload: EstimacionActualizacionRequestDTO): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(
       `${environment.baseUrl}/v1/estimaciones/${id}`, payload);
+  }
+
+  getFasesByEstimacion(idEstimacion: number): Observable<ApiResponse<EstimacionFaseDTO[]>> {
+    return this.http.get<ApiResponse<EstimacionFaseDTO[]>>(
+      `${environment.baseUrl}/v1/estimaciones/${idEstimacion}/fases`,
+    );
   }
 
   aprobar(id: number): Observable<ApiResponse<EstimacionDTO>> {

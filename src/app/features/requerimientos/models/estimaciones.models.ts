@@ -11,7 +11,7 @@ export interface FaseEstimacionRequestDTO {
 export interface EstimacionRequestDTO {
   idRequerimiento?: number;
   codigoEstimacion?: string;
-  idModificadorTarifa: number;
+  idModificadorTarifa: number | null;
   fechaEstimacion: string;
   comentario: string;
   fases: FaseEstimacionRequestDTO[];
@@ -44,7 +44,7 @@ export interface EstimacionDTO {
 }
 
 export interface ModificadorTarifaDTO {
-  id: number;
+  id: number| null;
   descripcion: string;
   porcentaje: number;
 }
@@ -52,4 +52,24 @@ export interface ModificadorTarifaDTO {
 export interface FaseMaestraDTO {
   id: string;
   nombre: string;
+}
+
+export interface EstimacionFaseDTO {
+  codFase: string;
+  faseDescripcion: string;
+  horasEstimadas: number;
+  fechaInicioPlan: string;
+  fechaFinPlan: string;
+}
+
+export interface EstimacionActualizacionRequestDTO {
+  idModificadorTarifa: number | null;
+  fechaEstimacion: string;
+  comentario: string;
+  fases: {
+    codFase: string;
+    horasEstimadas: number;
+    fechaInicioPlan: string;
+    fechaFinPlan: string;
+  }[];
 }
