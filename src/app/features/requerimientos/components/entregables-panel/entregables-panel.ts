@@ -31,6 +31,7 @@ import {
   EvaluacionRequest,
   FlujoBitacoraDTO,
   NuevaVersionRequest,
+  PresupuestoDesgloseDTO,
   RegistroEntregableRequest,
   RequerimientoFaseDTO,
 } from '../../models/entregables.models';
@@ -120,6 +121,10 @@ export class EntregablesPanelComponent implements OnInit {
     this.fases().reduce((acc, f) => acc + (f.cantEnRevision || 0), 0)
   );
 
+  readonly totalEstimadoGlobal  = computed(() => this.fases().reduce((acc, f) => acc + (f.horasEstimadas  || 0), 0));
+  readonly totalFacturadoGlobal = computed(() => this.fases().reduce((acc, f) => acc + (f.horasFacturadas || 0), 0));
+  readonly saldoGlobal          = computed(() => this.totalEstimadoGlobal() - this.totalFacturadoGlobal());
+
   readonly opcionesCatalogo = computed(() =>
     this.catalogoFase().map(c => ({ value: c.id, label: c.nombre }))
   );
@@ -143,6 +148,11 @@ export class EntregablesPanelComponent implements OnInit {
   readonly flujo                  = signal<FlujoBitacoraDTO[]>([]);
   readonly cargandoBitacora       = signal(false);
   readonly tituloDialogBitacora   = signal('');
+
+  // ── Modal: Desglose de Presupuesto ───────────────────────────────────
+  readonly desgloseVisible     = signal(false);
+  readonly desgloseData        = signal<PresupuestoDesgloseDTO[]>([]);
+  readonly desgloseFaseNombre  = signal('');
 
   // ── Modal: Nueva Versión ──────────────────────────────────────────────
   readonly dialogVersionVisible = signal(false);
@@ -447,6 +457,18 @@ export class EntregablesPanelComponent implements OnInit {
     } else {
       doEvaluar();
     }
+  }
+
+  // ── Modal: Desglose de Presupuesto ───────────────────────────────────
+  verDesglose(fase: RequerimientoFaseDTO, event: Event): void {
+    event.stopPropagation();
+    this.desgloseFaseNombre.set(fase.faseDescripcion);
+    this.desgloseData.set([]);
+    this.desgloseVisible.set(true);
+    this.service.getDesglosePresupuesto(fase.id).pipe(take(1)).subscribe({
+      next: res => this.desgloseData.set(res.data),
+      error: () => this.toastError('No se pudo cargar el desglose de presupuesto.'),
+    });
   }
 
   // ── Modal: Bitácora ───────────────────────────────────────────────────

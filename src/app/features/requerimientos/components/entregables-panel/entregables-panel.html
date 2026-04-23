@@ -45,6 +45,22 @@
     </div>
     }
 
+    <!-- ── Dashboard KPI ────────────────────────────────────────────────── -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+        <span class="text-slate-500 text-xs uppercase font-bold">Total Estimado</span>
+        <div class="text-2xl font-bold text-slate-800">{{ totalEstimadoGlobal() | number:'1.2-2' }}h</div>
+      </div>
+      <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+        <span class="text-blue-600 text-xs uppercase font-bold">Horas Facturadas</span>
+        <div class="text-2xl font-bold text-blue-700">{{ totalFacturadoGlobal() | number:'1.2-2' }}h</div>
+      </div>
+      <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+        <span class="text-emerald-600 text-xs uppercase font-bold">Saldo Pendiente</span>
+        <div class="text-2xl font-bold text-emerald-700">{{ saldoGlobal() | number:'1.2-2' }}h</div>
+      </div>
+    </div>
+
     <p-accordion [multiple]="true" [(value)]="indicesActivos">
       @for (fase of fases(); track fase.id) {
       <p-accordion-panel [value]="'fase-' + fase.id">
@@ -55,6 +71,15 @@
               <i class="pi pi-layers text-blue-500"></i>
               <span class="font-semibold text-slate-700">{{ fase.faseDescripcion }}</span>
               <span class="text-xs text-slate-400 font-mono">({{ fase.codFase }})</span>
+              @if (fase.horasEstimadas) {
+              <span class="text-xs text-slate-500 ml-2">
+                {{ fase.horasFacturadas || 0 | number:'1.2-2' }}h facturadas de {{ fase.horasEstimadas | number:'1.2-2' }}h estimadas
+                (Saldo: {{ (fase.horasEstimadas - (fase.horasFacturadas || 0)) | number:'1.2-2' }}h)
+              </span>
+              <i class="pi pi-info-circle text-blue-500 hover:text-blue-700 cursor-pointer ml-2 text-lg transition-colors"
+                pTooltip="Ver desglose de horas" tooltipPosition="top"
+                (click)="verDesglose(fase, $event)"></i>
+              }
             </div>
             <div class="flex gap-2 text-xs">
               @if (fase.cantPendientes && fase.cantPendientes > 0) {
@@ -479,3 +504,33 @@
 </p-dialog>
 
 <p-confirmDialog [style]="{ width: '450px' }" />
+
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL — Desglose de Presupuesto
+════════════════════════════════════════════════════════════ -->
+<p-dialog [header]="'Desglose de Presupuesto: ' + desgloseFaseNombre()"
+  [(visible)]="desgloseVisible" [modal]="true"
+  [style]="{ width: '500px' }" [draggable]="false" [resizable]="false" appendTo="body">
+
+  <p-table [value]="desgloseData()" styleClass="p-datatable-sm p-datatable-striped" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Fuente / Documento</th>
+        <th class="text-right">Horas</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-item>
+      <tr>
+        <td class="font-medium text-gray-700">{{ item.fuente }}</td>
+        <td class="text-right font-bold">{{ item.horas | number:'1.2-2' }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="2" class="text-center p-4 text-gray-500">No hay datos de presupuesto para esta fase.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+</p-dialog>

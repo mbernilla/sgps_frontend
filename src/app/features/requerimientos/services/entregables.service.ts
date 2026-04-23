@@ -10,6 +10,7 @@ import {
   EvaluacionRequest,
   FlujoBitacoraDTO,
   NuevaVersionRequest,
+  PresupuestoDesgloseDTO,
   RegistroEntregableRequest,
   RequerimientoFaseDTO,
   UploadResponseDTO,
@@ -36,6 +37,12 @@ export class EntregablesService {
   getEntregablesByFase(idFase: number): Observable<ApiResponse<EntregableGridDTO[]>> {
     return this.http.get<ApiResponse<EntregableGridDTO[]>>(
       `${this.base}/fases/${idFase}/entregables`
+    );
+  }
+
+  getDesglosePresupuesto(idFase: number): Observable<ApiResponse<PresupuestoDesgloseDTO[]>> {
+    return this.http.get<ApiResponse<PresupuestoDesgloseDTO[]>>(
+      `${this.base}/requerimientos/fases/${idFase}/desglose`
     );
   }
 

@@ -8,6 +8,13 @@ export interface RequerimientoFaseDTO {
   cantRechazados: number;
   cantPendientes?: number;
   cantAnulados?: number;
+  horasEstimadas?: number;
+  horasFacturadas?: number;
+}
+
+export interface PresupuestoDesgloseDTO {
+  fuente: string;
+  horas: number;
 }
 
 export interface CatalogoEntregableDTO {
