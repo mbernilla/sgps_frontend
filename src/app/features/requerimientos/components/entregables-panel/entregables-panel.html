@@ -90,7 +90,18 @@
 
             <ng-template pTemplate="body" let-ent>
               <tr>
-                <td class="font-medium text-slate-700 text-sm">{{ ent.nombreEntregable }}</td>
+                <td>
+                  <div class="font-semibold text-gray-800 text-sm">{{ ent.nombreEntregable }}</div>
+                  @if (ent.rutaArchivo) {
+                  <div class="flex items-center mt-1">
+                    <i class="pi pi-file text-gray-400 text-xs mr-1"></i>
+                    <small class="text-gray-500 block truncate" style="max-width: 200px;"
+                      [pTooltip]="ent.nombreArchivo" tooltipPosition="bottom">
+                      {{ ent.nombreArchivo }}
+                    </small>
+                  </div>
+                  }
+                </td>
                 <td class="text-center">
                   <span class="badge-custom" [ngClass]="getBadgeEntregable(ent.codEstado)">
                     {{ ent.estadoDescripcion }}
@@ -131,6 +142,12 @@
                       pTooltip="Subir nueva versión" tooltipPosition="top" (click)="abrirNuevaVersion(ent)" />
                     }
 
+                    }
+
+                    @if (ent.rutaArchivo) {
+                    <p-button icon="pi pi-download" [text]="true" [rounded]="true" severity="secondary" size="small"
+                      pTooltip="Descargar archivo" tooltipPosition="top"
+                      (click)="descargarArchivo(ent.rutaArchivo, ent.nombreArchivo ?? ent.nombreEntregable)" />
                     }
 
                     <p-button icon="pi pi-list" [text]="true" [rounded]="true" severity="secondary" size="small"
@@ -332,7 +349,7 @@
   </div>
   } @else {
 
-  <p-timeline [value]="flujo()" align="left" styleClass="ent-timeline">
+  <p-timeline [value]="flujo()" align="alternate" styleClass="ent-timeline">
     <ng-template pTemplate="marker" let-item>
       <span class="ent-timeline__marker"
         [style.background]="getColorFlujo(item.codEstado)">

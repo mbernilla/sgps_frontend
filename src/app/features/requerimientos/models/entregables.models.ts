@@ -24,6 +24,8 @@ export interface EntregableGridDTO {
   fechaEntregaPlan: string;
   fechaAprobacionPlan: string;
   fechaAprobacionReal: string | null;
+  nombreArchivo?: string;
+  rutaArchivo?: string;
 }
 
 export interface ArchivoAdjuntoDTO {
