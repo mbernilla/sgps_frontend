@@ -2,6 +2,10 @@ export interface RequerimientoFaseDTO {
   id: number;
   codFase: string;
   faseDescripcion: string;
+  cantAprobados: number;
+  cantObservados: number;
+  cantEnRevision: number;
+  cantRechazados: number;
 }
 
 export interface CatalogoEntregableDTO {
@@ -62,11 +66,6 @@ export interface RegistroEntregableRequest {
   horasFacturables: number;
   fechaEntregaPlan: string;
   fechaAprobacionPlan: string;
-  archivo: {
-    nombreArchivo: string;
-    rutaFileServer: string;
-    tamanioKb: number;
-  };
 }
 
 export interface EvaluacionRequest {

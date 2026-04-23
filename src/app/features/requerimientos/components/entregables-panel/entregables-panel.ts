@@ -108,6 +108,10 @@ export class EntregablesPanelComponent implements OnInit {
     fechaAprobacionPlan:  [null as Date | null,    Validators.required],
   });
 
+  readonly totalPendientes = computed(() =>
+    this.fases().reduce((acc, f) => acc + (f.cantEnRevision || 0), 0)
+  );
+
   readonly opcionesCatalogo = computed(() =>
     this.catalogoFase().map(c => ({ value: c.id, label: c.nombre }))
   );
@@ -195,7 +199,6 @@ export class EntregablesPanelComponent implements OnInit {
   abrirNuevo(fase: RequerimientoFaseDTO): void {
     this.faseParaNuevo.set(fase);
     this.nuevoForm.reset({ idCatalogoEntregable: null, idEstimacion: null, horasFacturables: 0, fechaEntregaPlan: null, fechaAprobacionPlan: null });
-    this.archivoNuevo = null;
     this.catalogoFase.set([]);
     this.cargandoCatalogo.set(true);
     this.service.getCatalogoByFase(fase.codFase)
@@ -207,20 +210,8 @@ export class EntregablesPanelComponent implements OnInit {
     this.dialogNuevoVisible.set(true);
   }
 
-  onArchivoNuevoSeleccionado(event: FileSelectEvent): void {
-    const file = event.currentFiles[0] ?? null;
-    if (!file) return;
-
-    const idCat = this.nuevoForm.get('idCatalogoEntregable')?.value as number | null;
-    const cat = this.catalogoFase().find(c => c.id === idCat);
-    if (cat && !this.validarArchivo(file, cat)) return;
-
-    this.archivoNuevo = file;
-  }
-
   guardarEntregable(): void {
     if (this.nuevoForm.invalid) { this.nuevoForm.markAllAsTouched(); return; }
-    if (!this.archivoNuevo) { this.toastError('Debe seleccionar un archivo.'); return; }
 
     const v = this.nuevoForm.getRawValue() as {
       idCatalogoEntregable: number;
@@ -245,41 +236,27 @@ export class EntregablesPanelComponent implements OnInit {
     }
 
     this.guardandoEntregable.set(true);
-    this.service.uploadArchivo(this.idRequerimiento, this.archivoNuevo, 'entregables')
-      .pipe(take(1))
-      .subscribe({
-        next: uploadRes => {
-          const payload: RegistroEntregableRequest = {
-            idRequerimientoFase:  fase.id,
-            idCatalogoEntregable: v.idCatalogoEntregable,
-            idEstimacion:         v.idEstimacion,
-            horasFacturables:     v.horasFacturables,
-            fechaEntregaPlan:     this.toDateStr(v.fechaEntregaPlan),
-            fechaAprobacionPlan:  this.toDateStr(v.fechaAprobacionPlan),
-            archivo: {
-              nombreArchivo:  uploadRes.data.nombreArchivoOriginal,
-              rutaFileServer: uploadRes.data.rutaFileServer,
-              tamanioKb:      uploadRes.data.tamanioKb,
-            },
-          };
-          this.service.registrar(payload).pipe(take(1)).subscribe({
-            next: () => {
-              this.guardandoEntregable.set(false);
-              this.dialogNuevoVisible.set(false);
-              this.msg.add({ key: 'ent', severity: 'success', summary: 'Registrado', detail: 'Entregable registrado correctamente.', life: 3000 });
-              this.recargarFase(fase.id);
-            },
-            error: err => {
-              this.guardandoEntregable.set(false);
-              this.toastError(err.error?.error || err.error?.mensaje || 'No se pudo registrar el entregable.');
-            },
-          });
-        },
-        error: err => {
-          this.guardandoEntregable.set(false);
-          this.toastError(err.error?.mensaje || 'No se pudo subir el archivo.');
-        },
-      });
+    const payload: RegistroEntregableRequest = {
+      idRequerimientoFase:  fase.id,
+      idCatalogoEntregable: v.idCatalogoEntregable,
+      idEstimacion:         v.idEstimacion,
+      horasFacturables:     v.horasFacturables,
+      fechaEntregaPlan:     this.toDateStr(v.fechaEntregaPlan),
+      fechaAprobacionPlan:  this.toDateStr(v.fechaAprobacionPlan),
+    };
+    this.service.registrar(payload).pipe(take(1)).subscribe({
+      next: () => {
+        this.guardandoEntregable.set(false);
+        this.dialogNuevoVisible.set(false);
+        this.msg.add({ key: 'ent', severity: 'success', summary: 'Planificado', detail: 'Entregable registrado. Suba el archivo cuando esté listo.', life: 4000 });
+        this.recargarFase(fase.id);
+        this.cargarFases();
+      },
+      error: err => {
+        this.guardandoEntregable.set(false);
+        this.toastError(err.error?.error || err.error?.mensaje || 'No se pudo registrar el entregable.');
+      },
+    });
   }
 
   // ── Modal: Evaluación ─────────────────────────────────────────────────
@@ -321,6 +298,7 @@ export class EntregablesPanelComponent implements OnInit {
             detail: 'Evaluación registrada correctamente.', life: 3000,
           });
           this.recargarTodasLasFases();
+          this.cargarFases();
         },
         error: err => {
           this.guardandoEval.set(false);
@@ -396,6 +374,7 @@ export class EntregablesPanelComponent implements OnInit {
               this.msg.add({ key: 'ent', severity: 'success', summary: 'Nueva versión', detail: 'Versión registrada correctamente.', life: 3000 });
               const idFase = this.getFaseDeEntregable(ent.id);
               if (idFase !== null) this.recargarFase(idFase);
+              this.cargarFases();
             },
             error: err => {
               this.guardandoVersion.set(false);
@@ -428,6 +407,7 @@ export class EntregablesPanelComponent implements OnInit {
   // ── Helpers de UI ─────────────────────────────────────────────────────
   getBadgeEntregable(codEstado: string): string {
     const map: Record<string, string> = {
+      ENT_PEN: 'badge-secondary',
       ENT_REV: 'badge-warn',
       ENT_APR: 'badge-success',
       ENT_OBS: 'badge-danger',
