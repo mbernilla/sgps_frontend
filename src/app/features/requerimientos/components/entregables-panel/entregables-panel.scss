@@ -193,6 +193,23 @@
 }
 
 /* ── Archivo chip ────────────────────────────────────────────────────── */
+.ent-archivo-version-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--ep-brand);
+  color: #fff;
+  border: 1px solid var(--ep-brand);
+  border-radius: var(--ep-radius-sm);
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 120ms;
+
+  &:hover { opacity: 0.85; }
+}
+
 .ent-archivo-chip {
   display: inline-flex;
   align-items: center;

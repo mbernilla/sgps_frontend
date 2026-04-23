@@ -43,6 +43,8 @@ export interface FlujoBitacoraDTO {
   comentarioResumen: string;
   fechaRegistro: string;
   registradoPor: number;
+  nombreArchivoVersion?: string;
+  rutaArchivoVersion?: string;
   archivos: ArchivoAdjuntoDTO[];
 }
 

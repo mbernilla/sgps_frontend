@@ -375,8 +375,23 @@
         <p class="text-sm text-gray-600 mt-1 mb-2">{{ item.comentarioResumen }}</p>
         }
 
+        @if (item.rutaArchivoVersion && item.codEstado === 'ENT_REV') {
+        <div class="mt-2 p-2 bg-blue-50 border border-blue-100 rounded flex items-center justify-between">
+          <div class="flex items-center overflow-hidden">
+            <i class="pi pi-file text-blue-500 mr-2"></i>
+            <span class="text-sm text-blue-700 font-medium truncate" style="max-width: 250px;"
+              [pTooltip]="item.nombreArchivoVersion" tooltipPosition="top">
+              {{ item.nombreArchivoVersion }}
+            </span>
+          </div>
+          <p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="info"
+            (onClick)="descargarArchivo(item.rutaArchivoVersion, item.nombreArchivoVersion!)" />
+        </div>
+        }
+
         @if (item.archivos?.length) {
-        <div class="flex flex-wrap gap-2 mt-2">
+        <div class="flex flex-wrap gap-2 mt-1">
+          <span class="text-xs w-full" style="color: var(--ep-muted)">Anexos:</span>
           @for (archivo of item.archivos; track archivo.id ?? archivo.nombreArchivo) {
           <button type="button" class="ent-archivo-chip"
             (click)="descargarArchivo(archivo.rutaArchivo, archivo.nombreArchivo)">
