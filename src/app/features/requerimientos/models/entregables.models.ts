@@ -6,6 +6,8 @@ export interface RequerimientoFaseDTO {
   cantObservados: number;
   cantEnRevision: number;
   cantRechazados: number;
+  cantPendientes?: number;
+  cantAnulados?: number;
 }
 
 export interface CatalogoEntregableDTO {
@@ -20,6 +22,7 @@ export interface CatalogoEntregableDTO {
 export interface EntregableGridDTO {
   id: number;
   idCatalogoEntregable: number;
+  idEstimacion?: number;
   nombreEntregable: string;
   codEstado: string;
   estadoDescripcion: string;
@@ -27,6 +30,7 @@ export interface EntregableGridDTO {
   cantidadDevoluciones: number;
   fechaEntregaPlan: string;
   fechaAprobacionPlan: string;
+  fechaEntregaReal?: string;
   fechaAprobacionReal: string | null;
   nombreArchivo?: string;
   rutaArchivo?: string;
@@ -78,4 +82,13 @@ export interface NuevaVersionRequest {
   nombreArchivo: string;
   rutaFileServer: string;
   tamanioKb: number;
+}
+
+export interface EditarEntregableRequest {
+  idRequerimientoFase: number;
+  idCatalogoEntregable: number;
+  idEstimacion: number;
+  horasFacturables: number;
+  fechaEntregaPlan: string;
+  fechaAprobacionPlan: string;
 }

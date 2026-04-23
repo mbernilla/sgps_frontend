@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import {
   CatalogoEntregableDTO,
+  EditarEntregableRequest,
   EntregableGridDTO,
   EvaluacionRequest,
   FlujoBitacoraDTO,
@@ -59,6 +60,24 @@ export class EntregablesService {
   subirNuevaVersion(idEntregable: number, payload: NuevaVersionRequest): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(
       `${this.base}/entregables/${idEntregable}/versiones`, payload
+    );
+  }
+
+  editar(idEntregable: number, payload: EditarEntregableRequest): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(
+      `${this.base}/entregables/${idEntregable}`, payload
+    );
+  }
+
+  eliminar(idEntregable: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(
+      `${this.base}/entregables/${idEntregable}`
+    );
+  }
+
+  anular(idEntregable: number): Observable<ApiResponse<void>> {
+    return this.http.patch<ApiResponse<void>>(
+      `${this.base}/entregables/${idEntregable}/anular`, {}
     );
   }
 

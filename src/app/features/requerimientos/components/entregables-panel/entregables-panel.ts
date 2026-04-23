@@ -1,10 +1,11 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, take } from 'rxjs';
+import { forkJoin, of, take } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { Select } from 'primeng/select';
@@ -25,6 +26,7 @@ import { EstimacionesService } from '../../services/estimaciones.service';
 import {
   ArchivoAdjuntoDTO,
   CatalogoEntregableDTO,
+  EditarEntregableRequest,
   EntregableGridDTO,
   EvaluacionRequest,
   FlujoBitacoraDTO,
@@ -61,8 +63,9 @@ interface FileSelectEvent {
     AccordionHeader,
     AccordionContent,
     TagModule,
+    ConfirmDialog,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './entregables-panel.html',
   styleUrl: './entregables-panel.scss',
 })
@@ -73,9 +76,13 @@ export class EntregablesPanelComponent implements OnInit {
   private readonly estService = inject(EstimacionesService);
   private readonly fb         = inject(FormBuilder);
   private readonly msg        = inject(MessageService);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly destroyRef    = inject(DestroyRef);
+  private readonly confirmService = inject(ConfirmationService);
 
   private idRequerimiento = 0;
+
+  // ── Estado abierto/cerrado del acordeón (preservado entre recargas) ───
+  indicesActivos: string[] = [];
 
   // ── Fases ─────────────────────────────────────────────────────────────
   readonly fases           = signal<RequerimientoFaseDTO[]>([]);
@@ -92,9 +99,10 @@ export class EntregablesPanelComponent implements OnInit {
   // ── Permiso simulado (JWT: APROBAR_ENTREGABLES) ───────────────────────
   readonly puedeAprobar = signal(true);
 
-  // ── Modal: Nuevo Entregable ───────────────────────────────────────────
+  // ── Modal: Nuevo / Editar Entregable ─────────────────────────────────
   readonly dialogNuevoVisible  = signal(false);
   readonly faseParaNuevo       = signal<RequerimientoFaseDTO | null>(null);
+  readonly idEntregableEdicion = signal<number | null>(null);
   readonly catalogoFase        = signal<CatalogoEntregableDTO[]>([]);
   readonly cargandoCatalogo    = signal(false);
   readonly guardandoEntregable = signal(false);
@@ -197,6 +205,7 @@ export class EntregablesPanelComponent implements OnInit {
 
   // ── Modal: Nuevo Entregable ───────────────────────────────────────────
   abrirNuevo(fase: RequerimientoFaseDTO): void {
+    this.idEntregableEdicion.set(null);
     this.faseParaNuevo.set(fase);
     this.nuevoForm.reset({ idCatalogoEntregable: null, idEstimacion: null, horasFacturables: 0, fechaEntregaPlan: null, fechaAprobacionPlan: null });
     this.catalogoFase.set([]);
@@ -210,6 +219,39 @@ export class EntregablesPanelComponent implements OnInit {
     this.dialogNuevoVisible.set(true);
   }
 
+  abrirModalEdicion(ent: EntregableGridDTO): void {
+    const idFase = this.getFaseDeEntregable(ent.id);
+    const fase = idFase !== null ? (this.fases().find(f => f.id === idFase) ?? null) : null;
+
+    this.idEntregableEdicion.set(ent.id);
+    this.faseParaNuevo.set(fase);
+    this.catalogoFase.set([]);
+    this.cargandoCatalogo.set(true);
+    this.dialogNuevoVisible.set(true);
+
+    const catalogo$ = fase
+      ? this.service.getCatalogoByFase(fase.codFase).pipe(take(1))
+      : of({ data: [] as CatalogoEntregableDTO[], mensaje: '' });
+
+    catalogo$.subscribe({
+      next: res => {
+        this.catalogoFase.set(res.data);
+        this.cargandoCatalogo.set(false);
+        this.nuevoForm.patchValue({
+          idCatalogoEntregable: ent.idCatalogoEntregable,
+          idEstimacion:         ent.idEstimacion ?? null,
+          horasFacturables:     ent.horasFacturables,
+          fechaEntregaPlan:     new Date(ent.fechaEntregaPlan    + 'T00:00:00'),
+          fechaAprobacionPlan:  new Date(ent.fechaAprobacionPlan + 'T00:00:00'),
+        });
+      },
+      error: () => {
+        this.cargandoCatalogo.set(false);
+        this.toastError('No se pudo cargar el catálogo de entregables.');
+      },
+    });
+  }
+
   guardarEntregable(): void {
     if (this.nuevoForm.invalid) { this.nuevoForm.markAllAsTouched(); return; }
 
@@ -221,9 +263,14 @@ export class EntregablesPanelComponent implements OnInit {
       fechaAprobacionPlan: Date;
     };
 
+    const idEdicion = this.idEntregableEdicion();
     const fase = this.faseParaNuevo()!;
+
+    // Validación de horas (excluye el propio entregable al editar)
     const existentes = this.entregablesPorFase()[fase.id] ?? [];
-    const horasExistentes = existentes.reduce((acc, e) => acc + e.horasFacturables, 0);
+    const horasExistentes = existentes
+      .filter(e => e.id !== idEdicion)
+      .reduce((acc, e) => acc + e.horasFacturables, 0);
     const estimacion = (this.estimaciones() || []).find(e => e.id === v.idEstimacion);
     if (estimacion) {
       const faseEst = (estimacion.fases || []).find(f => f.codFase === fase.codFase);
@@ -236,25 +283,97 @@ export class EntregablesPanelComponent implements OnInit {
     }
 
     this.guardandoEntregable.set(true);
-    const payload: RegistroEntregableRequest = {
-      idRequerimientoFase:  fase.id,
-      idCatalogoEntregable: v.idCatalogoEntregable,
-      idEstimacion:         v.idEstimacion,
-      horasFacturables:     v.horasFacturables,
-      fechaEntregaPlan:     this.toDateStr(v.fechaEntregaPlan),
-      fechaAprobacionPlan:  this.toDateStr(v.fechaAprobacionPlan),
-    };
-    this.service.registrar(payload).pipe(take(1)).subscribe({
-      next: () => {
-        this.guardandoEntregable.set(false);
-        this.dialogNuevoVisible.set(false);
-        this.msg.add({ key: 'ent', severity: 'success', summary: 'Planificado', detail: 'Entregable registrado. Suba el archivo cuando esté listo.', life: 4000 });
-        this.recargarFase(fase.id);
-        this.cargarFases();
+
+    if (idEdicion !== null) {
+      const payload: EditarEntregableRequest = {
+        idRequerimientoFase:  fase.id,
+        idCatalogoEntregable: v.idCatalogoEntregable,
+        idEstimacion:         v.idEstimacion,
+        horasFacturables:     v.horasFacturables,
+        fechaEntregaPlan:     this.toDateStr(v.fechaEntregaPlan),
+        fechaAprobacionPlan:  this.toDateStr(v.fechaAprobacionPlan),
+      };
+      this.service.editar(idEdicion, payload).pipe(take(1)).subscribe({
+        next: () => {
+          this.guardandoEntregable.set(false);
+          this.idEntregableEdicion.set(null);
+          this.dialogNuevoVisible.set(false);
+          this.msg.add({ key: 'ent', severity: 'success', summary: 'Actualizado', detail: 'Entregable actualizado correctamente.', life: 3000 });
+          this.recargarFase(fase.id);
+          this.cargarFases();
+        },
+        error: err => {
+          this.guardandoEntregable.set(false);
+          this.toastError(err.error?.error || err.error?.mensaje || 'No se pudo actualizar el entregable.');
+        },
+      });
+    } else {
+      const payload: RegistroEntregableRequest = {
+        idRequerimientoFase:  fase.id,
+        idCatalogoEntregable: v.idCatalogoEntregable,
+        idEstimacion:         v.idEstimacion,
+        horasFacturables:     v.horasFacturables,
+        fechaEntregaPlan:     this.toDateStr(v.fechaEntregaPlan),
+        fechaAprobacionPlan:  this.toDateStr(v.fechaAprobacionPlan),
+      };
+      this.service.registrar(payload).pipe(take(1)).subscribe({
+        next: () => {
+          this.guardandoEntregable.set(false);
+          this.dialogNuevoVisible.set(false);
+          this.msg.add({ key: 'ent', severity: 'success', summary: 'Planificado', detail: 'Entregable registrado. Suba el archivo cuando esté listo.', life: 4000 });
+          this.recargarFase(fase.id);
+          this.cargarFases();
+        },
+        error: err => {
+          this.guardandoEntregable.set(false);
+          this.toastError(err.error?.error || err.error?.mensaje || 'No se pudo registrar el entregable.');
+        },
+      });
+    }
+  }
+
+  eliminarEntregable(id: number): void {
+    const idFase = this.getFaseDeEntregable(id);
+    this.confirmService.confirm({
+      message: '¿Estás seguro de que deseas eliminar este entregable planificado? Esta acción lo ocultará del sistema y liberará las horas estimadas.',
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger p-button-text',
+      rejectButtonStyleClass: 'p-button-text p-button-text',
+      acceptIcon: 'none',
+      rejectIcon: 'none',
+      accept: () => {
+        this.service.eliminar(id).pipe(take(1)).subscribe({
+          next: res => {
+            this.msg.add({ key: 'ent', severity: 'success', summary: 'Eliminado', detail: res.mensaje || 'Entregable eliminado.', life: 3000 });
+            if (idFase !== null) this.recargarFase(idFase);
+            this.cargarFases();
+          },
+          error: err => this.toastError(err.error?.mensaje || 'No se pudo eliminar el entregable.'),
+        });
       },
-      error: err => {
-        this.guardandoEntregable.set(false);
-        this.toastError(err.error?.error || err.error?.mensaje || 'No se pudo registrar el entregable.');
+    });
+  }
+
+  anularEntregable(id: number): void {
+    const idFase = this.getFaseDeEntregable(id);
+    this.confirmService.confirm({
+      message: '¿Estás seguro de que deseas ANULAR este entregable? El registro se mantendrá visible para auditoría, pero su flujo se detendrá permanentemente y sus horas dejarán de ser facturables.',
+      header: 'Confirmar Anulación',
+      icon: 'pi pi-info-circle',
+      acceptButtonStyleClass: 'p-button-danger p-button-text',
+      rejectButtonStyleClass: 'p-button-text p-button-text',
+      acceptIcon: 'none',
+      rejectIcon: 'none',
+      accept: () => {
+        this.service.anular(id).pipe(take(1)).subscribe({
+          next: res => {
+            this.msg.add({ key: 'ent', severity: 'warn', summary: 'Anulado', detail: res.mensaje || 'Entregable anulado.', life: 3000 });
+            if (idFase !== null) this.recargarFase(idFase);
+            this.cargarFases();
+          },
+          error: err => this.toastError(err.error?.mensaje || 'No se pudo anular el entregable.'),
+        });
       },
     });
   }
@@ -411,6 +530,7 @@ export class EntregablesPanelComponent implements OnInit {
       ENT_REV: 'badge-warn',
       ENT_APR: 'badge-success',
       ENT_OBS: 'badge-danger',
+      ENT_ANU: 'badge-secondary',
     };
     return map[codEstado] ?? 'badge-secondary';
   }

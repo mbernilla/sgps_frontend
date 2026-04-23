@@ -45,7 +45,7 @@
     </div>
     }
 
-    <p-accordion [multiple]="true">
+    <p-accordion [multiple]="true" [(value)]="indicesActivos">
       @for (fase of fases(); track fase.id) {
       <p-accordion-panel [value]="'fase-' + fase.id">
 
@@ -57,6 +57,12 @@
               <span class="text-xs text-slate-400 font-mono">({{ fase.codFase }})</span>
             </div>
             <div class="flex gap-2 text-xs">
+              @if (fase.cantPendientes && fase.cantPendientes > 0) {
+              <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full font-semibold"
+                pTooltip="Pendientes de Entrega" tooltipPosition="top">
+                <i class="pi pi-calendar text-xs mr-1"></i>{{ fase.cantPendientes }}
+              </span>
+              }
               @if (fase.cantEnRevision > 0) {
               <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-semibold"
                 pTooltip="En Revisión" tooltipPosition="top">
@@ -107,6 +113,7 @@
                 <th class="w-20 text-center">Devoluciones</th>
                 <th class="w-28 text-center">Entrega Plan</th>
                 <th class="w-28 text-center">Aprob. Plan</th>
+                <th class="w-28 text-center">F. Entrega Real</th>
                 <th class="w-28 text-center">Aprob. Real</th>
                 <th class="w-44 text-center">Acciones</th>
               </tr>
@@ -142,6 +149,9 @@
                 <td class="text-center text-sm text-gray-600">{{ ent.fechaEntregaPlan | date:'dd/MM/yyyy' }}</td>
                 <td class="text-center text-sm text-gray-600">{{ ent.fechaAprobacionPlan | date:'dd/MM/yyyy' }}</td>
                 <td class="text-center text-sm text-gray-600">
+                  {{ ent.fechaEntregaReal ? (ent.fechaEntregaReal | date:'dd/MM/yyyy') : '—' }}
+                </td>
+                <td class="text-center text-sm text-gray-600">
                   {{ ent.fechaAprobacionReal ? (ent.fechaAprobacionReal | date:'dd/MM/yyyy') : '—' }}
                 </td>
                 <td class="text-center">
@@ -160,6 +170,18 @@
                       tooltipPosition="top" (click)="abrirNuevaVersion(ent)" />
                     }
 
+                    @if (ent.codEstado === 'ENT_PEN') {
+                    <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" size="small"
+                      pTooltip="Editar" tooltipPosition="top" (click)="abrirModalEdicion(ent)" />
+                    <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small"
+                      pTooltip="Eliminar" tooltipPosition="top" (click)="eliminarEntregable(ent.id)" />
+                    }
+
+                    @if (ent.codEstado !== 'ENT_PEN' && ent.codEstado !== 'ENT_ANU') {
+                    <p-button icon="pi pi-ban" [text]="true" [rounded]="true" severity="danger" size="small"
+                      pTooltip="Anular" tooltipPosition="top" (click)="anularEntregable(ent.id)" />
+                    }
+
                     @if (ent.rutaArchivo) {
                     <p-button icon="pi pi-download" [text]="true" [rounded]="true" severity="secondary" size="small"
                       pTooltip="Descargar archivo" tooltipPosition="top"
@@ -176,7 +198,7 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="8" class="text-center py-10 text-gray-400 text-sm">
+                <td colspan="9" class="text-center py-10 text-gray-400 text-sm">
                   <i class="pi pi-box text-3xl block mb-2 opacity-30"></i>
                   Sin entregables registrados para esta fase.
                 </td>
@@ -200,7 +222,7 @@
      MODAL — Nuevo Entregable
 ════════════════════════════════════════════════════════════ -->
 <p-dialog [visible]="dialogNuevoVisible()" (visibleChange)="dialogNuevoVisible.set($event)"
-  [header]="'Nuevo Entregable — ' + (faseParaNuevo()?.faseDescripcion ?? '')"
+  [header]="(idEntregableEdicion() ? 'Editar Entregable' : 'Nuevo Entregable') + ' — ' + (faseParaNuevo()?.faseDescripcion ?? '')"
   [modal]="true" [draggable]="false" [resizable]="false"
   [style]="{ width: '680px' }" appendTo="body">
 
@@ -272,7 +294,8 @@
   <ng-template pTemplate="footer">
     <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
       [disabled]="guardandoEntregable()" (click)="dialogNuevoVisible.set(false)" />
-    <p-button label="Registrar Entregable" icon="pi pi-check" [loading]="guardandoEntregable()"
+    <p-button [label]="idEntregableEdicion() ? 'Guardar Cambios' : 'Registrar Entregable'"
+      icon="pi pi-check" [loading]="guardandoEntregable()"
       (click)="guardarEntregable()" />
   </ng-template>
 
@@ -454,3 +477,5 @@
   </ng-template>
 
 </p-dialog>
+
+<p-confirmDialog [style]="{ width: '450px' }" />
