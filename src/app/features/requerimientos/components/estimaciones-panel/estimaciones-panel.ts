@@ -31,24 +31,6 @@ import {
   ModificadorTarifaDTO,
 } from '../../models/estimaciones.models';
 
-const FASE_PESO: Record<string, number> = {
-  FAS_INI: 1, FAS_ANA: 2, FAS_DIS: 3, FAS_CON: 4, FAS_DES: 5, FAS_PRF: 6, FAS_PRS: 7,
-};
-
-const FASE_NOMBRE: Record<string, string> = {
-  FAS_INI: 'Iniciación',
-  FAS_ANA: 'Análisis',
-  FAS_DIS: 'Diseño',
-  FAS_CON: 'Construcción',
-  FAS_DES: 'Desarrollo',
-  FAS_PRF: 'Pruebas Funcionales',
-  FAS_PRS: 'Pruebas de Sistema',
-};
-
-const FASES_MAESTRAS_ORDENADAS = Object.entries(FASE_PESO)
-  .sort(([, a], [, b]) => a - b)
-  .map(([cod]) => cod);
-
 @Component({
   selector: 'app-estimaciones-panel',
   standalone: true,
@@ -88,10 +70,9 @@ export class EstimacionesPanelComponent implements OnInit {
   readonly cargando            = signal(false);
   readonly modificadoresTarifa = signal<ModificadorTarifaDTO[]>([]);
 
-  private readonly _codigosFasesOrdenados = signal<string[]>(FASES_MAESTRAS_ORDENADAS);
-  readonly fasesOpciones = signal(
-    FASES_MAESTRAS_ORDENADAS.map(cod => ({ value: cod, label: `${FASE_NOMBRE[cod] ?? cod}  (${cod})` }))
-  );
+  private readonly _codigosFasesOrdenados = signal<string[]>([]);
+  readonly fasesOpciones = signal<{value: string, label: string}[]>([]);
+
   readonly opcionesModificadorTarifa = computed(() =>
     this.modificadoresTarifa().map(m => ({ value: m.id, label: `${m.descripcion} (${m.porcentaje.toFixed(2)}%)` }))
   );
@@ -216,14 +197,11 @@ private cargarModificadores(): void {
         next: res => {
           const fases: FaseMaestraDTO[] = res.data;
           if (!fases.length) return;
-          const ordenadas = [...fases].sort(
-            (a, b) => (FASE_PESO[a.id] ?? 99) - (FASE_PESO[b.id] ?? 99)
-          );
-          this._codigosFasesOrdenados.set(ordenadas.map(f => f.id));
-          this.fasesOpciones.set(ordenadas.map(f => ({
-            value: f.id,
-            label: `${f.nombre}  (${f.id})`,
-          })));
+          this._codigosFasesOrdenados.set(fases.map(f => f.id));
+          this.fasesOpciones.set(fases.map(f => ({
+          value: f.id,
+          label: `${f.nombre} (${f.id})`,
+        })));
         },
         error: () => this.toastError('No se pudo cargar las fases del proyecto.'),
       });
@@ -279,8 +257,7 @@ private cargarModificadores(): void {
       .subscribe({
         next: res => {
           this.fasesArray.clear();
-          [...res.data]
-            .sort((a, b) => (FASE_PESO[a.codFase] ?? 99) - (FASE_PESO[b.codFase] ?? 99))
+          res.data
             .forEach(f => this.fasesArray.push(this.buildFaseGroup({
               codFase:         f.codFase,
               horasEstimadas:  f.horasEstimadas,
@@ -316,8 +293,7 @@ private cargarModificadores(): void {
       .subscribe({
         next: res => {
           this.fasesArray.clear();
-          [...res.data]
-            .sort((a, b) => (FASE_PESO[a.codFase] ?? 99) - (FASE_PESO[b.codFase] ?? 99))
+          res.data
             .forEach(f => this.fasesArray.push(this.buildFaseGroup({
               codFase:         f.codFase,
               horasEstimadas:  f.horasEstimadas,

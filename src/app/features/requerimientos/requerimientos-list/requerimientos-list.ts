@@ -39,30 +39,30 @@ import { SeguimientosPanel } from '../components/seguimientos-panel/seguimientos
   styleUrl: './requerimientos-list.scss',
 })
 export class RequerimientosListComponent implements OnInit, OnDestroy {
-  private readonly reqService        = inject(RequerimientosService);
-  private readonly router            = inject(Router);
+  private readonly reqService = inject(RequerimientosService);
+  private readonly router = inject(Router);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly msg               = inject(MessageService);
+  private readonly msg = inject(MessageService);
   private readonly requerimientoService = inject(RequerimientosService);
 
   // ── Estado reactivo ────────────────────────────────────────────────────
-  requerimientos            = signal<RequerimientoGridDTO[]>([]);
-  totalRegistros            = signal<number>(0);
-  cargando                  = signal<boolean>(true);
+  requerimientos = signal<RequerimientoGridDTO[]>([]);
+  totalRegistros = signal<number>(0);
+  cargando = signal<boolean>(true);
 
   // Para la selección nativa de PrimeNG
   requerimientoSeleccionado = signal<any>(null);
 
   // Para la animación de fila nueva al volver del formulario
-  idResaltado               = signal<number | null>(null);
+  idResaltado = signal<number | null>(null);
 
   // Para el panel lateral de seguimientos
-  mostrarSidebarSeguimientos      = signal(false);
-  reqSeleccionadoParaSeguimiento  = signal<RequerimientoGridDTO | null>(null);
+  mostrarSidebarSeguimientos = signal(false);
+  reqSeleccionadoParaSeguimiento = signal<RequerimientoGridDTO | null>(null);
 
   // Menú contextual de acciones por fila
-  menuItems                           = signal<MenuItem[]>([]);
-  private readonly accioesMenu        = viewChild.required<Menu>('accioesMenu');
+  menuItems = signal<MenuItem[]>([]);
+  private readonly accioesMenu = viewChild.required<Menu>('accioesMenu');
 
   // ── Filtros ────────────────────────────────────────────────────────────
   filtroActual: RequerimientoFiltroDTO = {
@@ -73,10 +73,10 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
   };
 
   private readonly searchSubject = new Subject<string>();
-  private readonly destroy$      = new Subject<void>();
+  private readonly destroy$ = new Subject<void>();
 
   constructor() {
-    const nav   = this.router.getCurrentNavigation();
+    const nav = this.router.getCurrentNavigation();
     const state = nav?.extras?.state;
 
     if (state?.['nuevoIdDestacado']) {
@@ -117,7 +117,7 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
 
     if (event.multiSortMeta?.length) {
       this.filtroActual.orden = event.multiSortMeta.map(sort => ({
-        campo:     sort.field,
+        campo: sort.field,
         direccion: sort.order === 1 ? 'ASC' : 'DESC',
       } as OrdenDTO));
     } else {
@@ -138,8 +138,8 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
       {
         label: 'Consultas',
         items: [
-          { label: 'Ver Detalle',   icon: 'pi pi-eye',     command: () => this.router.navigate(['/requerimientos/ver', req.id]) },
-          { label: 'Seguimientos',  icon: 'pi pi-history',  command: () => this.abrirSeguimientos(req) },
+          { label: 'Ver Detalle', icon: 'pi pi-eye', command: () => this.router.navigate(['/requerimientos/ver', req.id]) },
+          { label: 'Seguimientos', icon: 'pi pi-history', command: () => this.abrirSeguimientos(req) },
         ],
       },
       {
@@ -152,7 +152,7 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
         label: 'Configuración',
         items: [
           { label: 'Editar Datos', icon: 'pi pi-pencil', command: () => this.router.navigate(['/requerimientos/editar', req.id]) },
-          { label: 'Eliminar',     icon: 'pi pi-trash',  styleClass: 'menu-danger', command: () => this.confirmarEliminacion(req.id, req.nombre) },
+          { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'menu-danger', command: () => this.confirmarEliminacion(req.id, req.nombre) },
         ],
       },
     ];
@@ -182,11 +182,11 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
 
   confirmarEliminacion(id: number, nombre: string): void {
     this.confirmationService.confirm({
-      message:               `¿Estás seguro de que deseas eliminar el requerimiento <b>"${nombre}"</b>?`,
-      header:                'Confirmar Eliminación',
-      icon:                  'pi pi-exclamation-triangle',
-      acceptLabel:           'Sí, Eliminar',
-      rejectLabel:           'Cancelar',
+      message: `¿Estás seguro de que deseas eliminar el requerimiento <b>"${nombre}"</b>?`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, Eliminar',
+      rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger p-button-sm',
       rejectButtonStyleClass: 'p-button-text p-button-sm',
       accept: () => {
@@ -194,18 +194,18 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
           next: () => {
             this.msg.add({
               severity: 'success',
-              summary:  'Eliminado',
-              detail:   'El requerimiento fue eliminado correctamente.',
-              life:     3000,
+              summary: 'Eliminado',
+              detail: 'El requerimiento fue eliminado correctamente.',
+              life: 3000,
             });
             this.cargarData();
           },
           error: (err) => {
             this.msg.add({
               severity: 'error',
-              summary:  'Error al eliminar',
-              detail:   err.error?.message ?? 'No se pudo eliminar el requerimiento.',
-              life:     5000,
+              summary: 'Error al eliminar',
+              detail: err.error?.message ?? 'No se pudo eliminar el requerimiento.',
+              life: 5000,
             });
           },
         });
@@ -231,5 +231,18 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
         this.cargando.set(false);
       },
     });
+  }
+
+  getEstimacionClass(estimacion: string): string {
+    if (!estimacion) return '';
+    if (estimacion.startsWith('RFC')) return 'code-rfc';
+
+    const classes: { [key: string]: string } = {
+      'EST-INI': 'code-ini',
+      'EST-ANA': 'code-ana',
+      'EST-DIS': 'code-dis'
+    };
+
+    return classes[estimacion] || 'badge-default'; // 'badge-default' por si llega algo inesperado
   }
 }
