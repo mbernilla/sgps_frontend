@@ -1,0 +1,418 @@
+<p-toast key="ent" />
+
+<!-- ════════════════════════════════════════════════════════════
+     PÁGINA COMPLETA — Gestión de Entregables
+════════════════════════════════════════════════════════════ -->
+<div class="ent-page">
+
+  <!-- ── Topbar ───────────────────────────────────────────────────────── -->
+  <div class="ent-topbar">
+    <div class="ent-topbar__inner">
+      <div class="flex items-center gap-3">
+        <p-button label="Volver a Requerimientos" icon="pi pi-arrow-left" severity="secondary" [text]="true"
+          (click)="volverALista()" />
+        <span class="ent-topbar__divider"></span>
+        <nav class="ent-breadcrumb" aria-label="breadcrumb">
+          <span class="ent-breadcrumb__item ent-breadcrumb__item--link" (click)="volverALista()">
+            Bandeja de Requerimientos
+          </span>
+          <i class="pi pi-angle-right ent-breadcrumb__sep"></i>
+          <span class="ent-breadcrumb__item ent-breadcrumb__item--active">Gestión de Entregables</span>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Contenido principal ──────────────────────────────────────────── -->
+  <div class="ent-content">
+
+    @if (cargandoFases()) {
+    <div class="flex flex-col items-center justify-center py-24 gap-3">
+      <p-progressSpinner strokeWidth="4" animationDuration=".7s" />
+      <span class="text-sm text-gray-400">Cargando fases del proyecto...</span>
+    </div>
+    } @else if (fases().length === 0) {
+    <div class="ent-empty">
+      <i class="pi pi-inbox text-5xl opacity-20 mb-3 block"></i>
+      <p class="text-gray-500 text-sm">No hay fases activas registradas para este requerimiento.</p>
+    </div>
+    } @else {
+
+    <p-accordion [multiple]="true">
+      @for (fase of fases(); track fase.id) {
+      <p-accordion-panel [value]="'fase-' + fase.id">
+
+        <p-accordion-header>
+          <div class="flex items-center gap-3 w-full">
+            <i class="pi pi-layers text-blue-500"></i>
+            <span class="font-semibold text-slate-700">{{ fase.faseDescripcion }}</span>
+            <span class="text-xs text-slate-400 font-mono">({{ fase.codFase }})</span>
+            @if (entregablesPorFase()[fase.id]?.length) {
+            <span class="ent-count-badge ml-auto me-2">
+              {{ entregablesPorFase()[fase.id].length }} entregable{{entregablesPorFase()[fase.id].length !== 1 ? 's' : ''}}
+            </span>
+            }
+          </div>
+        </p-accordion-header>
+
+        <p-accordion-content>
+
+          <!-- Toolbar de la fase -->
+          <div class="ent-fase-toolbar">
+            <p-button label="Nuevo Entregable" icon="pi pi-plus-circle" size="small"
+              (click)="abrirNuevo(fase)" />
+          </div>
+
+          <!-- Spinner por fase -->
+          @if (cargandoPorFase()[fase.id]) {
+          <div class="flex items-center justify-center py-10 gap-2">
+            <p-progressSpinner strokeWidth="4" animationDuration=".7s" [style]="{ width: '32px', height: '32px' }" />
+            <span class="text-sm text-gray-400">Cargando entregables...</span>
+          </div>
+          } @else {
+
+          <!-- Tabla de entregables -->
+          <p-table [value]="entregablesPorFase()[fase.id] || []"
+            styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines">
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="min-w-[200px]">Nombre Entregable</th>
+                <th class="w-28 text-center">Estado</th>
+                <th class="w-20 text-center">Horas</th>
+                <th class="w-20 text-center">Devoluciones</th>
+                <th class="w-28 text-center">Entrega Plan</th>
+                <th class="w-28 text-center">Aprob. Plan</th>
+                <th class="w-28 text-center">Aprob. Real</th>
+                <th class="w-44 text-center">Acciones</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-ent>
+              <tr>
+                <td class="font-medium text-slate-700 text-sm">{{ ent.nombreEntregable }}</td>
+                <td class="text-center">
+                  <span class="badge-custom" [ngClass]="getBadgeEntregable(ent.codEstado)">
+                    {{ ent.estadoDescripcion }}
+                  </span>
+                </td>
+                <td class="text-center text-sm">{{ ent.horasFacturables | number:'1.2-2' }}</td>
+                <td class="text-center text-sm">
+                  @if (ent.cantidadDevoluciones > 0) {
+                  <span class="text-red-600 font-semibold">{{ ent.cantidadDevoluciones }}</span>
+                  } @else {
+                  <span class="text-gray-400">0</span>
+                  }
+                </td>
+                <td class="text-center text-sm text-gray-600">{{ ent.fechaEntregaPlan | date:'dd/MM/yyyy' }}</td>
+                <td class="text-center text-sm text-gray-600">{{ ent.fechaAprobacionPlan | date:'dd/MM/yyyy' }}</td>
+                <td class="text-center text-sm text-gray-600">
+                  {{ ent.fechaAprobacionReal ? (ent.fechaAprobacionReal | date:'dd/MM/yyyy') : '—' }}
+                </td>
+                <td class="text-center">
+                  <div class="flex justify-center gap-1">
+
+                    @if (ent.codEstado === 'ENT_REV' && puedeAprobar()) {
+                    <p-button icon="pi pi-check-circle" [text]="true" [rounded]="true" severity="success" size="small"
+                      pTooltip="Aprobar" tooltipPosition="top" (click)="abrirEvaluacion(ent, 'aprobar')" />
+                    <p-button icon="pi pi-times-circle" [text]="true" [rounded]="true" severity="danger" size="small"
+                      pTooltip="Observar" tooltipPosition="top" (click)="abrirEvaluacion(ent, 'observar')" />
+                    }
+
+                    @if (ent.codEstado === 'ENT_OBS' && !puedeAprobar()) {
+                    <p-button icon="pi pi-upload" [text]="true" [rounded]="true" severity="info" size="small"
+                      pTooltip="Subir nueva versión" tooltipPosition="top" (click)="abrirNuevaVersion(ent)" />
+                    }
+
+                    @if (ent.codEstado !== 'ENT_APR') {
+
+                    @if (ent.codEstado === 'ENT_OBS' && puedeAprobar()) {
+                    <p-button icon="pi pi-upload" [text]="true" [rounded]="true" severity="info" size="small"
+                      pTooltip="Subir nueva versión" tooltipPosition="top" (click)="abrirNuevaVersion(ent)" />
+                    }
+
+                    }
+
+                    <p-button icon="pi pi-list" [text]="true" [rounded]="true" severity="secondary" size="small"
+                      pTooltip="Ver bitácora" tooltipPosition="top" (click)="verBitacora(ent)" />
+
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="text-center py-10 text-gray-400 text-sm">
+                  <i class="pi pi-box text-3xl block mb-2 opacity-30"></i>
+                  Sin entregables registrados para esta fase.
+                </td>
+              </tr>
+            </ng-template>
+
+          </p-table>
+
+          }
+        </p-accordion-content>
+      </p-accordion-panel>
+      }
+    </p-accordion>
+
+    }
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL — Nuevo Entregable
+════════════════════════════════════════════════════════════ -->
+<p-dialog [visible]="dialogNuevoVisible()" (visibleChange)="dialogNuevoVisible.set($event)"
+  [header]="'Nuevo Entregable — ' + (faseParaNuevo()?.faseDescripcion ?? '')"
+  [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '680px' }" appendTo="body">
+
+  @if (cargandoCatalogo()) {
+  <div class="flex items-center justify-center py-10 gap-2">
+    <p-progressSpinner strokeWidth="4" animationDuration=".7s" [style]="{ width: '32px', height: '32px' }" />
+    <span class="text-sm text-gray-400">Cargando catálogo...</span>
+  </div>
+  } @else {
+
+  <form [formGroup]="nuevoForm" class="flex flex-col gap-4 pt-2">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <div class="flex flex-col gap-1.5">
+        <label class="form-label">Tipo de Entregable <span class="text-red-400">*</span></label>
+        <p-select formControlName="idCatalogoEntregable" [options]="opcionesCatalogo()"
+          optionLabel="label" optionValue="value" placeholder="Seleccione..." appendTo="body"
+          styleClass="w-full" />
+        @if (nuevoForm.get('idCatalogoEntregable')?.invalid && nuevoForm.get('idCatalogoEntregable')?.touched) {
+        <small class="text-red-400 text-xs">Campo requerido.</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="form-label">Estimación <span class="text-red-400">*</span></label>
+        <p-select formControlName="idEstimacion" [options]="opcionesEstimaciones()"
+          optionLabel="label" optionValue="value" placeholder="Seleccione estimación..." appendTo="body"
+          styleClass="w-full" />
+        @if (nuevoForm.get('idEstimacion')?.invalid && nuevoForm.get('idEstimacion')?.touched) {
+        <small class="text-red-400 text-xs">Campo requerido.</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="form-label">Horas Facturables <span class="text-red-400">*</span></label>
+        <p-inputnumber formControlName="horasFacturables" mode="decimal" locale="en-US"
+          [minFractionDigits]="2" [maxFractionDigits]="2" [min]="0.01"
+          styleClass="w-full" inputStyleClass="w-full" />
+        @if (nuevoForm.get('horasFacturables')?.invalid && nuevoForm.get('horasFacturables')?.touched) {
+        <small class="text-red-400 text-xs">Debe ser mayor a 0.</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="form-label">Fecha Entrega Plan <span class="text-red-400">*</span></label>
+        <p-datepicker formControlName="fechaEntregaPlan" dateFormat="dd/mm/yy" [showIcon]="true"
+          appendTo="body" styleClass="w-full" />
+        @if (nuevoForm.get('fechaEntregaPlan')?.invalid && nuevoForm.get('fechaEntregaPlan')?.touched) {
+        <small class="text-red-400 text-xs">Campo requerido.</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="form-label">Fecha Aprobación Plan <span class="text-red-400">*</span></label>
+        <p-datepicker formControlName="fechaAprobacionPlan" dateFormat="dd/mm/yy" [showIcon]="true"
+          appendTo="body" styleClass="w-full" />
+        @if (nuevoForm.get('fechaAprobacionPlan')?.invalid && nuevoForm.get('fechaAprobacionPlan')?.touched) {
+        <small class="text-red-400 text-xs">Campo requerido.</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5 md:col-span-2">
+        <label class="form-label">Archivo <span class="text-red-400">*</span></label>
+        <p-fileUpload mode="basic" [auto]="false" chooseLabel="Seleccionar archivo"
+          chooseIcon="pi pi-paperclip" [maxFileSize]="52428800"
+          (onSelect)="onArchivoNuevoSeleccionado($event)" styleClass="w-full" />
+        @if (archivoNuevo) {
+        <small class="text-green-600 text-xs">{{ archivoNuevo.name }}</small>
+        }
+      </div>
+
+    </div>
+
+  </form>
+
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+      [disabled]="guardandoEntregable()" (click)="dialogNuevoVisible.set(false)" />
+    <p-button label="Registrar Entregable" icon="pi pi-check" [loading]="guardandoEntregable()"
+      (click)="guardarEntregable()" />
+  </ng-template>
+
+</p-dialog>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL — Evaluación (Aprobar / Observar)
+════════════════════════════════════════════════════════════ -->
+<p-dialog [visible]="dialogEvalVisible()" (visibleChange)="dialogEvalVisible.set($event)"
+  [header]="modoEval() === 'aprobar' ? 'Aprobar Entregable' : 'Observar Entregable'"
+  [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '560px' }" appendTo="body">
+
+  <div class="flex flex-col gap-4 pt-2">
+
+    @if (entregableEval()) {
+    <div class="ent-eval-info">
+      <span class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Entregable</span>
+      <p class="text-sm font-medium text-slate-800 m-0">{{ entregableEval()!.nombreEntregable }}</p>
+    </div>
+    }
+
+    <div class="flex flex-col gap-1.5">
+      <label class="form-label">
+        Comentario <span class="text-red-400">*</span>
+      </label>
+      <textarea pTextarea [formControl]="comentarioCtrl" rows="4" class="w-full resize-none"
+        [placeholder]="modoEval() === 'aprobar' ? 'Confirme la aprobación e incluya observaciones finales...' : 'Describa con detalle las observaciones o correcciones requeridas...'">
+      </textarea>
+      @if (comentarioCtrl.invalid && comentarioCtrl.touched) {
+      <small class="text-red-400 text-xs">El comentario es requerido.</small>
+      }
+    </div>
+
+    @if (modoEval() === 'observar') {
+    <div class="flex flex-col gap-1.5">
+      <label class="form-label">Archivos de Evidencia (opcional)</label>
+      <p-fileUpload mode="advanced" [multiple]="true" [auto]="false"
+        chooseLabel="Adjuntar evidencias" chooseIcon="pi pi-paperclip"
+        [showUploadButton]="false" [showCancelButton]="false"
+        (onSelect)="onArchivosEvalSeleccionados($event)" styleClass="w-full" />
+    </div>
+    }
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+      [disabled]="guardandoEval()" (click)="dialogEvalVisible.set(false)" />
+    @if (modoEval() === 'aprobar') {
+    <p-button label="Confirmar Aprobación" icon="pi pi-check-circle" severity="success"
+      [loading]="guardandoEval()" (click)="guardarEvaluacion()" />
+    } @else {
+    <p-button label="Registrar Observación" icon="pi pi-times-circle" severity="danger"
+      [loading]="guardandoEval()" (click)="guardarEvaluacion()" />
+    }
+  </ng-template>
+
+</p-dialog>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL — Bitácora de Flujo
+════════════════════════════════════════════════════════════ -->
+<p-dialog [visible]="dialogBitacoraVisible()" (visibleChange)="dialogBitacoraVisible.set($event)"
+  [header]="tituloDialogBitacora()"
+  [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '680px', maxWidth: '95vw' }" appendTo="body">
+
+  @if (cargandoBitacora()) {
+  <div class="flex flex-col items-center justify-center py-12 gap-3">
+    <p-progressSpinner strokeWidth="4" animationDuration=".7s" />
+    <span class="text-sm text-gray-400">Cargando bitácora...</span>
+  </div>
+  } @else if (flujo().length === 0) {
+  <div class="text-center py-10 text-gray-400 text-sm">
+    <i class="pi pi-inbox text-3xl block mb-2 opacity-30"></i>
+    Sin registros de flujo.
+  </div>
+  } @else {
+
+  <p-timeline [value]="flujo()" align="left" styleClass="ent-timeline">
+    <ng-template pTemplate="marker" let-item>
+      <span class="ent-timeline__marker"
+        [style.background]="getColorFlujo(item.codEstado)">
+        <i [class]="getIconoFlujo(item.codEstado) + ' text-white text-xs'"></i>
+      </span>
+    </ng-template>
+
+    <ng-template pTemplate="content" let-item>
+      <div class="ent-timeline__card">
+        <div class="flex items-center justify-between mb-1">
+          <span class="font-semibold text-sm text-slate-700">
+            Versión #{{ item.nroVersion }}
+            @if (item.estadoDescripcion) {
+            — <span class="badge-custom" [ngClass]="getBadgeEntregable(item.codEstado)">
+              {{ item.estadoDescripcion }}
+            </span>
+            }
+          </span>
+          <span class="text-xs text-gray-400">{{ item.fechaRegistro | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+
+        @if (item.comentarioResumen) {
+        <p class="text-sm text-gray-600 mt-1 mb-2">{{ item.comentarioResumen }}</p>
+        }
+
+        @if (item.archivos?.length) {
+        <div class="flex flex-wrap gap-2 mt-2">
+          @for (archivo of item.archivos; track archivo.id ?? archivo.nombreArchivo) {
+          <button type="button" class="ent-archivo-chip"
+            (click)="descargarArchivo(archivo.rutaArchivo, archivo.nombreArchivo)">
+            <i class="pi pi-file text-xs"></i>
+            <span>{{ archivo.nombreArchivo }}</span>
+            <i class="pi pi-download text-xs opacity-60"></i>
+          </button>
+          }
+        </div>
+        }
+      </div>
+    </ng-template>
+  </p-timeline>
+
+  }
+
+</p-dialog>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL — Nueva Versión
+════════════════════════════════════════════════════════════ -->
+<p-dialog [visible]="dialogVersionVisible()" (visibleChange)="dialogVersionVisible.set($event)"
+  header="Subir Nueva Versión"
+  [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '480px' }" appendTo="body">
+
+  <div class="flex flex-col gap-4 pt-2">
+
+    @if (entregableVersion()) {
+    <div class="ent-eval-info">
+      <span class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Entregable</span>
+      <p class="text-sm font-medium text-slate-800 m-0">{{ entregableVersion()!.nombreEntregable }}</p>
+    </div>
+    }
+
+    <div class="flex flex-col gap-1.5">
+      <label class="form-label">Archivo <span class="text-red-400">*</span></label>
+      <p-fileUpload mode="basic" [auto]="false" chooseLabel="Seleccionar archivo"
+        chooseIcon="pi pi-paperclip" [maxFileSize]="52428800"
+        (onSelect)="onArchivoVersionSeleccionado($event)" styleClass="w-full" />
+      @if (archivoVersion) {
+      <small class="text-green-600 text-xs">{{ archivoVersion.name }}</small>
+      }
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+      [disabled]="guardandoVersion()" (click)="dialogVersionVisible.set(false)" />
+    <p-button label="Subir Versión" icon="pi pi-upload" [loading]="guardandoVersion()"
+      (click)="guardarNuevaVersion()" />
+  </ng-template>
+
+</p-dialog>

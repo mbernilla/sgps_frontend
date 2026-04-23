@@ -43,6 +43,14 @@ export const routes: Routes = [
         m => m.EstimacionesPanelComponent
       ),
   },
+  {
+    path: 'requerimientos/:id/entregables',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/requerimientos/components/entregables-panel/entregables-panel').then(
+        m => m.EntregablesPanelComponent
+      ),
+  },
 
   // Maestros
   {

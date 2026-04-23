@@ -1,0 +1,210 @@
+:host {
+  display: block;
+
+  --ep-brand:      #3B4FC8;
+  --ep-brand-soft: #eef0fb;
+  --ep-border:     #e2e8f0;
+  --ep-text:       #1e293b;
+  --ep-muted:      #64748b;
+  --ep-radius:     8px;
+  --ep-radius-sm:  5px;
+  --ep-shadow:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+.ent-page {
+  min-height: calc(100vh - 64px);
+  background: #f1f5f9;
+}
+
+/* ── Topbar ──────────────────────────────────────────────────────────── */
+.ent-topbar {
+  background: #fff;
+  border-bottom: 1px solid var(--ep-border);
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.ent-topbar__inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+}
+
+.ent-topbar__divider {
+  width: 1px;
+  height: 20px;
+  background: var(--ep-border);
+  flex-shrink: 0;
+}
+
+/* ── Breadcrumb ──────────────────────────────────────────────────────── */
+.ent-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.ent-breadcrumb__item--link {
+  color: var(--ep-brand);
+  cursor: pointer;
+  transition: opacity 120ms;
+
+  &:hover { opacity: 0.7; text-decoration: underline; }
+}
+
+.ent-breadcrumb__item--active {
+  color: var(--ep-muted);
+  font-weight: 500;
+}
+
+.ent-breadcrumb__sep {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+/* ── Content ─────────────────────────────────────────────────────────── */
+.ent-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 28px 32px 48px;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────── */
+.ent-empty {
+  text-align: center;
+  padding: 64px 32px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: var(--ep-shadow);
+}
+
+/* ── Badge de entregables en header de panel ─────────────────────────── */
+.ent-count-badge {
+  background: var(--ep-brand-soft);
+  color: var(--ep-brand);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* ── Toolbar por fase ────────────────────────────────────────────────── */
+.ent-fase-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 12px;
+}
+
+/* ── Badge de estado ─────────────────────────────────────────────────── */
+.badge-custom {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.badge-warn      { background: #fef3c7; color: #d97706; }
+.badge-success   { background: #dcfce7; color: #166534; }
+.badge-danger    { background: #fee2e2; color: #b91c1c; }
+.badge-secondary { background: #f1f5f9; color: #475569; }
+
+/* ── Accordion overrides ─────────────────────────────────────────────── */
+::ng-deep {
+  .p-accordion-panel {
+    margin-bottom: 12px;
+    border-radius: var(--ep-radius) !important;
+    box-shadow: var(--ep-shadow);
+    overflow: hidden;
+  }
+
+  .p-accordion-header-action {
+    background: #fff !important;
+    border: 1px solid var(--ep-border) !important;
+    border-radius: var(--ep-radius) !important;
+    padding: 14px 20px !important;
+  }
+
+  .p-accordion-content {
+    border: 1px solid var(--ep-border);
+    border-top: none;
+    border-bottom-left-radius: var(--ep-radius);
+    border-bottom-right-radius: var(--ep-radius);
+    padding: 16px 20px;
+    background: #fff;
+  }
+
+  .p-datatable .p-datatable-thead > tr > th {
+    background: #4a5568 !important;
+    color: #fff !important;
+    padding: 10px 14px !important;
+    font-size: 12px;
+    font-weight: 600;
+    border: none !important;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 10px 14px !important;
+    font-size: 13px;
+  }
+}
+
+/* ── Form label ──────────────────────────────────────────────────────── */
+.form-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* ── Evaluación info box ─────────────────────────────────────────────── */
+.ent-eval-info {
+  background: #f8fafc;
+  border: 1px solid var(--ep-border);
+  border-radius: var(--ep-radius-sm);
+  padding: 10px 14px;
+}
+
+/* ── Timeline ────────────────────────────────────────────────────────── */
+.ent-timeline__marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ent-timeline__card {
+  background: #f8fafc;
+  border: 1px solid var(--ep-border);
+  border-radius: var(--ep-radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+/* ── Archivo chip ────────────────────────────────────────────────────── */
+.ent-archivo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #eef0fb;
+  color: var(--ep-brand);
+  border: 1px solid #c7cdf4;
+  border-radius: var(--ep-radius-sm);
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 120ms;
+
+  &:hover { background: #dce0f7; }
+}
