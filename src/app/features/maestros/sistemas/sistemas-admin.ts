@@ -137,7 +137,7 @@ export class SistemasAdminComponent implements OnInit {
         this.modalSistema.set(false);
         this.cargarSistemas();
       },
-      error: (err: any) => this.toast('error', 'Error al guardar', err.error?.error ?? 'No se pudo guardar el sistema.')
+      error: (err: any) => this.toast('error', 'Error al guardar', err.error?.mensaje ?? 'No se pudo guardar el sistema.')
     };
 
     // Separamos las rutas para que RxJS y TypeScript no se confundan con los tipos
@@ -172,7 +172,7 @@ export class SistemasAdminComponent implements OnInit {
             }
             this.cargarSistemas();
           },
-          error: err => this.toast('error', 'Error', err.error?.error ?? 'No se pudo dar de baja el sistema.'),
+          error: err => this.toast('error', 'Error', err.error?.mensaje ?? 'No se pudo dar de baja el sistema.'),
         });
       },
     });
@@ -217,7 +217,7 @@ export class SistemasAdminComponent implements OnInit {
         this.modalModulo.set(false);
         this.cargarModulos(sis.id);
       },
-      error: (err: any) => this.toast('error', 'Error al guardar', err.error?.error ?? 'No se pudo guardar el módulo.')
+      error: (err: any) => this.toast('error', 'Error al guardar', err.error?.mensaje ?? 'No se pudo guardar el módulo.')
     };
 
     // Separamos las rutas de RxJS
@@ -248,7 +248,7 @@ export class SistemasAdminComponent implements OnInit {
             this.toast('success', 'Baja registrada', `El módulo "${m.nombre}" fue dado de baja.`);
             this.cargarModulos(sis.id);
           },
-          error: err => this.toast('error', 'Error', err.error?.error ?? 'No se pudo dar de baja el módulo.'),
+          error: err => this.toast('error', 'Error', err.error?.mensaje ?? 'No se pudo dar de baja el módulo.'),
         });
       },
     });

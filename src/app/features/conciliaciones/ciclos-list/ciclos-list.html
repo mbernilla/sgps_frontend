@@ -1,0 +1,80 @@
+<p-toast />
+
+<div class="page-wrapper">
+  <div class="custom-card">
+
+    <div class="card-topbar">
+      <h1 class="card-title">
+        <i class="pi pi-sync"></i>
+        Gestión de Conciliaciones
+      </h1>
+    </div>
+    <p class="card-subtitle">Seleccione un ciclo para iniciar el proceso de cuadre.</p>
+
+    @if (cargando()) {
+    <div class="flex flex-col items-center justify-center py-24 gap-3">
+      <p-progressSpinner strokeWidth="4" animationDuration=".7s" />
+      <span class="text-sm text-gray-400">Cargando ciclos...</span>
+    </div>
+    } @else {
+
+    <p-table [value]="ciclos()" selectionMode="single"
+      styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
+      responsiveLayout="scroll"
+      [paginator]="ciclos().length > 10" [rows]="10" [rowsPerPageOptions]="[10, 20, 50]">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="min-w-[200px]">Ciclo</th>
+          <th class="w-56 text-center">Periodo</th>
+          <th class="w-32 text-center">Estado</th>
+          <th class="w-28 text-center">Conciliados</th>
+          <th class="w-24 text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-ciclo>
+        <tr [pSelectableRow]="ciclo">
+
+          <td>
+            <span class="font-semibold text-gray-800">{{ ciclo.nombreCiclo }}</span>
+          </td>
+
+          <td class="text-center text-sm text-gray-600">
+            {{ ciclo.fechaInicio | date:'dd/MM/yyyy' }} — {{ ciclo.fechaFin | date:'dd/MM/yyyy' }}
+          </td>
+
+          <td class="text-center">
+            @if (!ciclo.esCerrado) {
+            <p-tag value="Abierto" severity="success" />
+            } @else {
+            <p-tag value="Cerrado" severity="secondary" />
+            }
+          </td>
+
+          <td class="text-center">
+            <span class="badge-custom badge-info">{{ ciclo.totalConciliados }}</span>
+          </td>
+
+          <td class="text-center">
+            <p-button icon="pi pi-arrow-right" [rounded]="true" [text]="true" severity="secondary" size="small"
+              pTooltip="Ver detalle" tooltipPosition="top" (click)="irADetalle(ciclo.id)" />
+          </td>
+
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="text-center py-12 text-gray-400 text-sm">
+            <i class="pi pi-inbox text-3xl block mb-2 opacity-30"></i>
+            No hay ciclos de conciliación registrados.
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+
+    }
+  </div>
+</div>

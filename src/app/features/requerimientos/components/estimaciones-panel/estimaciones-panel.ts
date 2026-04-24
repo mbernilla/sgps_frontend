@@ -317,6 +317,9 @@ private cargarModificadores(): void {
 
   // ── Guardar ───────────────────────────────────────────────────────────
 guardar(): void {
+  console.error('--- ESTADO DEL FORMULARIO ---');
+console.log('Formulario válido:', this.mainForm.valid);
+
     if (this.mainForm.invalid) {
       this.mainForm.markAllAsTouched();
       this.toastError('Faltan campos requeridos. Revise las fechas y horas de todas las fases.');
@@ -362,7 +365,7 @@ guardar(): void {
           // Extraemos el mensaje real del backend (soporta 'mensaje' o 'message')
           error: err => {
             this.guardando.set(false);
-            const msg = err.error?.error || err.error?.mensaje || 'No se pudo guardar la estimación.';
+            const msg = err.error?.mensaje || 'No se pudo guardar la estimación.';
             this.toastError(msg);
           },
         });
@@ -387,7 +390,7 @@ guardar(): void {
           // Extraemos el mensaje real del backend
           error: err => {
             this.guardando.set(false);
-            const msg = err.error?.error || err.error?.mensaje || 'No se pudo guardar la estimación.';
+            const msg = err.error?.mensaje || 'No se pudo guardar la estimación.';
             this.toastError(msg);
           },
         });

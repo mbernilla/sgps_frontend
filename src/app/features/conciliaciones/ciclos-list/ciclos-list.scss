@@ -1,0 +1,92 @@
+:host {
+  --brand:       #3B4FC8;
+  --brand-dark:  #2d3fb0;
+  --header-bg:   #4a5568;
+  --header-text: #ffffff;
+  --row-border:  #e2e8f0;
+  --row-hover:   #e6f2fa;
+  --text-main:   #1e293b;
+  --text-muted:  #64748b;
+  --radius:      6px;
+  --shadow:      0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+}
+
+.page-wrapper {
+  padding: 28px 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-main);
+}
+
+.custom-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  gap: 16px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.card-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 0 24px 16px;
+  margin-top: -8px;
+}
+
+.badge-custom {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+.badge-info      { background: #e0f2fe; color: #0284c7; }
+.badge-success   { background: #dcfce7; color: #166534; }
+.badge-secondary { background: #f1f5f9; color: #475569; }
+
+::ng-deep {
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--header-bg) !important;
+    color: var(--header-text) !important;
+    padding: 12px 16px !important;
+    font-size: 13px;
+    font-weight: 600;
+    border: none !important;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 11px 16px !important;
+    border-bottom: 1px solid var(--row-border) !important;
+    font-size: 13.5px;
+    color: var(--text-main);
+  }
+
+  .p-datatable .p-datatable-tbody > tr:hover:not(.p-datatable-row-selected) > td {
+    background: var(--row-hover) !important;
+  }
+}
+
+:host ::ng-deep {
+  .p-datatable .p-datatable-tbody > tr.p-datatable-row-selected > td {
+    background-color: #cde6f7 !important;
+    color: #2b79b1 !important;
+  }
+}

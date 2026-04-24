@@ -52,6 +52,20 @@ export const routes: Routes = [
       ),
   },
 
+  // Conciliaciones
+  {
+    path: 'conciliaciones/maestro',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/conciliaciones/ciclos-list/ciclos-list').then(m => m.CiclosListComponent),
+  },
+  {
+    path: 'conciliaciones/gestion/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/conciliaciones/ciclo-detalle/ciclo-detalle').then(m => m.CicloDetalleComponent),
+  },
+
   // Maestros
   {
     path: 'maestros/sistemas',

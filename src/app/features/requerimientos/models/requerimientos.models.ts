@@ -39,6 +39,8 @@ export interface RequerimientoGridDTO {
   secuencialAnio: number;
   siglasEquipo: string;
   codigoInternoFormateado: string;
+  totalHorasAprobadas?: number;
+  horasFacturadas?: number;
 }
 
 export interface ApiResponse<T> {

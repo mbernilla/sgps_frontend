@@ -303,7 +303,7 @@
               <div class="fases-th fases-col-del"></div>
             </div>
 
-            @for (faseCtrl of fasesArray.controls; track $index; let i = $index; let par = $even) {
+            @for (faseCtrl of fasesArray.controls; track faseCtrl; let i = $index; let par = $even) {
             <div class="fases-row" [class.fases-row--alt]="par" [formGroupName]="i">
 
               <div class="fases-col-fase">

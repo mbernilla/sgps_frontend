@@ -314,7 +314,7 @@ export class EntregablesPanelComponent implements OnInit {
         },
         error: err => {
           this.guardandoEntregable.set(false);
-          this.toastError(err.error?.error || err.error?.mensaje || 'No se pudo actualizar el entregable.');
+          this.toastError(err.error?.mensaje || 'No se pudo actualizar el entregable.');
         },
       });
     } else {
@@ -336,7 +336,7 @@ export class EntregablesPanelComponent implements OnInit {
         },
         error: err => {
           this.guardandoEntregable.set(false);
-          this.toastError(err.error?.error || err.error?.mensaje || 'No se pudo registrar el entregable.');
+          this.toastError(err.error?.mensaje || 'No se pudo registrar el entregable.');
         },
       });
     }

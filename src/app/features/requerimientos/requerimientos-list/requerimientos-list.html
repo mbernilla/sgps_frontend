@@ -33,6 +33,7 @@
               field="nombre"></p-sortIcon></th>
           <th pSortableColumn="ultimaEstimacion">Última Est. <p-sortIcon field="ultimaEstimacion" /></th>
           <th pSortableColumn="totalHorasAprobadas">Horas Aprobadas <p-sortIcon field="totalHorasAprobadas" /></th>
+          <th class="text-center" pSortableColumn="horasFacturadas">H. Facturadas <p-sortIcon field="horasFacturadas" /></th>
           <th pSortableColumn="sistema" class="w-48">Sistema <p-sortIcon field="sistema"></p-sortIcon></th>
           <th pSortableColumn="tipoRequerimiento" class="w-40">Tipo <p-sortIcon field="tipoRequerimiento"></p-sortIcon>
           </th>
@@ -67,6 +68,10 @@
             } @else {
             <span class="text-gray-400 italic font-normal">-</span>
             }
+          </td>
+
+          <td class="text-center font-bold text-blue-600">
+            {{ req.horasFacturadas || 0 | number:'1.2-2' }}
           </td>
 
           <td class="text-gray-600 truncate max-w-[200px]" [title]="req.sistemaNombre">{{ req.sistemaNombre }}</td>
