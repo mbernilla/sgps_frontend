@@ -59,4 +59,8 @@ export class CiclosListComponent implements OnInit {
   irADetalle(idCiclo: number): void {
     this.router.navigate(['/conciliaciones/gestion', idCiclo]);
   }
+
+  irAPenalidades(idCiclo: number): void {
+    this.router.navigate(['/conciliaciones/ciclos', idCiclo, 'penalidades']);
+  }
 }

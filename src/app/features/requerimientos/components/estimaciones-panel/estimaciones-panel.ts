@@ -398,72 +398,6 @@ console.log('Formulario válido:', this.mainForm.valid);
   }
 
 
-  // guardar(): void {
-  //   if (this.mainForm.invalid) {
-  //     this.mainForm.markAllAsTouched();
-  //     this.toastError('Faltan campos requeridos. Revise las fechas y horas de todas las fases.');
-  //     return;
-  //   }
-
-  //   const v = this.mainForm.getRawValue() as {
-  //     idModificadorTarifa: number | null;
-  //     fechaEstimacion: Date;
-  //     comentario: string;
-  //     fases: { codFase: string; horasEstimadas: number; fechaInicioPlan: Date; fechaFinPlan: Date }[];
-  //   };
-
-  //   const fasesFormateadas = v.fases.map(f => ({
-  //     codFase:         f.codFase,
-  //     horasEstimadas:  f.horasEstimadas ?? 0,
-  //     fechaInicioPlan: this.toDateStr(f.fechaInicioPlan),
-  //     fechaFinPlan:    this.toDateStr(f.fechaFinPlan),
-  //   }));
-
-  //   this.guardando.set(true);
-
-  //   if (this.modoEdicion() === 'POST') {
-  //     const payload: EstimacionRequestDTO = {
-  //       idRequerimiento:     this.idRequerimiento,
-  //       codigoEstimacion:    this.codigoEnCurso(),
-  //       idModificadorTarifa: v.idModificadorTarifa!,
-  //       fechaEstimacion:     this.toDateStr(v.fechaEstimacion),
-  //       comentario:          v.comentario ?? '',
-  //       fases:               fasesFormateadas,
-  //     };
-  //     this.service.crear(payload)
-  //       .pipe(takeUntilDestroyed(this.destroyRef))
-  //       .subscribe({
-  //         next: res => {
-  //           this.guardando.set(false);
-  //           this.vistaActual.set('lectura');
-  //           this.msg.add({ key: 'est', severity: 'success', summary: 'Guardado', detail: res.mensaje, life: 3000 });
-  //           //this.cargarEstimaciones();
-  //           this.finalizarGuardado();
-  //         },
-  //         error: err => { this.guardando.set(false); this.toastError(err.error?.mensaje ?? 'No se pudo guardar la estimación.'); },
-  //       });
-  //   } else {
-  //     const idEditado = this.idEstimacionEdit()!;
-  //     const payload: EstimacionActualizacionRequestDTO = {
-  //       idModificadorTarifa: v.idModificadorTarifa,
-  //       fechaEstimacion:     this.toDateStr(v.fechaEstimacion),
-  //       comentario:          v.comentario ?? '',
-  //       fases:               fasesFormateadas,
-  //     };
-  //     this.service.actualizar(idEditado, payload)
-  //       .pipe(takeUntilDestroyed(this.destroyRef))
-  //       .subscribe({
-  //         next: res => {
-  //           this.guardando.set(false);
-  //           this.vistaActual.set('lectura');
-  //           this.msg.add({ key: 'est', severity: 'success', summary: 'Actualizado', detail: res.mensaje, life: 3000 });
-  //           //this.cargarEstimaciones();
-  //           this.finalizarGuardado();
-  //         },
-  //         error: err => { this.guardando.set(false); this.toastError(err.error?.mensaje ?? 'No se pudo actualizar la estimación.'); },
-  //       });
-  //   }
-  // }
 
   private finalizarGuardado(): void {
     this.guardando.set(false);
@@ -547,7 +481,7 @@ console.log('Formulario válido:', this.mainForm.valid);
   private buildFaseGroup(v?: { codFase?: string; horasEstimadas?: number; fechaInicioPlan?: Date | null; fechaFinPlan?: Date | null }): FormGroup {
     return this.fb.group({
       codFase:         [v?.codFase        ?? '',   Validators.required],
-      horasEstimadas:  [v?.horasEstimadas ?? 0,    [Validators.required, Validators.min(0)]],
+      horasEstimadas:  [v?.horasEstimadas ?? 0,    [Validators.required]],
       fechaInicioPlan: [v?.fechaInicioPlan ?? null, Validators.required],
       fechaFinPlan:    [v?.fechaFinPlan   ?? null, Validators.required],
     });

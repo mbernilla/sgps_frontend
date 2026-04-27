@@ -15,7 +15,7 @@ import { ProgressSpinner } from 'primeng/progressspinner';
 import * as XLSX from 'xlsx';
 
 import { ConciliacionService } from '../services/conciliacion.service';
-import { ConciliacionDetalleDTO, ConciliacionManualRequest, RequerimientoComboDTO } from '../models/conciliacion.models';
+import { ConciliacionDetalleDTO, ConciliacionManualRequest, EntregableConciliacionDTO, RequerimientoComboDTO } from '../models/conciliacion.models';
 
 @Component({
   selector: 'app-ciclo-detalle',
@@ -77,6 +77,18 @@ export class CicloDetalleComponent implements OnInit {
   readonly totalHorasExcel    = computed(() => this.detalles().reduce((acc, d) => acc + (d.horasAprobadasExcel     || 0), 0));
   readonly totalHorasSgps     = computed(() => this.detalles().reduce((acc, d) => acc + (d.horasInternasAprobadas  || 0), 0));
   readonly totalDiferencia    = computed(() => this.detalles().reduce((acc, d) => acc + (d.diferenciaHoras         || 0), 0));
+
+  // ── Modal: Selección de Entregables ──────────────────────────────────
+  readonly dialogEntregablesVisible   = signal(false);
+  readonly cargandoEntregables        = signal(false);
+  readonly guardandoEntregables       = signal(false);
+  readonly entregablesDisponibles     = signal<EntregableConciliacionDTO[]>([]);
+  readonly entregablesSeleccionados   = signal<EntregableConciliacionDTO[]>([]);
+  private idConciliacionActiva: number | null = null;
+
+  readonly totalHorasSeleccionadas = computed(() =>
+    this.entregablesSeleccionados().reduce((acc, e) => acc + (e.horasFacturables || 0), 0)
+  );
 
   ngOnInit(): void {
     this.idCiclo = Number(this.route.snapshot.paramMap.get('id'));
@@ -298,6 +310,44 @@ export class CicloDetalleComponent implements OnInit {
             this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo confirmar el cuadre.', life: 5000 });
           },
         });
+      },
+    });
+  }
+
+  // ── Modal: Selección de Entregables ──────────────────────────────────
+  abrirModalEntregables(item: ConciliacionDetalleDTO): void {
+    this.idConciliacionActiva = item.id;
+    this.entregablesDisponibles.set([]);
+    this.entregablesSeleccionados.set([]);
+    this.dialogEntregablesVisible.set(true);
+    this.cargandoEntregables.set(true);
+    this.service.getEntregablesConciliacion(this.idCiclo, item.id).subscribe({
+      next: res => {
+        this.entregablesDisponibles.set(res.data);
+        this.entregablesSeleccionados.set(res.data.filter(e => e.seleccionado));
+        this.cargandoEntregables.set(false);
+      },
+      error: err => {
+        this.cargandoEntregables.set(false);
+        this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo cargar los entregables.', life: 5000 });
+      },
+    });
+  }
+
+  guardarEntregables(): void {
+    if (this.idConciliacionActiva === null) return;
+    const ids = this.entregablesSeleccionados().map(e => e.id);
+    this.guardandoEntregables.set(true);
+    this.service.asignarEntregables(this.idCiclo, this.idConciliacionActiva, ids).subscribe({
+      next: res => {
+        this.guardandoEntregables.set(false);
+        this.dialogEntregablesVisible.set(false);
+        this.msg.add({ severity: 'success', summary: 'Guardado', detail: res.mensaje || 'Entregables asignados correctamente.', life: 3000 });
+        this.cargarDetalle();
+      },
+      error: err => {
+        this.guardandoEntregables.set(false);
+        this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo asignar los entregables.', life: 5000 });
       },
     });
   }

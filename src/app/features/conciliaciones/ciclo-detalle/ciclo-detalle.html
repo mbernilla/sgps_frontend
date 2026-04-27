@@ -102,7 +102,7 @@
           </td>
 
           <td class="text-center">
-            @if (item.cuadreOk) {
+            @if (item.diferenciaHoras === 0) {
             <p-tag severity="success" value="Conciliado" />
             } @else {
             <p-tag severity="danger" value="Pendiente" />
@@ -111,20 +111,12 @@
 
           <td class="text-center">
             <div class="flex gap-2 justify-center">
-              @if (item.cuadreOk) {
-              <p-button icon="pi pi-history" [rounded]="true" [text]="true" severity="warn" size="small"
-                pTooltip="Revertir Conciliación" tooltipPosition="top"
-                [loading]="reviertendoId() === item.id"
-                (click)="revertir(item)" />
-              } @else {
               <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="warn" size="small"
                 pTooltip="Editar" tooltipPosition="top" (click)="abrirEdicion(item)" />
-              @if (item.diferenciaHoras === 0) {
-              <p-button icon="pi pi-check-circle" [rounded]="true" [text]="true" severity="success" size="small"
-                pTooltip="Confirmar Cuadre" tooltipPosition="top"
-                [loading]="conciliandoId() === item.id"
-                (click)="conciliar(item)" />
-              }
+              <p-button icon="pi pi-list" [rounded]="true" [text]="true" severity="info" size="small"
+                pTooltip="Seleccionar Entregables" tooltipPosition="top"
+                (click)="abrirModalEntregables(item)" />
+              @if (!item.cuadreOk) {
               <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
                 pTooltip="Eliminar" tooltipPosition="top"
                 [loading]="eliminandoId() === item.id"
@@ -205,6 +197,76 @@
       [disabled]="guardandoManual()" (click)="dialogManualVisible.set(false)" />
     <p-button label="Registrar" icon="pi pi-check" [loading]="guardandoManual()"
       (click)="guardarManual()" />
+  </ng-template>
+
+</p-dialog>
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL — Selección de Entregables
+════════════════════════════════════════════════════════════ -->
+<p-dialog [visible]="dialogEntregablesVisible()" (visibleChange)="dialogEntregablesVisible.set($event)"
+  header="Seleccionar Entregables"
+  [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '680px' }" appendTo="body">
+
+  @if (cargandoEntregables()) {
+  <div class="flex flex-col items-center justify-center py-12 gap-3">
+    <p-progressSpinner strokeWidth="4" animationDuration=".7s" />
+    <span class="text-sm text-gray-400">Cargando entregables...</span>
+  </div>
+  } @else {
+  <p-table [value]="entregablesDisponibles()"
+    [selection]="entregablesSeleccionados()"
+    (selectionChange)="entregablesSeleccionados.set($event)"
+    dataKey="id"
+    styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
+    responsiveLayout="scroll"
+    [paginator]="entregablesDisponibles().length > 10" [rows]="10">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th class="w-12">
+          <p-tableHeaderCheckbox />
+        </th>
+        <th>Entregable</th>
+        <th class="w-36 text-right">Horas Facturables</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-ent>
+      <tr>
+        <td class="w-12">
+          <p-tableCheckbox [value]="ent" />
+        </td>
+        <td>{{ ent.nombre }}</td>
+        <td class="text-right font-semibold text-blue-600">
+          {{ ent.horasFacturables | number:'1.2-2' }}h
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="3" class="text-center py-8 text-gray-400 text-sm">
+          <i class="pi pi-inbox text-3xl block mb-2 opacity-30"></i>
+          No hay entregables disponibles para esta conciliación.
+        </td>
+      </tr>
+    </ng-template>
+
+  </p-table>
+
+  <div class="flex items-center justify-between px-2 pt-3 text-sm text-slate-600">
+    <span>{{ entregablesSeleccionados().length }} entregable(s) seleccionado(s)</span>
+    <span class="font-semibold text-blue-700">Total: {{ totalHorasSeleccionadas() | number:'1.2-2' }}h</span>
+  </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+      [disabled]="guardandoEntregables()" (click)="dialogEntregablesVisible.set(false)" />
+    <p-button label="Guardar" icon="pi pi-check" [loading]="guardandoEntregables()"
+      (click)="guardarEntregables()" />
   </ng-template>
 
 </p-dialog>

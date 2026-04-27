@@ -57,8 +57,12 @@
           </td>
 
           <td class="text-center">
-            <p-button icon="pi pi-arrow-right" [rounded]="true" [text]="true" severity="secondary" size="small"
-              pTooltip="Ver detalle" tooltipPosition="top" (click)="irADetalle(ciclo.id)" />
+            <div class="flex gap-2 justify-center">
+              <p-button icon="pi pi-arrow-right" [rounded]="true" [text]="true" severity="secondary" size="small"
+                pTooltip="Ver detalle" tooltipPosition="top" (click)="irADetalle(ciclo.id)" />
+              <p-button icon="pi pi-shield" [rounded]="true" [text]="true" severity="warn" size="small"
+                pTooltip="Ver Penalidades" tooltipPosition="top" (click)="irAPenalidades(ciclo.id)" />
+            </div>
           </td>
 
         </tr>

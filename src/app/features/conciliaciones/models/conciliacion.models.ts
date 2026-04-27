@@ -1,5 +1,5 @@
 export interface RequerimientoComboDTO {
-  id: number;
+  id: number | null;
   codigoInternoFormateado: string;
   descripcionCompleta: string;
 }
@@ -30,4 +30,46 @@ export interface CicloContratoDTO {
   fechaFin: string;
   esCerrado: boolean;
   totalConciliados: number;
+}
+
+export interface EntregableConciliacionDTO {
+  id: number;
+  nombreEntregable: string;
+  horasFacturables: number;
+  seleccionado: boolean;
+}
+
+export interface PenalidadDTO {
+  id: number;
+  idContratoCiclo: number;
+  idContratoSla: number;
+  codigoSla: string;
+  nombreSla: string;
+  idRequerimiento: number;
+  nombreRequerimiento: string;
+  codGrupoTecnologico: number;
+  descripcionGrupoTecnologico: string;
+  horasPenalidad: number;
+  precioUnitario: number;
+  montoPenalidad: number;
+  observacion: string;
+}
+
+export interface PenalidadRequest {
+  idContratoSla: number;
+  idRequerimiento: number | null;
+  codGrupoTecnologico: string;
+  horasPenalidad: number;
+  observacion: string;
+}
+
+export interface SlaComboDTO {
+  id: number;
+  descripcion: string;
+}
+
+export interface ConceptoDTO {
+  id: number;
+  cod: string;
+  nombre: string;
 }

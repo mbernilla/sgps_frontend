@@ -13,7 +13,7 @@ import { AuthService } from '../core/services/auth.service'; // Ajusta la ruta
 export class LayoutComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
-  isSidebarCollapsed = signal<boolean>(false);
+  isSidebarCollapsed = signal<boolean>(true);
 
   // El signal comienza como null
   usuarioActual = signal<{ nombre: string, email: string, iniciales: string } | null>(null);

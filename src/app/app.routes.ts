@@ -65,6 +65,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/conciliaciones/ciclo-detalle/ciclo-detalle').then(m => m.CicloDetalleComponent),
   },
+  {
+    path: 'conciliaciones/ciclos/:idCiclo/penalidades',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/conciliaciones/penalidades/penalidades.component').then(m => m.PenalidadesComponent),
+  },
 
   // Maestros
   {

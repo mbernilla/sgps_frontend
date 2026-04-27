@@ -1,0 +1,178 @@
+<p-toast />
+
+<div class="page-wrapper">
+  <div class="custom-card">
+
+    <!-- ── Topbar ──────────────────────────────────────────────────────── -->
+    <div class="card-topbar">
+      <h1 class="card-title">
+        <i class="pi pi-shield"></i>
+        Penalidades / SLAs — Ciclo #{{ idCiclo }}
+      </h1>
+      <div class="flex items-center gap-2">
+        <p-button label="Agregar Penalidad" icon="pi pi-plus" severity="success"
+          (click)="abrirNuevo()" />
+        <p-button label="Volver" icon="pi pi-arrow-left" [text]="true" severity="secondary"
+          (click)="volver()" />
+      </div>
+    </div>
+
+    <!-- ── Grilla ────────────────────────────────────────────────────── -->
+    @if (cargando()) {
+    <div class="flex flex-col items-center justify-center py-24 gap-3">
+      <p-progressSpinner strokeWidth="4" animationDuration=".7s" />
+      <span class="text-sm text-gray-400">Cargando penalidades...</span>
+    </div>
+    } @else {
+
+    <p-table [value]="penalidades()"
+      styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
+      responsiveLayout="scroll"
+      [paginator]="penalidades().length > 10" [rows]="10" [rowsPerPageOptions]="[10, 20, 50]">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="w-28">Código</th>
+          <th class="min-w-[180px]">SLA</th>
+          <th class="min-w-[180px]">Requerimiento</th>
+          <th class="min-w-[160px]">Grupo Tecnológico</th>
+          <th class="w-28 text-right">Horas</th>
+          <th class="w-36 text-right">Precio Unitario</th>
+          <th class="w-36 text-right">Monto Penalidad</th>
+          <th class="min-w-[160px]">Observación</th>
+          <th class="w-20 text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr>
+
+          <td>
+            <span class="font-semibold text-slate-700">{{ item.codigoSla }}</span>
+          </td>
+
+          <td>{{ item.nombreSla }}</td>
+
+          <td>{{ item.nombreRequerimiento }}</td>
+
+          <td>{{ item.descripcionGrupoTecnologico }}</td>
+
+          <td class="text-right font-semibold text-slate-700">
+            {{ item.horasPenalidad | number:'1.2-2' }}h
+          </td>
+
+          <td class="text-right font-semibold text-slate-700">
+            {{ item.precioUnitario | currency:'PEN':'symbol':'1.2-2' }}
+          </td>
+
+          <td class="text-right font-bold text-red-600">
+            {{ item.montoPenalidad | currency:'PEN':'symbol':'1.2-2' }}
+          </td>
+
+          <td class="text-gray-500 text-sm">{{ item.observacion }}</td>
+
+          <td class="text-center">
+            <div class="flex gap-2 justify-center">
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" size="small"
+                pTooltip="Editar" tooltipPosition="top"
+                (click)="abrirEditar(item)" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+                pTooltip="Eliminar" tooltipPosition="top"
+                [loading]="eliminandoId() === item.id"
+                (click)="confirmarEliminar(item)" />
+            </div>
+          </td>
+
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center py-12 text-gray-400 text-sm">
+            <i class="pi pi-inbox text-3xl block mb-2 opacity-30"></i>
+            No hay penalidades registradas para este ciclo.
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+
+    }
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL — Nueva Penalidad
+════════════════════════════════════════════════════════════ -->
+<p-dialog [visible]="displayModal()" (visibleChange)="displayModal.set($event)"
+  [header]="editandoId() ? 'Editar Penalidad' : 'Nueva Penalidad'"
+  [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '620px' }" appendTo="body">
+
+  <form [formGroup]="penalidadForm" class="flex flex-col gap-4 pt-2">
+
+    <div class="grid grid-cols-2 gap-4">
+
+      <div class="flex flex-col gap-1.5">
+        <label class="form-label">SLA <span class="text-red-400">*</span></label>
+        <p-select formControlName="idContratoSla"
+          [options]="slas()" optionLabel="descripcion" optionValue="id"
+          filterPlaceholder="Buscar SLA..."
+          placeholder="Seleccione un SLA..." appendTo="body" styleClass="w-full" />
+        @if (penalidadForm.get('idContratoSla')?.invalid && penalidadForm.get('idContratoSla')?.touched) {
+        <small class="text-red-400 text-xs">Campo requerido.</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="form-label">Requerimiento</label>
+        <p-select formControlName="idRequerimiento"
+          [options]="requerimientos()" optionLabel="descripcionCompleta" optionValue="id"
+          [filter]="true" filterPlaceholder="Buscar requerimiento..."
+          placeholder="Sin requerimiento asociado" appendTo="body" styleClass="w-full" />
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="form-label">Grupo Tecnológico <span class="text-red-400">*</span></label>
+        <p-select formControlName="codGrupoTecnologico"
+          [options]="gruposTec()" optionLabel="nombre" optionValue="id"
+          placeholder="Seleccione un grupo..." appendTo="body" styleClass="w-full" />
+        @if (penalidadForm.get('codGrupoTecnologico')?.invalid && penalidadForm.get('codGrupoTecnologico')?.touched) {
+        <small class="text-red-400 text-xs">Campo requerido.</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="form-label">Horas <span class="text-red-400">*</span></label>
+        <p-inputnumber formControlName="horasPenalidad"
+          mode="decimal" locale="en-US" [minFractionDigits]="2" [maxFractionDigits]="2" [min]="0"
+          styleClass="w-full" inputStyleClass="w-full" />
+        @if (penalidadForm.get('horasPenalidad')?.invalid && penalidadForm.get('horasPenalidad')?.touched) {
+        <small class="text-red-400 text-xs">Campo requerido.</small>
+        }
+      </div>
+
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="form-label">Observación <span class="text-red-400">*</span></label>
+      <textarea pTextarea formControlName="observacion" rows="3" class="w-full"
+          placeholder="Ingrese una observación..."></textarea>
+      @if (penalidadForm.get('observacion')?.invalid && penalidadForm.get('observacion')?.touched) {
+      <small class="text-red-400 text-xs">Campo requerido.</small>
+      }
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
+      [disabled]="guardando()" (click)="displayModal.set(false)" />
+    <p-button [label]="editandoId() ? 'Actualizar' : 'Registrar'" icon="pi pi-check" [loading]="guardando()"
+      (click)="registrarPenalidad()" />
+  </ng-template>
+
+</p-dialog>
+
+<p-confirmDialog [style]="{ width: '480px' }" />
