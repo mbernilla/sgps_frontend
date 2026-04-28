@@ -274,9 +274,15 @@
 
       <div class="flex flex-col gap-1.5">
         <label class="form-label">Estimación <span class="text-red-400">*</span></label>
-        <p-select formControlName="idEstimacion" [options]="opcionesEstimaciones()"
-          optionLabel="label" optionValue="value" placeholder="Seleccione estimación..." appendTo="body"
-          styleClass="w-full" />
+        <div class="flex gap-1.5 items-center">
+          <p-select formControlName="idEstimacion" [options]="opcionesEstimaciones()"
+            optionLabel="label" optionValue="value" placeholder="Seleccione estimación..." appendTo="body"
+            styleClass="flex-1" />
+          <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="secondary" size="small"
+            pTooltip="Ver desglose de saldo" tooltipPosition="top"
+            [disabled]="!saldoFase()"
+            (click)="opSaldo.toggle($event)" />
+        </div>
         @if (nuevoForm.get('idEstimacion')?.invalid && nuevoForm.get('idEstimacion')?.touched) {
         <small class="text-red-400 text-xs">Campo requerido.</small>
         }
@@ -289,6 +295,13 @@
           styleClass="w-full" inputStyleClass="w-full" />
         @if (nuevoForm.get('horasFacturables')?.invalid && nuevoForm.get('horasFacturables')?.touched) {
         <small class="text-red-400 text-xs">Debe ser mayor a 0.</small>
+        }
+        @if (saldoFase(); as saldo) {
+        <div class="mt-2 flex items-center justify-between text-[11px] p-2 bg-slate-50 rounded border border-slate-200">
+          <span class="text-slate-500">Presupuesto: <strong>{{ saldo.presupuesto | number:'1.2-2' }}h</strong></span>
+          <span class="text-slate-500">Consumido: <strong>{{ saldo.consumido | number:'1.2-2' }}h</strong></span>
+          <span class="text-emerald-600 font-bold">Disponible: {{ saldo.disponible | number:'1.2-2' }}h</span>
+        </div>
         }
       </div>
 
@@ -313,6 +326,33 @@
     </div>
 
   </form>
+
+  <p-popover #opSaldo>
+    @if (saldoFase(); as saldo) {
+    <div class="min-w-[320px] flex flex-col gap-1.5 p-1">
+      <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide pb-1 border-b border-slate-200">
+        Desglose de Saldo por Estimación
+      </p>
+      @for (est of saldo.desgloseEstimaciones; track est.idEstimacion) {
+      <div class="flex flex-col gap-1 border-b border-slate-100 last:border-0 pb-2 mb-1">
+        <span class="text-xs font-bold text-slate-700">
+          <i class="pi pi-folder-open text-[10px] mr-1 text-blue-500"></i>
+          {{ est.descripcion }}
+        </span>
+        <div class="flex items-center gap-3 text-[11px]">
+          <span class="text-slate-500">Presupuesto: <strong>{{ est.presupuesto | number:'1.2-2' }}h</strong></span>
+          <span class="text-slate-500">Consumido: <strong>{{ est.consumido | number:'1.2-2' }}h</strong></span>
+          <span class="font-bold" [ngClass]="est.disponible > 0 ? 'text-emerald-600' : 'text-red-500'">
+            Disp: {{ est.disponible | number:'1.2-2' }}h
+          </span>
+        </div>
+      </div>
+      } @empty {
+      <p class="text-xs text-slate-400 py-2">Sin desglose disponible.</p>
+      }
+    </div>
+    }
+  </p-popover>
 
   }
 

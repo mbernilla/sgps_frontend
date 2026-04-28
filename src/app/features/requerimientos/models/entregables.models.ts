@@ -17,6 +17,21 @@ export interface PresupuestoDesgloseDTO {
   horas: number;
 }
 
+export interface SaldoEstimacionDTO {
+  idEstimacion: number;
+  descripcion: string;
+  presupuesto: number;
+  consumido: number;
+  disponible: number;
+}
+
+export interface SaldoFaseDTO {
+  presupuesto: number;
+  consumido: number;
+  disponible: number;
+  desgloseEstimaciones: SaldoEstimacionDTO[];
+}
+
 export interface CatalogoEntregableDTO {
   id: number;
   nombre: string;

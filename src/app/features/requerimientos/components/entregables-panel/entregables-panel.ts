@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, of, take } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -15,6 +15,7 @@ import { Textarea } from 'primeng/textarea';
 import { Toast } from 'primeng/toast';
 import { Dialog } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { Popover } from 'primeng/popover';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { FileUpload } from 'primeng/fileupload';
 import { TimelineModule } from 'primeng/timeline';
@@ -34,6 +35,7 @@ import {
   PresupuestoDesgloseDTO,
   RegistroEntregableRequest,
   RequerimientoFaseDTO,
+  SaldoFaseDTO,
 } from '../../models/entregables.models';
 import { EstimacionDTO } from '../../models/estimaciones.models';
 
@@ -65,6 +67,7 @@ interface FileSelectEvent {
     AccordionContent,
     TagModule,
     ConfirmDialog,
+    Popover,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './entregables-panel.html',
@@ -101,9 +104,12 @@ export class EntregablesPanelComponent implements OnInit {
   readonly puedeAprobar = signal(true);
 
   // ── Modal: Nuevo / Editar Entregable ─────────────────────────────────
+  readonly saldoFase           = signal<SaldoFaseDTO | null>(null);
+  @ViewChild('opSaldo') opSaldo!: Popover;
   readonly dialogNuevoVisible  = signal(false);
   readonly faseParaNuevo       = signal<RequerimientoFaseDTO | null>(null);
   readonly idEntregableEdicion = signal<number | null>(null);
+  readonly idEstimacionOriginal = signal<number | null>(null);
   readonly catalogoFase        = signal<CatalogoEntregableDTO[]>([]);
   readonly cargandoCatalogo    = signal(false);
   readonly guardandoEntregable = signal(false);
@@ -129,11 +135,28 @@ export class EntregablesPanelComponent implements OnInit {
     this.catalogoFase().map(c => ({ value: c.id, label: c.nombre }))
   );
 
-  readonly opcionesEstimaciones = computed(() =>
-    this.estimaciones()
-      .filter(e => e.codEstado === 'EST_APR')
-      .map(e => ({ value: e.id, label: `${e.codigoEstimacionDescripcion} (${e.horasEstimadas.toFixed(0)}h)` }))
-  );
+  readonly opcionesEstimaciones = computed(() => {
+    const saldo = this.saldoFase();
+    const idOriginal = this.idEstimacionOriginal();
+
+    if (saldo && saldo.desgloseEstimaciones) {
+      return saldo.desgloseEstimaciones
+        .filter(est => {
+          const tieneSaldo = est.disponible > 0;
+          // CANDADO ESTRICTO: Solo aplica el bypass si idOriginal NO es nulo
+          const esLaMia = (idOriginal !== null) && (est.idEstimacion === idOriginal);
+
+          return tieneSaldo || esLaMia;
+        })
+        .map(est => ({
+          value: est.idEstimacion,
+          label: est.descripcion
+        }));
+    }
+
+    // Sin adivinanzas: si no hay saldo cargado, el combo espera vacío
+    return [];
+  });
 
   // ── Modal: Evaluación ─────────────────────────────────────────────────
   readonly dialogEvalVisible = signal(false);
@@ -216,6 +239,7 @@ export class EntregablesPanelComponent implements OnInit {
   // ── Modal: Nuevo Entregable ───────────────────────────────────────────
   abrirNuevo(fase: RequerimientoFaseDTO): void {
     this.idEntregableEdicion.set(null);
+    this.idEstimacionOriginal.set(null);
     this.faseParaNuevo.set(fase);
     this.nuevoForm.reset({ idCatalogoEntregable: null, idEstimacion: null, horasFacturables: 0, fechaEntregaPlan: null, fechaAprobacionPlan: null });
     this.catalogoFase.set([]);
@@ -226,6 +250,11 @@ export class EntregablesPanelComponent implements OnInit {
         next: res => { this.catalogoFase.set(res.data); this.cargandoCatalogo.set(false); },
         error: () => { this.cargandoCatalogo.set(false); this.toastError('No se pudo cargar el catálogo de entregables.'); },
       });
+    this.saldoFase.set(null);
+    this.service.getSaldoFase(fase.id).pipe(take(1)).subscribe({
+      next: res => this.saldoFase.set(res.data),
+      error: () => this.saldoFase.set(null),
+    });
     this.dialogNuevoVisible.set(true);
   }
 
@@ -234,9 +263,17 @@ export class EntregablesPanelComponent implements OnInit {
     const fase = idFase !== null ? (this.fases().find(f => f.id === idFase) ?? null) : null;
 
     this.idEntregableEdicion.set(ent.id);
+    this.idEstimacionOriginal.set(ent.idEstimacion ?? null);
     this.faseParaNuevo.set(fase);
     this.catalogoFase.set([]);
     this.cargandoCatalogo.set(true);
+    this.saldoFase.set(null);
+    if (fase) {
+      this.service.getSaldoFase(fase.id).pipe(take(1)).subscribe({
+        next: res => this.saldoFase.set(res.data),
+        error: () => this.saldoFase.set(null),
+      });
+    }
     this.dialogNuevoVisible.set(true);
 
     const catalogo$ = fase

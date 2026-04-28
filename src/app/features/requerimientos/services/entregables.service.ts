@@ -13,6 +13,7 @@ import {
   PresupuestoDesgloseDTO,
   RegistroEntregableRequest,
   RequerimientoFaseDTO,
+  SaldoFaseDTO,
   UploadResponseDTO,
 } from '../models/entregables.models';
 
@@ -43,6 +44,12 @@ export class EntregablesService {
   getDesglosePresupuesto(idFase: number): Observable<ApiResponse<PresupuestoDesgloseDTO[]>> {
     return this.http.get<ApiResponse<PresupuestoDesgloseDTO[]>>(
       `${this.base}/requerimientos/fases/${idFase}/desglose`
+    );
+  }
+
+  getSaldoFase(idFase: number): Observable<ApiResponse<SaldoFaseDTO>> {
+    return this.http.get<ApiResponse<SaldoFaseDTO>>(
+      `${this.base}/entregables/fases/${idFase}/saldo`
     );
   }
 
