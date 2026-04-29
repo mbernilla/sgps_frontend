@@ -71,7 +71,7 @@
               <i class="pi pi-layers text-blue-500"></i>
               <span class="font-semibold text-slate-700">{{ fase.faseDescripcion }}</span>
               <span class="text-xs text-slate-400 font-mono">({{ fase.codFase }})</span>
-              @if (fase.horasEstimadas) {
+              @if (fase.horasEstimadas != null) {
               <span class="text-xs text-slate-500 ml-2">
                 {{ fase.horasFacturadas || 0 | number:'1.2-2' }}h facturadas de {{ fase.horasEstimadas | number:'1.2-2' }}h estimadas
                 (Saldo: {{ (fase.horasEstimadas - (fase.horasFacturadas || 0)) | number:'1.2-2' }}h)
@@ -136,6 +136,7 @@
                 <th class="w-28 text-center">Estado</th>
                 <th class="w-20 text-center">Horas</th>
                 <th class="w-20 text-center">Devoluciones</th>
+                <th class="w-20 text-center">Ciclo Fact.</th>
                 <th class="w-28 text-center">Entrega Plan</th>
                 <th class="w-28 text-center">Aprob. Plan</th>
                 <th class="w-28 text-center">F. Entrega Real</th>
@@ -163,7 +164,9 @@
                     {{ ent.estadoDescripcion }}
                   </span>
                 </td>
+
                 <td class="text-center text-sm">{{ ent.horasFacturables | number:'1.2-2' }}</td>
+
                 <td class="text-center text-sm">
                   @if (ent.cantidadDevoluciones > 0) {
                   <span class="text-red-600 font-semibold">{{ ent.cantidadDevoluciones }}</span>
@@ -171,6 +174,9 @@
                   <span class="text-gray-400">0</span>
                   }
                 </td>
+
+                <td class="text-center text-sm text-blue-600">{{ ent.nombreCiclo }}</td>
+
                 <td class="text-center text-sm text-gray-600">{{ ent.fechaEntregaPlan | date:'dd/MM/yyyy' }}</td>
                 <td class="text-center text-sm text-gray-600">{{ ent.fechaAprobacionPlan | date:'dd/MM/yyyy' }}</td>
                 <td class="text-center text-sm text-gray-600">

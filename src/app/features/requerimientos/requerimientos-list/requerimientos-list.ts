@@ -136,24 +136,21 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
   private buildMenuItems(req: RequerimientoGridDTO): MenuItem[] {
     return [
       {
-        label: 'Consultas',
+        label: '<span class="block px-3 py-2.5 bg-green-50 border-l-3 border-green-500 text-[12px] font-semibold text-green-700 uppercase tracking-widest rounded-sm">Datos del Requerimiento</span>',
+        escape: false,
         items: [
-          { label: 'Ver Detalle', icon: 'pi pi-eye', command: () => this.router.navigate(['/requerimientos/ver', req.id]) },
-          { label: 'Seguimientos', icon: 'pi pi-history', command: () => this.abrirSeguimientos(req) },
+          { label: 'Ver', icon: 'pi pi-eye', command: () => this.router.navigate(['/requerimientos/ver', req.id]) },
+          { label: 'Editar', icon: 'pi pi-pencil', command: () => this.router.navigate(['/requerimientos/editar', req.id]) },
+          { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'menu-danger', command: () => this.confirmarEliminacion(req.id, req.nombre) },
         ],
       },
       {
-        label: 'Gestión',
+        label: '<span class="block px-3 py-2.5 bg-green-50 border-l-3 border-green-500 text-[12px] font-semibold text-green-700 uppercase tracking-widest rounded-sm">Gestión</span>',
+        escape: false,
         items: [
           { label: 'Gestionar Estimaciones', icon: 'pi pi-calculator', command: () => this.router.navigate(['/requerimientos', req.id, 'estimaciones']) },
           { label: 'Ver Entregables', icon: 'pi pi-box', command: () => this.router.navigate(['/requerimientos', req.id, 'entregables']) },
-        ],
-      },
-      {
-        label: 'Configuración',
-        items: [
-          { label: 'Editar Datos', icon: 'pi pi-pencil', command: () => this.router.navigate(['/requerimientos/editar', req.id]) },
-          { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'menu-danger', command: () => this.confirmarEliminacion(req.id, req.nombre) },
+          { label: 'Seguimientos', icon: 'pi pi-history', command: () => this.abrirSeguimientos(req) },
         ],
       },
     ];
