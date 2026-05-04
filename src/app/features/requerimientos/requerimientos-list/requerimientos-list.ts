@@ -150,7 +150,6 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
         items: [
           { label: 'Gestionar Estimaciones', icon: 'pi pi-calculator', command: () => this.router.navigate(['/requerimientos', req.id, 'estimaciones']) },
           { label: 'Ver Entregables', icon: 'pi pi-box', command: () => this.router.navigate(['/requerimientos', req.id, 'entregables']) },
-          { label: 'Seguimientos', icon: 'pi pi-history', command: () => this.abrirSeguimientos(req) },
         ],
       },
     ];

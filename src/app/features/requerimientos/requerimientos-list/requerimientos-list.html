@@ -27,6 +27,7 @@
 
       <ng-template pTemplate="header">
         <tr>
+          <th class="w-16 text-center">Seg.</th>
           <th pSortableColumn="codigo" class="w-32">Código Int. <p-sortIcon field="codigo"></p-sortIcon></th>
           <th pSortableColumn="codExterno" class="w-32">Ticket Ext. <p-sortIcon field="codExterno"></p-sortIcon></th>
           <th pSortableColumn="nombre" class="min-w-[15rem]">Nombre del Proyecto <p-sortIcon
@@ -34,7 +35,6 @@
           <th pSortableColumn="ultimaEstimacion">Última Est. <p-sortIcon field="ultimaEstimacion" /></th>
           <th pSortableColumn="totalHorasAprobadas">Horas Aprobadas <p-sortIcon field="totalHorasAprobadas" /></th>
           <th class="text-center" pSortableColumn="horasFacturadas">H. Facturadas <p-sortIcon field="horasFacturadas" /></th>
-          <th pSortableColumn="sistema" class="w-48">Sistema <p-sortIcon field="sistema"></p-sortIcon></th>
           <th pSortableColumn="tipoRequerimiento" class="w-40">Tipo <p-sortIcon field="tipoRequerimiento"></p-sortIcon>
           </th>
           <th pSortableColumn="estado" class="w-40 text-center">Estado <p-sortIcon field="estado"></p-sortIcon></th>
@@ -46,6 +46,11 @@
 
       <ng-template pTemplate="body" let-req>
         <tr [pSelectableRow]="req" [ngClass]="{'flash-row': req.id === idResaltado()}">
+
+          <td class="text-center">
+            <p-button icon="pi pi-history" [text]="true" [rounded]="true" severity="secondary"
+              pTooltip="Ver Seguimientos" tooltipPosition="top" (click)="abrirSeguimientos(req)" />
+          </td>
 
           <td class="font-medium text-gray-700">{{ req.codigoInternoFormateado }}</td>
           <td>{{ req.codExterno || '-' }}</td>
@@ -74,7 +79,6 @@
             {{ req.horasFacturadas || 0 | number:'1.2-2' }}
           </td>
 
-          <td class="text-gray-600 truncate max-w-[200px]" [title]="req.sistemaNombre">{{ req.sistemaNombre }}</td>
           <td class="text-gray-600">{{ req.tipoReqDescripcion }}</td>
 
           <td class="text-center">

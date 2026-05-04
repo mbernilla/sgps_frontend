@@ -2,6 +2,7 @@ export interface RequerimientoComboDTO {
   id: number | null;
   codigoInternoFormateado: string;
   descripcionCompleta: string;
+  esActivo?: boolean;
 }
 
 export interface ConciliacionManualRequest {

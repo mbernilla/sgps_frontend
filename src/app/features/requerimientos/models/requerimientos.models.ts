@@ -41,6 +41,7 @@ export interface RequerimientoGridDTO {
   codigoInternoFormateado: string;
   totalHorasAprobadas?: number;
   horasFacturadas?: number;
+  esActivo?: boolean;
 }
 
 export interface ApiResponse<T> {

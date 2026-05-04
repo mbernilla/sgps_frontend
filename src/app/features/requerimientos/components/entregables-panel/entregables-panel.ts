@@ -74,13 +74,13 @@ interface FileSelectEvent {
   styleUrl: './entregables-panel.scss',
 })
 export class EntregablesPanelComponent implements OnInit {
-  private readonly route      = inject(ActivatedRoute);
-  private readonly router     = inject(Router);
-  private readonly service    = inject(EntregablesService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly service = inject(EntregablesService);
   private readonly estService = inject(EstimacionesService);
-  private readonly fb         = inject(FormBuilder);
-  private readonly msg        = inject(MessageService);
-  private readonly destroyRef    = inject(DestroyRef);
+  private readonly fb = inject(FormBuilder);
+  private readonly msg = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly confirmService = inject(ConfirmationService);
 
   private idRequerimiento = 0;
@@ -89,12 +89,12 @@ export class EntregablesPanelComponent implements OnInit {
   indicesActivos: string[] = [];
 
   // ── Fases ─────────────────────────────────────────────────────────────
-  readonly fases           = signal<RequerimientoFaseDTO[]>([]);
-  readonly cargandoFases   = signal(false);
+  readonly fases = signal<RequerimientoFaseDTO[]>([]);
+  readonly cargandoFases = signal(false);
 
   // ── Entregables por fase ──────────────────────────────────────────────
   readonly entregablesPorFase = signal<Record<number, EntregableGridDTO[]>>({});
-  readonly cargandoPorFase    = signal<Record<number, boolean>>({});
+  readonly cargandoPorFase = signal<Record<number, boolean>>({});
   private readonly fasesYaCargadas = new Set<number>();
 
   // ── Estimaciones (para validación de horas) ───────────────────────────
@@ -104,32 +104,35 @@ export class EntregablesPanelComponent implements OnInit {
   readonly puedeAprobar = signal(true);
 
   // ── Modal: Nuevo / Editar Entregable ─────────────────────────────────
-  readonly saldoFase           = signal<SaldoFaseDTO | null>(null);
+  readonly saldoFase = signal<SaldoFaseDTO | null>(null);
   @ViewChild('opSaldo') opSaldo!: Popover;
-  readonly dialogNuevoVisible  = signal(false);
-  readonly faseParaNuevo       = signal<RequerimientoFaseDTO | null>(null);
+  readonly dialogNuevoVisible = signal(false);
+  readonly faseParaNuevo = signal<RequerimientoFaseDTO | null>(null);
   readonly idEntregableEdicion = signal<number | null>(null);
   readonly idEstimacionOriginal = signal<number | null>(null);
-  readonly catalogoFase        = signal<CatalogoEntregableDTO[]>([]);
-  readonly cargandoCatalogo    = signal(false);
+  readonly catalogoFase = signal<CatalogoEntregableDTO[]>([]);
+  readonly cargandoCatalogo = signal(false);
   readonly guardandoEntregable = signal(false);
   archivoNuevo: File | null = null;
 
   readonly nuevoForm: FormGroup = this.fb.group({
     idCatalogoEntregable: [null as number | null, Validators.required],
-    idEstimacion:         [null as number | null, Validators.required],
-    horasFacturables:     [0, [Validators.required, Validators.min(0.01)]],
-    fechaEntregaPlan:     [null as Date | null,    Validators.required],
-    fechaAprobacionPlan:  [null as Date | null,    Validators.required],
+    idEstimacion: [null as number | null, Validators.required],
+    horasFacturables: [0, [Validators.required, Validators.min(0.01)]],
+    fechaEntregaPlan: [null as Date | null, Validators.required],
+    fechaAprobacionPlan: [null as Date | null, Validators.required],
   });
 
   readonly totalPendientes = computed(() =>
     this.fases().reduce((acc, f) => acc + (f.cantEnRevision || 0), 0)
   );
 
-  readonly totalEstimadoGlobal  = computed(() => this.fases().reduce((acc, f) => acc + (f.horasEstimadas  || 0), 0));
+  readonly totalEstimadoGlobal = computed(() =>
+    this.fases().reduce((acc, f) => acc + (f.horasEstimadas || 0), 0)
+  );
+
   readonly totalFacturadoGlobal = computed(() => this.fases().reduce((acc, f) => acc + (f.horasFacturadas || 0), 0));
-  readonly saldoGlobal          = computed(() => this.totalEstimadoGlobal() - this.totalFacturadoGlobal());
+  readonly saldoGlobal = computed(() => this.totalEstimadoGlobal() - this.totalFacturadoGlobal());
 
   readonly opcionesCatalogo = computed(() =>
     this.catalogoFase().map(c => ({ value: c.id, label: c.nombre }))
@@ -160,27 +163,27 @@ export class EntregablesPanelComponent implements OnInit {
 
   // ── Modal: Evaluación ─────────────────────────────────────────────────
   readonly dialogEvalVisible = signal(false);
-  readonly entregableEval    = signal<EntregableGridDTO | null>(null);
-  readonly modoEval          = signal<'aprobar' | 'observar'>('aprobar');
-  readonly guardandoEval     = signal(false);
+  readonly entregableEval = signal<EntregableGridDTO | null>(null);
+  readonly modoEval = signal<'aprobar' | 'observar'>('aprobar');
+  readonly guardandoEval = signal(false);
   private archivosEval: File[] = [];
-  readonly comentarioCtrl    = new FormControl('', { nonNullable: true, validators: Validators.required });
+  readonly comentarioCtrl = new FormControl('', { nonNullable: true, validators: Validators.required });
 
   // ── Modal: Bitácora ───────────────────────────────────────────────────
-  readonly dialogBitacoraVisible  = signal(false);
-  readonly flujo                  = signal<FlujoBitacoraDTO[]>([]);
-  readonly cargandoBitacora       = signal(false);
-  readonly tituloDialogBitacora   = signal('');
+  readonly dialogBitacoraVisible = signal(false);
+  readonly flujo = signal<FlujoBitacoraDTO[]>([]);
+  readonly cargandoBitacora = signal(false);
+  readonly tituloDialogBitacora = signal('');
 
   // ── Modal: Desglose de Presupuesto ───────────────────────────────────
-  readonly desgloseVisible     = signal(false);
-  readonly desgloseData        = signal<PresupuestoDesgloseDTO[]>([]);
-  readonly desgloseFaseNombre  = signal('');
+  readonly desgloseVisible = signal(false);
+  readonly desgloseData = signal<PresupuestoDesgloseDTO[]>([]);
+  readonly desgloseFaseNombre = signal('');
 
   // ── Modal: Nueva Versión ──────────────────────────────────────────────
   readonly dialogVersionVisible = signal(false);
-  readonly entregableVersion    = signal<EntregableGridDTO | null>(null);
-  readonly guardandoVersion     = signal(false);
+  readonly entregableVersion = signal<EntregableGridDTO | null>(null);
+  readonly guardandoVersion = signal(false);
   archivoVersion: File | null = null;
 
   // ── Ciclo de vida ─────────────────────────────────────────────────────
@@ -286,10 +289,10 @@ export class EntregablesPanelComponent implements OnInit {
         this.cargandoCatalogo.set(false);
         this.nuevoForm.patchValue({
           idCatalogoEntregable: ent.idCatalogoEntregable,
-          idEstimacion:         ent.idEstimacion ?? null,
-          horasFacturables:     ent.horasFacturables,
-          fechaEntregaPlan:     new Date(ent.fechaEntregaPlan    + 'T00:00:00'),
-          fechaAprobacionPlan:  new Date(ent.fechaAprobacionPlan + 'T00:00:00'),
+          idEstimacion: ent.idEstimacion ?? null,
+          horasFacturables: ent.horasFacturables,
+          fechaEntregaPlan: new Date(ent.fechaEntregaPlan + 'T00:00:00'),
+          fechaAprobacionPlan: new Date(ent.fechaAprobacionPlan + 'T00:00:00'),
         });
       },
       error: () => {
@@ -333,12 +336,12 @@ export class EntregablesPanelComponent implements OnInit {
 
     if (idEdicion !== null) {
       const payload: EditarEntregableRequest = {
-        idRequerimientoFase:  fase.id,
+        idRequerimientoFase: fase.id,
         idCatalogoEntregable: v.idCatalogoEntregable,
-        idEstimacion:         v.idEstimacion,
-        horasFacturables:     v.horasFacturables,
-        fechaEntregaPlan:     this.toDateStr(v.fechaEntregaPlan),
-        fechaAprobacionPlan:  this.toDateStr(v.fechaAprobacionPlan),
+        idEstimacion: v.idEstimacion,
+        horasFacturables: v.horasFacturables,
+        fechaEntregaPlan: this.toDateStr(v.fechaEntregaPlan),
+        fechaAprobacionPlan: this.toDateStr(v.fechaAprobacionPlan),
       };
       this.service.editar(idEdicion, payload).pipe(take(1)).subscribe({
         next: () => {
@@ -356,12 +359,12 @@ export class EntregablesPanelComponent implements OnInit {
       });
     } else {
       const payload: RegistroEntregableRequest = {
-        idRequerimientoFase:  fase.id,
+        idRequerimientoFase: fase.id,
         idCatalogoEntregable: v.idCatalogoEntregable,
-        idEstimacion:         v.idEstimacion,
-        horasFacturables:     v.horasFacturables,
-        fechaEntregaPlan:     this.toDateStr(v.fechaEntregaPlan),
-        fechaAprobacionPlan:  this.toDateStr(v.fechaAprobacionPlan),
+        idEstimacion: v.idEstimacion,
+        horasFacturables: v.horasFacturables,
+        fechaEntregaPlan: this.toDateStr(v.fechaEntregaPlan),
+        fechaAprobacionPlan: this.toDateStr(v.fechaAprobacionPlan),
       };
       this.service.registrar(payload).pipe(take(1)).subscribe({
         next: () => {
@@ -441,8 +444,8 @@ export class EntregablesPanelComponent implements OnInit {
   guardarEvaluacion(): void {
     if (this.comentarioCtrl.invalid) { this.comentarioCtrl.markAsTouched(); return; }
 
-    const idEnt    = this.entregableEval()!.id;
-    const modo     = this.modoEval();
+    const idEnt = this.entregableEval()!.id;
+    const modo = this.modoEval();
     const codEstado = modo === 'aprobar' ? 'ENT_APR' : 'ENT_OBS';
     const comentario = this.comentarioCtrl.value;
 
@@ -482,7 +485,7 @@ export class EntregablesPanelComponent implements OnInit {
         next: responses => {
           const adjuntos: ArchivoAdjuntoDTO[] = responses.map(r => ({
             nombreArchivo: r.data.nombreArchivoOriginal,
-            rutaArchivo:   r.data.rutaFileServer,
+            rutaArchivo: r.data.rutaFileServer,
           }));
           doEvaluar(adjuntos);
         },
@@ -541,9 +544,9 @@ export class EntregablesPanelComponent implements OnInit {
       .subscribe({
         next: uploadRes => {
           const payload: NuevaVersionRequest = {
-            nombreArchivo:  uploadRes.data.nombreArchivoOriginal,
+            nombreArchivo: uploadRes.data.nombreArchivoOriginal,
             rutaFileServer: uploadRes.data.rutaFileServer,
-            tamanioKb:      uploadRes.data.tamanioKb,
+            tamanioKb: uploadRes.data.tamanioKb,
           };
           this.service.subirNuevaVersion(ent.id, payload).pipe(take(1)).subscribe({
             next: () => {

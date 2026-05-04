@@ -119,8 +119,8 @@ export class SeguimientosPanel implements OnInit, OnChanges {
 
   // ── Formulario de registro ────────────────────────────────────────────
   readonly form = this.fb.group({
-    codTipoSeguimiento:    this.fb.nonNullable.control('',       Validators.required),
-    idPersonalResponsable: this.fb.control<number | null>(null,  Validators.required),
+    codTipoSeguimiento:    this.fb.nonNullable.control('SEG_NOT', Validators.required),
+    idPersonalResponsable: this.fb.control<number | null>(null),  // validación dinámica
     descripcion:           this.fb.nonNullable.control('',       [Validators.required, Validators.maxLength(500)]),
     fechaReal:             this.fb.control<Date | null>(new Date(), Validators.required),
     fechaPlazo:            this.fb.control<Date | null>(null),   // validación dinámica
@@ -131,6 +131,17 @@ export class SeguimientosPanel implements OnInit, OnChanges {
    * Controla la visibilidad de fechaPlazo en el template.
    */
   readonly mostrarFechasPlazo = toSignal(
+    this.form.controls.codTipoSeguimiento.valueChanges.pipe(
+      map(val => !!val && val !== 'SEG_NOT'),
+    ),
+    { initialValue: false },
+  );
+
+  /**
+   * true cuando el tipo seleccionado NO es "Nota" (SEG_NOT) y hay un valor.
+   * Controla la visibilidad de idPersonalResponsable en el template.
+   */
+  readonly mostrarResponsable = toSignal(
     this.form.controls.codTipoSeguimiento.valueChanges.pipe(
       map(val => !!val && val !== 'SEG_NOT'),
     ),
@@ -209,7 +220,7 @@ export class SeguimientosPanel implements OnInit, OnChanges {
 
   /** Limpia el formulario completo (botón manual del usuario). */
   limpiar(): void {
-    this.form.reset({ fechaReal: new Date() });
+    this.form.reset({ codTipoSeguimiento: 'SEG_NOT', fechaReal: new Date() });
   }
 
   /** Carga el seguimiento en el formulario para editarlo. */
@@ -325,26 +336,33 @@ export class SeguimientosPanel implements OnInit, OnChanges {
   }
 
   /**
-   * Añade / quita el validador required en fechaPlazo según el tipo elegido.
-   * Tipo "Tarea" (SEG_TAR) obliga a declarar una fecha límite.
+   * Añade / quita validadores en fechaPlazo e idPersonalResponsable según el tipo elegido.
+   * Tipo "Tarea" (SEG_TAR) obliga a declarar una fecha límite y un responsable.
    */
   private suscribirValidacionDinamica(): void {
     this.form.controls.codTipoSeguimiento.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(tipo => {
-        const ctrl = this.form.controls.fechaPlazo;
+        const fechaPlazoCtrl = this.form.controls.fechaPlazo;
+        const responsableCtrl = this.form.controls.idPersonalResponsable;
 
         if (tipo === 'SEG_TAR') {
-          ctrl.addValidators(Validators.required);
+          fechaPlazoCtrl.addValidators(Validators.required);
+          responsableCtrl.addValidators(Validators.required);
+          fechaPlazoCtrl.markAsUntouched();
+          responsableCtrl.markAsUntouched();
         } else {
-          ctrl.removeValidators(Validators.required);
-          // Limpiamos el valor al ocultar el campo para no enviar fechas fantasma
-          if (tipo === 'SEG_NOT') {
-            ctrl.setValue(null, { emitEvent: false });
-          }
+          fechaPlazoCtrl.removeValidators(Validators.required);
+          responsableCtrl.removeValidators(Validators.required);
+          // Limpiamos valores y estado al ocultar los campos para no enviar datos fantasma
+          fechaPlazoCtrl.setValue(null, { emitEvent: false });
+          responsableCtrl.setValue(null, { emitEvent: false });
+          fechaPlazoCtrl.markAsUntouched();
+          responsableCtrl.markAsUntouched();
         }
 
-        ctrl.updateValueAndValidity({ emitEvent: false });
+        fechaPlazoCtrl.updateValueAndValidity({ emitEvent: false });
+        responsableCtrl.updateValueAndValidity({ emitEvent: false });
       });
   }
 
@@ -378,7 +396,7 @@ private cargarHistorial(): void {
    */
   private limpiarManteniendo(): void {
     const responsable = this.form.controls.idPersonalResponsable.value;
-    this.form.reset({ fechaReal: new Date() });
+    this.form.reset({ codTipoSeguimiento: 'SEG_NOT', fechaReal: new Date() });
     this.form.controls.idPersonalResponsable.setValue(responsable, { emitEvent: false });
   }
 
