@@ -53,18 +53,20 @@
     }
 
     <!-- ── Resumen Horas (Compacto) ────────────────────────────────────── -->
-    <div class="ent-horas-summary mb-6">
-      <div class="ent-horas-item">
-        <span class="ent-horas-label">Total estimado</span>
-        <span class="ent-horas-value">{{ totalEstimadoGlobal() | number:'1.2-2' }} h</span>
-      </div>
-      <div class="ent-horas-item">
-        <span class="ent-horas-label">Horas facturadas</span>
-        <span class="ent-horas-value">{{ totalFacturadoGlobal() | number:'1.2-2' }} h</span>
-      </div>
-      <div class="ent-horas-item">
-        <span class="ent-horas-label">Saldo pendiente</span>
-        <span class="ent-horas-value">{{ saldoGlobal() | number:'1.2-2' }} h</span>
+    <div class="ent-horas-container">
+      <div class="ent-horas-summary">
+        <div class="ent-horas-item">
+          <span class="ent-horas-label">Total estimado</span>
+          <span class="ent-horas-value">{{ totalEstimadoGlobal() | number:'1.2-2' }} h</span>
+        </div>
+        <div class="ent-horas-item">
+          <span class="ent-horas-label">Horas facturadas</span>
+          <span class="ent-horas-value">{{ totalFacturadoGlobal() | number:'1.2-2' }} h</span>
+        </div>
+        <div class="ent-horas-item">
+          <span class="ent-horas-label">Saldo pendiente</span>
+          <span class="ent-horas-value">{{ saldoGlobal() | number:'1.2-2' }} h</span>
+        </div>
       </div>
     </div>
 

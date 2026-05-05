@@ -230,17 +230,25 @@
 }
 
 /* ── Resumen Horas Compacto ──────────────────────────────────────────── */
+.ent-horas-container {
+  margin: 4px 0;
+  display: flex;
+  justify-content: center;
+}
+
 .ent-horas-summary {
   display: flex;
   gap: 32px;
   padding: 0;
+  justify-content: center;
+  align-items: center;
 }
 
 .ent-horas-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
+  text-align: center;
 }
 
 .ent-horas-label {
