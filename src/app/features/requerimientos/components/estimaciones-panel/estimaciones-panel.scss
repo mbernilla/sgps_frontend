@@ -76,6 +76,13 @@
   color: #94a3b8;
 }
 
+/* ── Cabecera (componente reutilizable) ──────────────────────────────── */
+.est-content-top {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 32px 0;
+}
+
 /* ── Área de contenido ───────────────────────────────────────────────── */
 .est-content {
   max-width: 1400px;

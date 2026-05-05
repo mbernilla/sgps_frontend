@@ -70,6 +70,9 @@
 }
 
 /* ── Content ─────────────────────────────────────────────────────────── */
+.ent-content-top {
+  margin-bottom: 0;
+}
 .ent-content {
   max-width: 1400px;
   margin: 0 auto;
@@ -224,4 +227,43 @@
   transition: background 120ms;
 
   &:hover { background: #dce0f7; }
+}
+
+/* ── Resumen Horas Compacto ──────────────────────────────────────────── */
+.ent-horas-summary {
+  display: flex;
+  gap: 32px;
+  padding: 0;
+}
+
+.ent-horas-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.ent-horas-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ent-horas-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ep-text);
+}
+
+@media (max-width: 768px) {
+  .ent-horas-summary {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .ent-horas-item {
+    flex: 0 1 calc(50% - 8px);
+  }
 }

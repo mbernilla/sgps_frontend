@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
+import { RequerimientoCabeceraDTO } from '../../../core/models/requerimiento-cabecera.model';
 import {
   EstimacionActualizacionRequestDTO,
   EstimacionDTO,
@@ -18,6 +19,12 @@ export const CONTRATO_ACTIVO_ID = 2;
 export class EstimacionesService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.baseUrl}/v1`;
+
+  getCabecera(idRequerimiento: number): Observable<ApiResponse<RequerimientoCabeceraDTO>> {
+    return this.http.get<ApiResponse<RequerimientoCabeceraDTO>>(
+      `${this.base}/requerimientos/${idRequerimiento}/cabecera`
+    );
+  }
 
   getByRequerimiento(idRequerimiento: number): Observable<ApiResponse<EstimacionDTO[]>> {
     const timestamp = new Date().getTime();

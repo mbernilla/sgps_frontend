@@ -19,6 +19,9 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { Dialog } from 'primeng/dialog';
 
+import { RequerimientoCabeceraComponent } from '../../../../shared/components/requerimiento-cabecera/requerimiento-cabecera';
+import { RequerimientoCabeceraDTO } from '../../../../core/models/requerimiento-cabecera.model';
+import { ApiResponse } from '../../../../core/models/api-response.model';
 import { EstimacionesService, CONTRATO_ACTIVO_ID } from '../../services/estimaciones.service';
 import {
   CodigoEstimacion,
@@ -49,6 +52,7 @@ import {
     TooltipModule,
     ProgressSpinner,
     Dialog,
+    RequerimientoCabeceraComponent,
   ],
   providers: [MessageService],
   templateUrl: './estimaciones-panel.html',
@@ -64,6 +68,9 @@ export class EstimacionesPanelComponent implements OnInit {
 
   private idRequerimiento = 0;
 
+  // ── Cabecera del Requerimiento ────────────────────────────────────────
+  readonly cabecera = signal<RequerimientoCabeceraDTO | null>(null);
+  readonly cargandoCabecera = signal(false);
 
   // ── Datos ─────────────────────────────────────────────────────────────
   readonly estimaciones        = signal<EstimacionDTO[]>([]);
@@ -146,6 +153,7 @@ export class EstimacionesPanelComponent implements OnInit {
   // ── Ciclo de vida ─────────────────────────────────────────────────────
   ngOnInit(): void {
     this.idRequerimiento = Number(this.route.snapshot.paramMap.get('id'));
+    this.cargarCabecera();
     this.cargarEstimaciones();
     this.cargarModificadores();
     this.cargarFasesMaestras();
@@ -156,6 +164,22 @@ export class EstimacionesPanelComponent implements OnInit {
   }
 
   // ── Carga de datos ────────────────────────────────────────────────────
+  private cargarCabecera(): void {
+    this.cargandoCabecera.set(true);
+    this.service.getCabecera(this.idRequerimiento)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res: ApiResponse<RequerimientoCabeceraDTO>) => {
+          this.cabecera.set(res.data);
+          this.cargandoCabecera.set(false);
+        },
+        error: () => {
+          this.cargandoCabecera.set(false);
+          this.toastError('No se pudo cargar la información del requerimiento.');
+        },
+      });
+  }
+
   cargarEstimaciones(): void {
     this.cargando.set(true);
     this.estimaciones.set([]);

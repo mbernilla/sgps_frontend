@@ -23,6 +23,13 @@
     </div>
   </div>
 
+  <!-- ── Sección Cabecera ────────────────────────────────────────────── -->
+  <div class="ent-content-top">
+    <app-requerimiento-cabecera
+      [cabecera]="cabecera()"
+      [cargando]="cargandoCabecera()" />
+  </div>
+
   <!-- ── Contenido principal ──────────────────────────────────────────── -->
   <div class="ent-content">
 
@@ -45,19 +52,19 @@
     </div>
     }
 
-    <!-- ── Dashboard KPI ────────────────────────────────────────────────── -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-        <span class="text-slate-500 text-xs uppercase font-bold">Total Estimado</span>
-        <div class="text-2xl font-bold text-slate-800">{{ totalEstimadoGlobal() | number:'1.2-2' }}h</div>
+    <!-- ── Resumen Horas (Compacto) ────────────────────────────────────── -->
+    <div class="ent-horas-summary mb-6">
+      <div class="ent-horas-item">
+        <span class="ent-horas-label">Total estimado</span>
+        <span class="ent-horas-value">{{ totalEstimadoGlobal() | number:'1.2-2' }} h</span>
       </div>
-      <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-        <span class="text-blue-600 text-xs uppercase font-bold">Horas Facturadas</span>
-        <div class="text-2xl font-bold text-blue-700">{{ totalFacturadoGlobal() | number:'1.2-2' }}h</div>
+      <div class="ent-horas-item">
+        <span class="ent-horas-label">Horas facturadas</span>
+        <span class="ent-horas-value">{{ totalFacturadoGlobal() | number:'1.2-2' }} h</span>
       </div>
-      <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
-        <span class="text-emerald-600 text-xs uppercase font-bold">Saldo Pendiente</span>
-        <div class="text-2xl font-bold text-emerald-700">{{ saldoGlobal() | number:'1.2-2' }}h</div>
+      <div class="ent-horas-item">
+        <span class="ent-horas-label">Saldo pendiente</span>
+        <span class="ent-horas-value">{{ saldoGlobal() | number:'1.2-2' }} h</span>
       </div>
     </div>
 

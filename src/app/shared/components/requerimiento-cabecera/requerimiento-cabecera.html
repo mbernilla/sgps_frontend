@@ -1,0 +1,52 @@
+@if (cargando) {
+<div class="rcab-container rcab-loading">
+  <div class="flex justify-center items-center py-8">
+    <p-progressSpinner strokeWidth="4" animationDuration=".7s" [style]="{ width: '40px', height: '40px' }" />
+  </div>
+</div>
+} @else if (cabecera) {
+<div class="rcab-container">
+  <!-- Fila 1: Nombre y Estado -->
+  <div class="rcab-header">
+    <h2 class="rcab-title">{{ cabecera.requerimientoNombre }}</h2>
+    <span class="rcab-badge" [ngClass]="getBadgeClass()">
+      {{ cabecera.estadoDescripcion }}
+    </span>
+  </div>
+
+  <!-- Fila 2: Códigos -->
+  <div class="rcab-codes">
+    <span class="rcab-code">{{ cabecera.requerimientoCodigo }}</span>
+    <span class="rcab-code rcab-code--external">({{ cabecera.codigoExterno }})</span>
+  </div>
+
+  <hr class="rcab-divider" />
+
+  <!-- Fila 3: Metadata (3 columnas) -->
+  <div class="rcab-metadata-row">
+    <div class="rcab-metadata-col">
+      <span class="rcab-label">Grupo Tecnológico</span>
+      <span class="rcab-value">{{ cabecera.grupoTecnologicoDescripcion }}</span>
+    </div>
+    <div class="rcab-metadata-col">
+      <span class="rcab-label">Responsable</span>
+      <span class="rcab-value">{{ cabecera.responsableNombre }}</span>
+    </div>
+    <div class="rcab-metadata-col">
+      <span class="rcab-label">Fecha de Registro</span>
+      <span class="rcab-value">{{ cabecera.fechaRegistro | date:'dd/MM/yyyy HH:mm' }}</span>
+    </div>
+  </div>
+
+  <hr class="rcab-divider" />
+
+  <!-- Fila 4: KPI Horas Aprobadas -->
+  <div class="rcab-kpi">
+    <div class="rcab-kpi-icon">
+      <i class="pi pi-check-circle"></i>
+    </div>
+    <span class="rcab-kpi-label">Horas Aprobadas</span>
+    <span class="rcab-kpi-value">{{ cabecera.totalHorasAprobadas | number:'1.2-2' }}h</span>
+  </div>
+</div>
+}

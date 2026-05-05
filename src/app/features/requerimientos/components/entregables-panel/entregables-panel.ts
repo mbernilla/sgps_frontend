@@ -22,8 +22,10 @@ import { TimelineModule } from 'primeng/timeline';
 import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
 import { TagModule } from 'primeng/tag';
 
+import { RequerimientoCabeceraComponent } from '../../../../shared/components/requerimiento-cabecera/requerimiento-cabecera';
 import { EntregablesService } from '../../services/entregables.service';
 import { EstimacionesService } from '../../services/estimaciones.service';
+import { RequerimientoCabeceraDTO } from '../../../../core/models/requerimiento-cabecera.model';
 import {
   ArchivoAdjuntoDTO,
   CatalogoEntregableDTO,
@@ -68,6 +70,7 @@ interface FileSelectEvent {
     TagModule,
     ConfirmDialog,
     Popover,
+    RequerimientoCabeceraComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './entregables-panel.html',
@@ -84,6 +87,10 @@ export class EntregablesPanelComponent implements OnInit {
   private readonly confirmService = inject(ConfirmationService);
 
   private idRequerimiento = 0;
+
+  // ── Cabecera del Requerimiento ────────────────────────────────────────
+  readonly cabecera = signal<RequerimientoCabeceraDTO | null>(null);
+  readonly cargandoCabecera = signal(false);
 
   // ── Estado abierto/cerrado del acordeón (preservado entre recargas) ───
   indicesActivos: string[] = [];
@@ -189,6 +196,7 @@ export class EntregablesPanelComponent implements OnInit {
   // ── Ciclo de vida ─────────────────────────────────────────────────────
   ngOnInit(): void {
     this.idRequerimiento = Number(this.route.snapshot.paramMap.get('id'));
+    this.cargarCabecera();
     this.cargarFases();
     this.cargarEstimaciones();
   }
@@ -198,6 +206,22 @@ export class EntregablesPanelComponent implements OnInit {
   }
 
   // ── Carga de datos ────────────────────────────────────────────────────
+  private cargarCabecera(): void {
+    this.cargandoCabecera.set(true);
+    this.service.getCabecera(this.idRequerimiento)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.cabecera.set(res.data);
+          this.cargandoCabecera.set(false);
+        },
+        error: () => {
+          this.cargandoCabecera.set(false);
+          this.toastError('No se pudo cargar la información del requerimiento.');
+        },
+      });
+  }
+
   cargarFases(): void {
     this.cargandoFases.set(true);
     this.service.getFasesByRequerimiento(this.idRequerimiento)
