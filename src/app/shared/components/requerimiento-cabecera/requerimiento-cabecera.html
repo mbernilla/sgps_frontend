@@ -22,7 +22,7 @@
 
   <hr class="rcab-divider" />
 
-  <!-- Fila 3: Metadata (3 columnas) -->
+  <!-- Fila 3: Metadata (4 columnas) -->
   <div class="rcab-metadata-row">
     <div class="rcab-metadata-col">
       <span class="rcab-label">Grupo Tecnológico</span>
@@ -36,17 +36,13 @@
       <span class="rcab-label">Fecha de Registro</span>
       <span class="rcab-value">{{ cabecera.fechaRegistro | date:'dd/MM/yyyy HH:mm' }}</span>
     </div>
-  </div>
-
-  <hr class="rcab-divider" />
-
-  <!-- Fila 4: KPI Horas Aprobadas -->
-  <div class="rcab-kpi">
-    <div class="rcab-kpi-icon">
-      <i class="pi pi-check-circle"></i>
+    <div class="rcab-metadata-col rcab-metadata-col--horas">
+      <div class="rcab-horas-icon">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <span class="rcab-label rcab-label--horas">Horas Aprobadas</span>
+      <span class="rcab-value rcab-value--horas">{{ cabecera.totalHorasAprobadas | number:'1.2-2' }} h</span>
     </div>
-    <span class="rcab-kpi-label">Horas Aprobadas</span>
-    <span class="rcab-kpi-value">{{ cabecera.totalHorasAprobadas | number:'1.2-2' }}h</span>
   </div>
 </div>
 }
