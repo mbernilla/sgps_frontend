@@ -1,0 +1,171 @@
+<div class="page-wrapper">
+  <div class="custom-card">
+
+    <!-- Topbar -->
+    <div class="card-topbar">
+      <div class="flex items-center gap-3">
+        <p-button label="Volver" icon="pi pi-arrow-left" severity="secondary" [text]="true"
+          (click)="volverALista()" pTooltip="Volver a ciclos" tooltipPosition="right" />
+        <h1 class="card-title">Costos ABC</h1>
+      </div>
+    </div>
+
+    <!-- Contenido -->
+    @if (cargando()) {
+    <div class="flex flex-col items-center justify-center py-24 gap-3">
+      <p-progressSpinner strokeWidth="4" animationDuration=".7s" />
+      <span class="text-sm text-gray-400">Cargando costos ABC...</span>
+    </div>
+    } @else if (gruposTecnologicos().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-inbox text-5xl opacity-20 mb-3 block"></i>
+      <p class="text-gray-500 text-sm">No hay datos de costos ABC disponibles para este ciclo.</p>
+    </div>
+    } @else {
+
+    <!-- Grupos Tecnológicos -->
+    @for (grupo of gruposTecnologicos(); track grupo.codGrupoTecnologico) {
+    <div class="grupo-tecnologico">
+
+      <!-- Header del Grupo Tecnológico (Collapsible) -->
+      <div class="grupo-header" (click)="toggleGrupo(grupo)">
+        <div class="grupo-header-content">
+          <i class="pi" [ngClass]="grupo.expandido ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+          <span class="grupo-codigo">{{ grupo.codGrupoTecnologico }}</span>
+        </div>
+      </div>
+
+      <!-- Tabla de Datos del Grupo -->
+      @if (grupo.expandido) {
+      <p-table [value]="grupo.items" selectionMode="single"
+        styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" responsiveLayout="scroll">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Gerencia</th>
+            <th>Equipo</th>
+            <th class="w-28 text-center">Centro Costo</th>
+            <th class="w-28 text-right">Horas Dist.</th>
+            <th class="w-32 text-right">Monto Distribuido</th>
+            <th class="w-32 text-right">Monto S/ IGV</th>
+            <th class="w-16 text-center">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td class="text-sm">{{ item.gerenciaNombre }}</td>
+            <td class="text-sm">{{ item.equipoNombre }}</td>
+            <td class="text-center text-sm">{{ item.codigoCentroCosto }}</td>
+            <td class="text-right text-sm">{{ item.horasDistribuidas | number:'1.2-2' }}</td>
+            <td class="text-right font-semibold text-sm">{{ item.montoDistribuido | number:'1.2-2' }}</td>
+            <td class="text-right font-semibold text-sm">{{ item.montoDistribuidoSinIgv | number:'1.2-2' }}</td>
+            <td class="text-center">
+              <p-button icon="pi pi-list" [text]="true" [rounded]="true" severity="info" size="small"
+                pTooltip="Ver detalles" tooltipPosition="top" (click)="abrirModalDetalles(item)" />
+            </td>
+          </tr>
+        </ng-template>
+
+      </p-table>
+
+      <!-- Subtotal del Grupo -->
+      <div class="subtotal-row">
+        <div class="subtotal-col subtotal-col-gerencia">Subtotal {{ grupo.codGrupoTecnologico }}</div>
+        <div class="subtotal-col subtotal-col-equipo"></div>
+        <div class="subtotal-col subtotal-col-centro"></div>
+        <div class="subtotal-col subtotal-col-horas">{{ grupo.totales.horasDistribuidas | number:'1.2-2' }} h</div>
+        <div class="subtotal-col subtotal-col-monto">{{ grupo.totales.montoDistribuido | number:'1.2-2' }}</div>
+        <div class="subtotal-col subtotal-col-monto">{{ grupo.totales.montoDistribuidoSinIgv | number:'1.2-2' }}</div>
+        <div class="subtotal-col subtotal-col-acciones"></div>
+      </div>
+      }
+
+    </div>
+    }
+
+    <!-- Suma Total General -->
+    <div class="total-general">
+      <div class="total-header">SUMA TOTAL</div>
+      <div class="total-grid">
+        <div class="total-item">
+          <div class="total-label">HORAS DISTRIBUIDAS</div>
+          <div class="total-value">{{ totalGeneral().horasDistribuidas | number:'1.2-2' }} h</div>
+        </div>
+        <div class="total-item">
+          <div class="total-label">MONTO DISTRIBUIDO</div>
+          <div class="total-value">{{ totalGeneral().montoDistribuido | number:'1.2-2' }}</div>
+        </div>
+        <div class="total-item">
+          <div class="total-label">MONTO S/ IGV</div>
+          <div class="total-value">{{ totalGeneral().montoDistribuidoSinIgv | number:'1.2-2' }}</div>
+        </div>
+      </div>
+    </div>
+
+    }
+
+  </div>
+</div>
+
+<!-- Modal de Detalles del Equipo -->
+<p-dialog [visible]="modalVisible()" (visibleChange)="modalVisible.set($event)" [style]="{width: '70vw'}" [modal]="true" [closable]="true">
+  <ng-template pTemplate="header">
+    <div class="modal-header-content">
+      @if (equipoSeleccionado(); as equipo) {
+      <span class="modal-title">
+        <i class="pi pi-list mr-2"></i>
+        {{ equipo.nombre }}
+      </span>
+      <span class="modal-subtitle">{{ equipo.gerencia }}</span>
+      }
+    </div>
+  </ng-template>
+
+  @if (detallesEquipo().length > 0) {
+  <div class="modal-content">
+    <!-- Tabla Agrupada por Código Externo -->
+    <p-table [value]="filasAgrupadas()" styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
+      responsiveLayout="scroll">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Código Externo</th>
+          <th>Requerimiento</th>
+          <th class="w-28 text-right">Horas Distribuidas</th>
+          <th class="w-32 text-right">Monto Distribuido</th>
+          <th class="w-32 text-right">Monto S/ IGV</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td class="text-sm">{{ item.codExterno }}</td>
+          <td class="text-sm">{{ item.requerimientoNombre }}</td>
+          <td class="text-right text-sm">{{ item.horasDistribuidas | number:'1.2-2' }}</td>
+          <td class="text-right font-semibold text-sm">{{ item.montoDistribuido | number:'1.2-2' }}</td>
+          <td class="text-right font-semibold text-sm">{{ item.montoDistribuidoSinIgv | number:'1.2-2' }}</td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+
+    <!-- Total General -->
+    <div class="modal-subtotal-row modal-total-row">
+      <div class="modal-subtotal-col modal-subtotal-col-label">Total</div>
+      <div class="modal-subtotal-col modal-subtotal-col-empty"></div>
+      <div class="modal-subtotal-col modal-subtotal-col-horas">{{ totalesModal().horasDistribuidas | number:'1.2-2' }}</div>
+      <div class="modal-subtotal-col modal-subtotal-col-monto">{{ totalesModal().montoDistribuido | number:'1.2-2' }}</div>
+      <div class="modal-subtotal-col modal-subtotal-col-monto">{{ totalesModal().montoDistribuidoSinIgv | number:'1.2-2' }}</div>
+    </div>
+
+  </div>
+  } @else {
+  <div class="empty-state">
+    <i class="pi pi-inbox text-3xl opacity-20 mb-2 block"></i>
+    <p class="text-gray-500 text-sm">No hay detalles disponibles para este equipo.</p>
+  </div>
+  }
+</p-dialog>
+
+<p-toast />

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { CicloContratoDTO, ConciliacionDetalleDTO, ConciliacionManualRequest, ConceptoDTO, EntregableConciliacionDTO, PenalidadDTO, PenalidadRequest, RequerimientoComboDTO, SlaComboDTO } from '../models/conciliacion.models';
+import { CicloContratoDTO, ConciliacionDetalleDTO, ConciliacionManualRequest, ConceptoDTO, CostosAbcDTO, EntregableConciliacionDTO, PenalidadDTO, PenalidadRequest, RequerimientoComboDTO, SlaComboDTO } from '../models/conciliacion.models';
 
 @Injectable({ providedIn: 'root' })
 export class ConciliacionService {
@@ -105,6 +105,12 @@ export class ConciliacionService {
   actualizarPenalidad(idCiclo: number, idPenalidad: number, data: PenalidadRequest): Observable<ApiResponse<void>> {
     return this.http.put<ApiResponse<void>>(
       `${this.base}/ciclos/${idCiclo}/penalidades/${idPenalidad}`, data
+    );
+  }
+
+  getCostosABC(idCiclo: number): Observable<ApiResponse<CostosAbcDTO[]>> {
+    return this.http.get<ApiResponse<CostosAbcDTO[]>>(
+      `${this.base}/ciclos/${idCiclo}/conciliaciones/distribucion`
     );
   }
 }

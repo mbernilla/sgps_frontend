@@ -225,11 +225,11 @@
 
     <ng-template pTemplate="header">
       <tr>
-        <th class="w-12">
+        <th class="w-12" [ngStyle]="{'background-color': '#3B4FC8', 'color': '#ffffff', 'font-weight': '700', 'padding': '10px 16px'}">
           <p-tableHeaderCheckbox />
         </th>
-        <th>Entregable</th>
-        <th class="w-36 text-right">Horas Facturables</th>
+        <th [ngStyle]="{'background-color': '#3B4FC8', 'color': '#ffffff', 'font-weight': '700', 'padding': '10px 16px'}">Entregable</th>
+        <th class="w-36 text-right" [ngStyle]="{'background-color': '#3B4FC8', 'color': '#ffffff', 'font-weight': '700', 'padding': '10px 16px'}">Horas Facturables</th>
       </tr>
     </ng-template>
 

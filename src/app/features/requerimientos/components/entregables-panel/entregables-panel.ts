@@ -202,7 +202,7 @@ export class EntregablesPanelComponent implements OnInit {
   }
 
   volverALista(): void {
-    this.router.navigate(['/requerimientos']);
+    this.router.navigate(['/requerimientos'], { state: { nuevoIdDestacado: this.idRequerimiento } });
   }
 
   // ── Carga de datos ────────────────────────────────────────────────────

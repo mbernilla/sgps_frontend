@@ -71,6 +71,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/conciliaciones/penalidades/penalidades.component').then(m => m.PenalidadesComponent),
   },
+  {
+    path: 'conciliaciones/ciclos/:idCiclo/costos-abc',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/conciliaciones/costos-abc/costos-abc.component').then(m => m.CostosAbcComponent),
+  },
 
   // Maestros
   {

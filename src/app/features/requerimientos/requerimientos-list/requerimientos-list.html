@@ -20,8 +20,9 @@
       </div>
     </div>
 
-    <p-table [value]="requerimientos()" selectionMode="single" [(selection)]="requerimientoSeleccionado" [lazy]="true"
-      (onLazyLoad)="onLazyLoad($event)" dataKey="id" [paginator]="true" [rows]="10" [totalRecords]="totalRegistros()"
+    <p-table [value]="requerimientos()" selectionMode="single" [(selection)]="requerimientoSeleccionado"
+      [lazy]="true" (onLazyLoad)="onLazyLoad($event)" [first]="primeraFila"
+      dataKey="id" [paginator]="true" [rows]="filtroActual.size" [totalRecords]="totalRegistros()"
       [loading]="cargando()" [rowsPerPageOptions]="[5, 10, 20, 50]" sortMode="multiple"
       styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" responsiveLayout="scroll">
 

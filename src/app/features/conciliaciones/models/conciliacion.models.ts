@@ -74,3 +74,23 @@ export interface ConceptoDTO {
   cod: string;
   nombre: string;
 }
+
+export interface CostosAbcDTO {
+  idRequerimiento: number;
+  codGrupoTecnologico: string;
+  codExterno: string;
+  requerimientoNombre: string;
+  idCatalogoEntregable: number;
+  entregableNombre: string;
+  idEquipo: number;
+  equipoNombre: string;
+  idGerencia: number;
+  gerenciaNombre: string;
+  codigoCentroCosto: string;
+  porcentaje: number;
+  horasOriginales: number;
+  horasDistribuidas: number;
+  montoOriginal: number;
+  montoDistribuido: number;
+  montoDistribuidoSinIgv: number;
+}

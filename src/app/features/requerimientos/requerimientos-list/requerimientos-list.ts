@@ -50,8 +50,11 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
   totalRegistros = signal<number>(0);
   cargando = signal<boolean>(true);
 
-  // Para la selección nativa de PrimeNG
-  requerimientoSeleccionado = signal<any>(null);
+  // Para la selección nativa de PrimeNG (valor plano, no signal — PrimeNG two-way binding)
+  requerimientoSeleccionado: RequerimientoGridDTO | null = null;
+
+  // Para que la tabla se posicione en la página correcta al restaurar el filtro
+  primeraFila = 0;
 
   // Para la animación de fila nueva al volver del formulario
   idResaltado = signal<number | null>(null);
@@ -80,7 +83,8 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
     const state = nav?.extras?.state;
 
     if (state?.['nuevoIdDestacado']) {
-      this.idResaltado.set(Number(state['nuevoIdDestacado']));
+      const idResaltado = Number(state['nuevoIdDestacado']);
+      this.idResaltado.set(idResaltado);
     }
   }
 
@@ -92,13 +96,26 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
     ).subscribe(texto => {
       this.filtroActual.textoBusqueda = texto;
       this.filtroActual.page = 1;
+      this.primeraFila = 0;
       this.cargarData();
     });
 
-    const state = history.state;
-    if (state?.nuevoIdDestacado) {
+    // Restaurar el filtro guardado si existe
+    const filtroGuardado = this.requerimientoService.obtenerFiltroGuardado();
+    if (filtroGuardado) {
+      this.filtroActual = { ...filtroGuardado };
+      // Comunicar a la tabla en qué fila debe empezar para que dispare
+      // onLazyLoad con el page/size correcto
+      this.primeraFila = (this.filtroActual.page - 1) * this.filtroActual.size;
+      this.requerimientoService.limpiarFiltroGuardado();
+    }
+
+    // Limpiar estado de navegación del historial
+    if (history.state?.nuevoIdDestacado) {
       window.history.replaceState({}, '');
     }
+
+    // NO llamar cargarData() aquí — la tabla lazy lo hace a través de onLazyLoad
   }
 
   ngOnDestroy(): void {
@@ -148,11 +165,26 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
         label: '<span class="block px-3 py-2.5 bg-green-50 border-l-3 border-green-500 text-[12px] font-semibold text-green-700 uppercase tracking-widest rounded-sm">Gestión</span>',
         escape: false,
         items: [
-          { label: 'Gestionar Estimaciones', icon: 'pi pi-calculator', command: () => this.router.navigate(['/requerimientos', req.id, 'estimaciones']) },
-          { label: 'Ver Entregables', icon: 'pi pi-box', command: () => this.router.navigate(['/requerimientos', req.id, 'entregables']) },
+          { label: 'Gestionar Estimaciones', icon: 'pi pi-calculator', command: () => this.irAEstimaciones(req.id) },
+          { label: 'Ver Entregables', icon: 'pi pi-box', command: () => this.irAEntregables(req.id) },
         ],
       },
     ];
+  }
+
+  // ── Navegación con guardado de filtro ──────────────────────────────────
+  private irAEstimaciones(idRequerimiento: number): void {
+    this.requerimientoService.guardarFiltro(this.filtroActual);
+    this.router.navigate(['/requerimientos', idRequerimiento, 'estimaciones'], {
+      state: { nuevoIdDestacado: idRequerimiento }
+    });
+  }
+
+  private irAEntregables(idRequerimiento: number): void {
+    this.requerimientoService.guardarFiltro(this.filtroActual);
+    this.router.navigate(['/requerimientos', idRequerimiento, 'entregables'], {
+      state: { nuevoIdDestacado: idRequerimiento }
+    });
   }
 
   // ── Sidebar de seguimientos ────────────────────────────────────────────
@@ -219,8 +251,14 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
         this.totalRegistros.set(res.data.totalElementos);
         this.cargando.set(false);
 
-        if (this.idResaltado() !== null) {
-          setTimeout(() => this.idResaltado.set(null), 5500);
+        // Seleccionar la fila del requerimiento al que se estaba navegando
+        const idPendiente = this.idResaltado();
+        if (idPendiente !== null) {
+          const req = res.data.contenido.find(r => r.id === idPendiente);
+          if (req) {
+            this.requerimientoSeleccionado = req;
+            this.idResaltado.set(null);
+          }
         }
       },
       error: (err) => {
