@@ -421,7 +421,17 @@ export class RequerimientosFormComponent implements OnInit {
           setTimeout(() => this.router.navigate(['/requerimientos']), 1500);
         },
         error: (err) => {
-          this.msg.add({ severity: 'error', summary: 'Error al actualizar', detail: err.error?.message || 'Error del servidor.', life: 5000 });
+
+          console.error('🐞 [FORM] Error del backend completo:', err);
+
+          // 2. Extrae el mensaje de forma defensiva (cubriendo inglés y español)
+          const mensajeReal = err.error?.message || err.error?.mensaje || err.message || 'Error del servidor.';
+
+          this.msg.add({
+            severity: 'error',
+            summary: 'Error al actualizar',
+            detail: mensajeReal,
+            life: 5000 });
         }
       });
     } else {

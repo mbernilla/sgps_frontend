@@ -104,6 +104,40 @@
   }
 }
 
+.grupo-header-subtotales {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-left: 24px;
+}
+
+.subtotal-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  &:not(:last-child) {
+    padding-right: 24px;
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+.subtotal-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.subtotal-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Courier New', monospace;
+}
+
 .grupo-codigo {
   font-size: 16px;
   font-weight: 700;

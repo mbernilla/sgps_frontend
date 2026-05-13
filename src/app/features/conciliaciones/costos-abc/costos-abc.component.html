@@ -33,6 +33,22 @@
           <i class="pi" [ngClass]="grupo.expandido ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
           <span class="grupo-codigo">{{ grupo.codGrupoTecnologico }}</span>
         </div>
+        @if (!grupo.expandido) {
+        <div class="grupo-header-subtotales">
+          <div class="subtotal-item">
+            <div class="subtotal-label">Horas Dist.</div>
+            <div class="subtotal-value">{{ grupo.totales.horasDistribuidas | number:'1.2-2' }}</div>
+          </div>
+          <div class="subtotal-item">
+            <div class="subtotal-label">Monto Distribuido</div>
+            <div class="subtotal-value">{{ grupo.totales.montoDistribuido | number:'1.2-2' }}</div>
+          </div>
+          <div class="subtotal-item">
+            <div class="subtotal-label">Monto S/ IGV</div>
+            <div class="subtotal-value">{{ grupo.totales.montoDistribuidoSinIgv | number:'1.2-2' }}</div>
+          </div>
+        </div>
+        }
       </div>
 
       <!-- Tabla de Datos del Grupo -->
