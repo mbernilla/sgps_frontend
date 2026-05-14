@@ -1,4 +1,7 @@
 /* PrimeIcons */
 @import "primeicons/primeicons.css";
 
-
+.p-confirm-dialog-message {
+    word-break: break-word;
+    line-height: 1.5; /* Mejora la legibilidad en textos largos */
+}

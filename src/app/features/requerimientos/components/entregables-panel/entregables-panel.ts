@@ -22,6 +22,7 @@ import { TimelineModule } from 'primeng/timeline';
 import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
 import { TagModule } from 'primeng/tag';
 
+import { ActionOrchestratorService } from '../../../../shared/services/action-orchestrator.service';
 import { RequerimientoCabeceraComponent } from '../../../../shared/components/requerimiento-cabecera/requerimiento-cabecera';
 import { EntregablesService } from '../../services/entregables.service';
 import { EstimacionesService } from '../../services/estimaciones.service';
@@ -191,6 +192,9 @@ export class EntregablesPanelComponent implements OnInit {
   readonly dialogVersionVisible = signal(false);
   readonly entregableVersion = signal<EntregableGridDTO | null>(null);
   readonly guardandoVersion = signal(false);
+
+  private readonly actionService = inject(ActionOrchestratorService);
+
   archivoVersion: File | null = null;
 
   // ── Ciclo de vida ─────────────────────────────────────────────────────
@@ -406,49 +410,84 @@ export class EntregablesPanelComponent implements OnInit {
     }
   }
 
+  // eliminarEntregable(id: number): void {
+  //   const idFase = this.getFaseDeEntregable(id);
+  //   this.confirmService.confirm({
+  //     message: '¿Estás seguro de que deseas eliminar este entregable planificado? Esta acción lo ocultará del sistema y liberará las horas estimadas.',
+  //     header: 'Confirmar Eliminación',
+  //     icon: 'pi pi-exclamation-triangle',
+  //     acceptButtonStyleClass: 'p-button-danger p-button-text',
+  //     rejectButtonStyleClass: 'p-button-text p-button-text',
+  //     acceptIcon: 'none',
+  //     rejectIcon: 'none',
+  //     accept: () => {
+  //       this.service.eliminar(id).pipe(take(1)).subscribe({
+  //         next: res => {
+  //           this.msg.add({ key: 'ent', severity: 'success', summary: 'Eliminado', detail: res.mensaje || 'Entregable eliminado.', life: 3000 });
+  //           if (idFase !== null) this.recargarFase(idFase);
+  //           this.cargarFases();
+  //         },
+  //         error: err => this.toastError(err.error?.mensaje || 'No se pudo eliminar el entregable.'),
+  //       });
+  //     },
+  //   });
+  // }
+
   eliminarEntregable(id: number): void {
+    // Calculamos el idFase antes de abrir el modal
     const idFase = this.getFaseDeEntregable(id);
-    this.confirmService.confirm({
-      message: '¿Estás seguro de que deseas eliminar este entregable planificado? Esta acción lo ocultará del sistema y liberará las horas estimadas.',
+
+    this.actionService.ejecutar({
       header: 'Confirmar Eliminación',
+      message: '¿Estás seguro de que deseas eliminar este entregable planificado? Esta acción lo ocultará del sistema y liberará las horas estimadas.',
       icon: 'pi pi-exclamation-triangle',
-      acceptButtonStyleClass: 'p-button-danger p-button-text',
-      rejectButtonStyleClass: 'p-button-text p-button-text',
-      acceptIcon: 'none',
-      rejectIcon: 'none',
-      accept: () => {
-        this.service.eliminar(id).pipe(take(1)).subscribe({
-          next: res => {
-            this.msg.add({ key: 'ent', severity: 'success', summary: 'Eliminado', detail: res.mensaje || 'Entregable eliminado.', life: 3000 });
-            if (idFase !== null) this.recargarFase(idFase);
-            this.cargarFases();
-          },
-          error: err => this.toastError(err.error?.mensaje || 'No se pudo eliminar el entregable.'),
-        });
-      },
+      acceptClass: 'p-button-danger p-button-text',
+      // Mantenemos tu operador take(1) dentro de la evaluación perezosa
+      action: () => this.service.eliminar(id).pipe(take(1)),
+      onSuccess: () => {
+        // Lógica condicional de recarga
+        if (idFase !== null) this.recargarFase(idFase);
+        this.cargarFases();
+      }
     });
   }
 
+  // anularEntregable(id: number): void {
+  //   const idFase = this.getFaseDeEntregable(id);
+  //   this.confirmService.confirm({
+  //     message: '¿Estás seguro de que deseas ANULAR este entregable? El registro se mantendrá visible para auditoría, pero su flujo se detendrá permanentemente y sus horas dejarán de ser facturables.',
+  //     header: 'Confirmar Anulación',
+  //     icon: 'pi pi-info-circle',
+  //     acceptButtonStyleClass: 'p-button-danger p-button-text',
+  //     rejectButtonStyleClass: 'p-button-text p-button-text',
+  //     acceptIcon: 'none',
+  //     rejectIcon: 'none',
+  //     accept: () => {
+  //       this.service.anular(id).pipe(take(1)).subscribe({
+  //         next: res => {
+  //           this.msg.add({ key: 'ent', severity: 'warn', summary: 'Anulado', detail: res.mensaje || 'Entregable anulado.', life: 3000 });
+  //           if (idFase !== null) this.recargarFase(idFase);
+  //           this.cargarFases();
+  //         },
+  //         error: err => this.toastError(err.error?.mensaje || 'No se pudo anular el entregable.'),
+  //       });
+  //     },
+  //   });
+  // }
+
   anularEntregable(id: number): void {
     const idFase = this.getFaseDeEntregable(id);
-    this.confirmService.confirm({
-      message: '¿Estás seguro de que deseas ANULAR este entregable? El registro se mantendrá visible para auditoría, pero su flujo se detendrá permanentemente y sus horas dejarán de ser facturables.',
+
+    this.actionService.ejecutar({
       header: 'Confirmar Anulación',
+      message: '¿Estás seguro de que deseas ANULAR este entregable? El registro se mantendrá visible para auditoría, pero su flujo se detendrá permanentemente y sus horas dejarán de ser facturables.',
       icon: 'pi pi-info-circle',
-      acceptButtonStyleClass: 'p-button-danger p-button-text',
-      rejectButtonStyleClass: 'p-button-text p-button-text',
-      acceptIcon: 'none',
-      rejectIcon: 'none',
-      accept: () => {
-        this.service.anular(id).pipe(take(1)).subscribe({
-          next: res => {
-            this.msg.add({ key: 'ent', severity: 'warn', summary: 'Anulado', detail: res.mensaje || 'Entregable anulado.', life: 3000 });
-            if (idFase !== null) this.recargarFase(idFase);
-            this.cargarFases();
-          },
-          error: err => this.toastError(err.error?.mensaje || 'No se pudo anular el entregable.'),
-        });
-      },
+      acceptClass: 'p-button-danger p-button-text',
+      action: () => this.service.anular(id).pipe(take(1)),
+      onSuccess: () => {
+        if (idFase !== null) this.recargarFase(idFase);
+        this.cargarFases();
+      }
     });
   }
 

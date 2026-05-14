@@ -14,6 +14,8 @@ import { InputNumber } from 'primeng/inputnumber';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import * as XLSX from 'xlsx';
 
+import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
+
 import { ConciliacionService } from '../services/conciliacion.service';
 import { ConciliacionDetalleDTO, ConciliacionManualRequest, EntregableConciliacionDTO, RequerimientoComboDTO } from '../models/conciliacion.models';
 
@@ -85,6 +87,8 @@ export class CicloDetalleComponent implements OnInit {
   readonly entregablesDisponibles     = signal<EntregableConciliacionDTO[]>([]);
   readonly entregablesSeleccionados   = signal<EntregableConciliacionDTO[]>([]);
   private idConciliacionActiva: number | null = null;
+
+  private readonly actionService = inject(ActionOrchestratorService);
 
   readonly totalHorasSeleccionadas = computed(() =>
     this.entregablesSeleccionados().reduce((acc, e) => acc + (e.horasFacturables || 0), 0)
@@ -234,83 +238,133 @@ export class CicloDetalleComponent implements OnInit {
   }
 
   // ── Eliminar Conciliación ─────────────────────────────────────────────
+  // eliminar(item: ConciliacionDetalleDTO): void {
+  //   this.confirmService.confirm({
+  //     message: '¿Está seguro de eliminar esta conciliación?',
+  //     header: 'Confirmar',
+  //     icon: 'pi pi-exclamation-triangle',
+  //     acceptButtonStyleClass: 'p-button-danger p-button-text',
+  //     rejectButtonStyleClass: 'p-button-text p-button-text',
+  //     acceptIcon: 'none',
+  //     rejectIcon: 'none',
+  //     accept: () => {
+  //       this.eliminandoId.set(item.id);
+  //       this.service.eliminarConciliacion(this.idCiclo, item.id).subscribe({
+  //         next: res => {
+  //           this.eliminandoId.set(null);
+  //           this.msg.add({ severity: 'success', summary: 'Eliminado', detail: res.mensaje || 'Conciliación eliminada.', life: 3000 });
+  //           this.cargarDetalle();
+  //         },
+  //         error: err => {
+  //           this.eliminandoId.set(null);
+  //           this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo eliminar la conciliación.', life: 5000 });
+  //         },
+  //       });
+  //     },
+  //   });
+  // }
+
   eliminar(item: ConciliacionDetalleDTO): void {
-    this.confirmService.confirm({
-      message: '¿Está seguro de eliminar esta conciliación?',
+    this.actionService.ejecutar({
       header: 'Confirmar',
+      message: '¿Está seguro de eliminar esta conciliación?',
       icon: 'pi pi-exclamation-triangle',
-      acceptButtonStyleClass: 'p-button-danger p-button-text',
-      rejectButtonStyleClass: 'p-button-text p-button-text',
-      acceptIcon: 'none',
-      rejectIcon: 'none',
-      accept: () => {
-        this.eliminandoId.set(item.id);
-        this.service.eliminarConciliacion(this.idCiclo, item.id).subscribe({
-          next: res => {
-            this.eliminandoId.set(null);
-            this.msg.add({ severity: 'success', summary: 'Eliminado', detail: res.mensaje || 'Conciliación eliminada.', life: 3000 });
-            this.cargarDetalle();
-          },
-          error: err => {
-            this.eliminandoId.set(null);
-            this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo eliminar la conciliación.', life: 5000 });
-          },
-        });
-      },
+      acceptClass: 'p-button-danger p-button-text',
+      // 1. Evaluación perezosa (Arrow function) que aprendimos
+      action: () => this.service.eliminarConciliacion(this.idCiclo, item.id),
+      // 2. Encendido del estado de carga (Signal)
+      onStart: () => this.eliminandoId.set(item.id),
+      // 3. Apagado del estado de carga (Se ejecuta siempre gracias al finalize)
+      onComplete: () => this.eliminandoId.set(null),
+      // 4. Recarga de la tabla solo si fue exitoso
+      onSuccess: () => this.cargarDetalle()
     });
   }
 
   // ── Revertir Cuadre ──────────────────────────────────────────────────
+  // revertir(item: ConciliacionDetalleDTO): void {
+  //   this.confirmService.confirm({
+  //     message: '¿Desea revertir la conciliación? Los entregables asignados se liberarán.',
+  //     header: 'Revertir Conciliación',
+  //     icon: 'pi pi-history',
+  //     acceptButtonStyleClass: 'p-button-warning p-button-text',
+  //     rejectButtonStyleClass: 'p-button-text p-button-text',
+  //     acceptIcon: 'none',
+  //     rejectIcon: 'none',
+  //     accept: () => {
+  //       this.reviertendoId.set(item.id);
+  //       this.service.revertirConciliacion(this.idCiclo, item.id).subscribe({
+  //         next: res => {
+  //           this.reviertendoId.set(null);
+  //           this.msg.add({ severity: 'warn', summary: 'Revertido', detail: res.mensaje || 'La conciliación fue revertida.', life: 3000 });
+  //           this.cargarDetalle();
+  //         },
+  //         error: err => {
+  //           this.reviertendoId.set(null);
+  //           this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo revertir la conciliación.', life: 5000 });
+  //         },
+  //       });
+  //     },
+  //   });
+  // }
+
   revertir(item: ConciliacionDetalleDTO): void {
-    this.confirmService.confirm({
-      message: '¿Desea revertir la conciliación? Los entregables asignados se liberarán.',
+    this.actionService.ejecutar({
       header: 'Revertir Conciliación',
+      message: '¿Desea revertir la conciliación? Los entregables asignados se liberarán.',
       icon: 'pi pi-history',
-      acceptButtonStyleClass: 'p-button-warning p-button-text',
-      rejectButtonStyleClass: 'p-button-text p-button-text',
-      acceptIcon: 'none',
-      rejectIcon: 'none',
-      accept: () => {
-        this.reviertendoId.set(item.id);
-        this.service.revertirConciliacion(this.idCiclo, item.id).subscribe({
-          next: res => {
-            this.reviertendoId.set(null);
-            this.msg.add({ severity: 'warn', summary: 'Revertido', detail: res.mensaje || 'La conciliación fue revertida.', life: 3000 });
-            this.cargarDetalle();
-          },
-          error: err => {
-            this.reviertendoId.set(null);
-            this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo revertir la conciliación.', life: 5000 });
-          },
-        });
-      },
+      acceptClass: 'p-button-warning p-button-text',
+      // Flujo asíncrono perezoso
+      action: () => this.service.revertirConciliacion(this.idCiclo, item.id),
+      // Manejo de estado visual (Spinner/Deshabilitado)
+      onStart: () => this.reviertendoId.set(item.id),
+      onComplete: () => this.reviertendoId.set(null),
+      // Refresco de datos
+      onSuccess: () => this.cargarDetalle()
     });
   }
 
   // ── Confirmar Cuadre ─────────────────────────────────────────────────
+  // conciliar(item: ConciliacionDetalleDTO): void {
+  //   this.confirmService.confirm({
+  //     message: '¿Está seguro de confirmar el cuadre? Esta acción asignará los entregables al ciclo y bloqueará futuras ediciones.',
+  //     header: 'Confirmar Cuadre',
+  //     icon: 'pi pi-check-circle',
+  //     acceptButtonStyleClass: 'p-button-success p-button-text',
+  //     rejectButtonStyleClass: 'p-button-text p-button-text',
+  //     acceptIcon: 'none',
+  //     rejectIcon: 'none',
+  //     accept: () => {
+  //       this.conciliandoId.set(item.id);
+  //       this.service.confirmarConciliacion(this.idCiclo, item.id).subscribe({
+  //         next: res => {
+  //           this.conciliandoId.set(null);
+  //           this.msg.add({ severity: 'success', summary: 'Cuadre confirmado', detail: res.mensaje || 'La conciliación fue confirmada.', life: 3000 });
+  //           this.cargarDetalle();
+  //         },
+  //         error: err => {
+  //           this.conciliandoId.set(null);
+  //           this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo confirmar el cuadre.', life: 5000 });
+  //         },
+  //       });
+  //     },
+  //   });
+  // }
+
   conciliar(item: ConciliacionDetalleDTO): void {
-    this.confirmService.confirm({
-      message: '¿Está seguro de confirmar el cuadre? Esta acción asignará los entregables al ciclo y bloqueará futuras ediciones.',
+    this.actionService.ejecutar({
       header: 'Confirmar Cuadre',
+      message: '¿Está seguro de confirmar el cuadre? Esta acción asignará los entregables al ciclo y bloqueará futuras ediciones.',
       icon: 'pi pi-check-circle',
-      acceptButtonStyleClass: 'p-button-success p-button-text',
-      rejectButtonStyleClass: 'p-button-text p-button-text',
-      acceptIcon: 'none',
-      rejectIcon: 'none',
-      accept: () => {
-        this.conciliandoId.set(item.id);
-        this.service.confirmarConciliacion(this.idCiclo, item.id).subscribe({
-          next: res => {
-            this.conciliandoId.set(null);
-            this.msg.add({ severity: 'success', summary: 'Cuadre confirmado', detail: res.mensaje || 'La conciliación fue confirmada.', life: 3000 });
-            this.cargarDetalle();
-          },
-          error: err => {
-            this.conciliandoId.set(null);
-            this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo confirmar el cuadre.', life: 5000 });
-          },
-        });
-      },
+      acceptClass: 'p-button-success p-button-text',
+      // Función anónima para construir la petición solo al confirmar
+      action: () => this.service.confirmarConciliacion(this.idCiclo, item.id),
+      // Encendemos el estado de carga específico para la conciliación
+      onStart: () => this.conciliandoId.set(item.id),
+      // Lo apagamos de forma segura (pase lo que pase)
+      onComplete: () => this.conciliandoId.set(null),
+      // Recargamos el detalle al tener éxito
+      onSuccess: () => this.cargarDetalle()
     });
   }
 

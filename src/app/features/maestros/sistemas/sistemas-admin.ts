@@ -14,6 +14,7 @@ import { Toast } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { PrimeTemplate, ConfirmationService, MessageService } from 'primeng/api';
 
+import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
 import { MaestraService } from '../../../core/services/maestra.service';
 import { SistemasService } from './sistemas.service';
 import { SistemaAdminDTO, ModuloAdminDTO, SistemaCreateDTO, ModuloCreateDTO, GrupoTecOpt } from './sistemas.models';
@@ -45,7 +46,6 @@ export class SistemasAdminComponent implements OnInit {
   private readonly svc     = inject(SistemasService);
   private readonly maestra = inject(MaestraService);
   private readonly msg     = inject(MessageService);
-  private readonly confirm = inject(ConfirmationService);
 
   // ── Estado reactivo ───────────────────────────────────────────────────────
 
@@ -69,6 +69,8 @@ export class SistemasAdminComponent implements OnInit {
   readonly tituloModalModulo  = computed(() => this.moduloEnEdicion()  ? 'Editar Módulo'   : 'Nuevo Módulo');
   readonly labelBtnSistema    = computed(() => this.sistemaEnEdicion() ? 'Actualizar'      : 'Guardar');
   readonly labelBtnModulo     = computed(() => this.moduloEnEdicion()  ? 'Actualizar'      : 'Guardar');
+
+  private readonly actionService = inject(ActionOrchestratorService);
 
   // ── Formularios ───────────────────────────────────────────────────────────
 
@@ -152,29 +154,51 @@ export class SistemasAdminComponent implements OnInit {
     }
   }
 
+  // eliminarSistema(s: SistemaAdminDTO, event: Event): void {
+  //   event.stopPropagation();
+  //   this.confirm.confirm({
+  //     message:               `¿Dar de baja el sistema "<b>${s.nombre}</b>"? La acción es reversible.`,
+  //     header:                'Confirmar baja lógica',
+  //     icon:                  'pi pi-exclamation-triangle',
+  //     acceptLabel:           'Sí, dar de baja',
+  //     rejectLabel:           'Cancelar',
+  //     acceptButtonStyleClass: 'p-button-danger p-button-sm',
+  //     rejectButtonStyleClass: 'p-button-text p-button-sm',
+  //     accept: () => {
+  //       this.svc.deleteSistema(s.id).subscribe({
+  //         next: () => {
+  //           this.toast('success', 'Baja registrada', `El sistema "${s.nombre}" fue dado de baja.`);
+  //           if (this.sistemaSeleccionado()?.id === s.id) {
+  //             this.sistemaSeleccionado.set(null);
+  //             this.modulos.set([]);
+  //           }
+  //           this.cargarSistemas();
+  //         },
+  //         error: err => this.toast('error', 'Error', err.error?.mensaje ?? 'No se pudo dar de baja el sistema.'),
+  //       });
+  //     },
+  //   });
+  // }
+
   eliminarSistema(s: SistemaAdminDTO, event: Event): void {
+    // 1. Mantenemos el bloqueo de propagación nativo fuera del orquestador
     event.stopPropagation();
-    this.confirm.confirm({
-      message:               `¿Dar de baja el sistema "<b>${s.nombre}</b>"? La acción es reversible.`,
-      header:                'Confirmar baja lógica',
-      icon:                  'pi pi-exclamation-triangle',
-      acceptLabel:           'Sí, dar de baja',
-      rejectLabel:           'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger p-button-sm',
-      rejectButtonStyleClass: 'p-button-text p-button-sm',
-      accept: () => {
-        this.svc.deleteSistema(s.id).subscribe({
-          next: () => {
-            this.toast('success', 'Baja registrada', `El sistema "${s.nombre}" fue dado de baja.`);
-            if (this.sistemaSeleccionado()?.id === s.id) {
-              this.sistemaSeleccionado.set(null);
-              this.modulos.set([]);
-            }
-            this.cargarSistemas();
-          },
-          error: err => this.toast('error', 'Error', err.error?.mensaje ?? 'No se pudo dar de baja el sistema.'),
-        });
-      },
+
+    this.actionService.ejecutar({
+      header: 'Confirmar baja lógica',
+      message: `¿Dar de baja el sistema "<b>${s.nombre}</b>"? La acción es no reversible.`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptClass: 'p-button-danger p-button-sm',
+      action: () => this.svc.deleteSistema(s.id),
+      onSuccess: () => {
+        // 2. Lógica de negocio específica al tener éxito
+        if (this.sistemaSeleccionado()?.id === s.id) {
+          this.sistemaSeleccionado.set(null);
+          this.modulos.set([]);
+        }
+        // 3. Recarga de la grilla principal
+        this.cargarSistemas();
+      }
     });
   }
 
@@ -232,25 +256,39 @@ export class SistemasAdminComponent implements OnInit {
     }
   }
 
+  // eliminarModulo(m: ModuloAdminDTO): void {
+  //   const sis = this.sistemaSeleccionado()!;
+  //   this.confirm.confirm({
+  //     message:               `¿Dar de baja el módulo "<b>${m.nombre}</b>"?`,
+  //     header:                'Confirmar baja lógica',
+  //     icon:                  'pi pi-exclamation-triangle',
+  //     acceptLabel:           'Sí, dar de baja',
+  //     rejectLabel:           'Cancelar',
+  //     acceptButtonStyleClass: 'p-button-danger p-button-sm',
+  //     rejectButtonStyleClass: 'p-button-text p-button-sm',
+  //     accept: () => {
+  //       this.svc.deleteModulo(sis.id, m.id).subscribe({
+  //         next: () => {
+  //           this.toast('success', 'Baja registrada', `El módulo "${m.nombre}" fue dado de baja.`);
+  //           this.cargarModulos(sis.id);
+  //         },
+  //         error: err => this.toast('error', 'Error', err.error?.mensaje ?? 'No se pudo dar de baja el módulo.'),
+  //       });
+  //     },
+  //   });
+  // }
+
   eliminarModulo(m: ModuloAdminDTO): void {
     const sis = this.sistemaSeleccionado()!;
-    this.confirm.confirm({
-      message:               `¿Dar de baja el módulo "<b>${m.nombre}</b>"?`,
-      header:                'Confirmar baja lógica',
-      icon:                  'pi pi-exclamation-triangle',
-      acceptLabel:           'Sí, dar de baja',
-      rejectLabel:           'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger p-button-sm',
-      rejectButtonStyleClass: 'p-button-text p-button-sm',
-      accept: () => {
-        this.svc.deleteModulo(sis.id, m.id).subscribe({
-          next: () => {
-            this.toast('success', 'Baja registrada', `El módulo "${m.nombre}" fue dado de baja.`);
-            this.cargarModulos(sis.id);
-          },
-          error: err => this.toast('error', 'Error', err.error?.mensaje ?? 'No se pudo dar de baja el módulo.'),
-        });
-      },
+
+    this.actionService.ejecutar({
+      header: 'Confirmar baja lógica',
+      message: `¿Dar de baja el módulo "<b>${m.nombre}</b>"?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptClass: 'p-button-danger p-button-sm',
+      acceptLabel: 'Sí, dar de baja',
+      action: () => this.svc.deleteModulo(sis.id, m.id),
+      onSuccess: () => this.cargarModulos(sis.id)
     });
   }
 

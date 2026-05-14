@@ -6,9 +6,11 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginaDTO, RequerimientoFiltroDTO, RequerimientoGridDTO, OrdenDTO } from '../models/requerimientos.models';
 
+
 @Injectable({
   providedIn: 'root'
 })
+
 export class RequerimientosService {
   private readonly http = inject(HttpClient);
   private readonly API_URL = `${environment.baseUrl}/v1/requerimientos`;

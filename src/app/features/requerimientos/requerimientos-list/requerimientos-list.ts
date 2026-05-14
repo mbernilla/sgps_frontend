@@ -3,14 +3,14 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
 
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
-import { ConfirmDialog } from 'primeng/confirmdialog';
+import { MenuItem } from 'primeng/api';
 import { Drawer } from 'primeng/drawer';
 import { Menu } from 'primeng/menu';
 
@@ -28,22 +28,21 @@ import { SeguimientosPanel } from '../components/seguimientos-panel/seguimientos
     InputTextModule,
     TagModule,
     TooltipModule,
-    ConfirmDialog,
     RouterModule,
     Drawer,
     Menu,
     SeguimientosPanel,
   ],
-  providers: [ConfirmationService, MessageService],
   templateUrl: './requerimientos-list.html',
   styleUrl: './requerimientos-list.scss',
 })
 export class RequerimientosListComponent implements OnInit, OnDestroy {
   private readonly reqService = inject(RequerimientosService);
   private readonly router = inject(Router);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly msg = inject(MessageService);
+
   private readonly requerimientoService = inject(RequerimientosService);
+
+  private readonly actionService = inject(ActionOrchestratorService);
 
   // ── Estado reactivo ────────────────────────────────────────────────────
   requerimientos = signal<RequerimientoGridDTO[]>([]);
@@ -210,35 +209,13 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
   }
 
   confirmarEliminacion(id: number, nombre: string): void {
-    this.confirmationService.confirm({
-      message: `¿Estás seguro de que deseas eliminar el requerimiento <b>"${nombre}"</b>?`,
+    this.actionService.ejecutar({
       header: 'Confirmar Eliminación',
+      message: `¿Estás seguro de que deseas eliminar el requerimiento <b>"${nombre}"</b>?`,
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, Eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger p-button-sm',
-      rejectButtonStyleClass: 'p-button-text p-button-sm',
-      accept: () => {
-        this.requerimientoService.eliminar(id).subscribe({
-          next: () => {
-            this.msg.add({
-              severity: 'success',
-              summary: 'Eliminado',
-              detail: 'El requerimiento fue eliminado correctamente.',
-              life: 3000,
-            });
-            this.cargarData();
-          },
-          error: (err) => {
-            this.msg.add({
-              severity: 'error',
-              summary: 'Error al eliminar',
-              detail: err.error?.message ?? 'No se pudo eliminar el requerimiento.',
-              life: 5000,
-            });
-          },
-        });
-      },
+      acceptClass: 'p-button-danger p-button-sm',
+      action: () => this.requerimientoService.eliminar(id),
+      onSuccess: () => this.cargarData()
     });
   }
 

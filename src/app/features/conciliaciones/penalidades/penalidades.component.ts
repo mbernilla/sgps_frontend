@@ -12,8 +12,9 @@ import { Select } from 'primeng/select';
 import { InputNumber } from 'primeng/inputnumber';
 import { Textarea } from 'primeng/textarea';
 import { ProgressSpinner } from 'primeng/progressspinner';
+import { finalize } from 'rxjs';
 
-
+import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
 import { ConciliacionService } from '../services/conciliacion.service';
 import { AppContextService } from '../../../core/services/app-context.service'
 import { ConceptoDTO, PenalidadDTO, PenalidadRequest, RequerimientoComboDTO, SlaComboDTO } from '../models/conciliacion.models';
@@ -70,20 +71,43 @@ export class PenalidadesComponent implements OnInit {
     observacion:         ['', Validators.required],
   });
 
+  private readonly actionService = inject(ActionOrchestratorService);
+
   ngOnInit(): void {
     this.idCiclo = Number(this.route.snapshot.paramMap.get('idCiclo'));
     this.cargarPenalidades();
     this.cargarCombos();
   }
 
+  // private cargarPenalidades(): void {
+  //   this.cargando.set(true);
+  //   this.service.getPenalidadesPorCiclo(this.idCiclo).subscribe({
+  //     next: res => { this.penalidades.set(res.data); this.cargando.set(false); },
+  //     error: err => {
+  //       this.cargando.set(false);
+  //       this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudieron cargar las penalidades.', life: 5000 });
+  //     },
+  //   });
+  // }
+
   private cargarPenalidades(): void {
     this.cargando.set(true);
-    this.service.getPenalidadesPorCiclo(this.idCiclo).subscribe({
-      next: res => { this.penalidades.set(res.data); this.cargando.set(false); },
-      error: err => {
-        this.cargando.set(false);
-        this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudieron cargar las penalidades.', life: 5000 });
+
+    this.service.getPenalidadesPorCiclo(this.idCiclo).pipe(
+      // finalize garantiza que el spinner se apague pase lo que pase (éxito o error)
+      finalize(() => this.cargando.set(false))
+    ).subscribe({
+      next: res => {
+        this.penalidades.set(res.data);
       },
+      error: err => {
+        this.msg.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err.error?.mensaje || 'No se pudieron cargar las penalidades.',
+          life: 5000
+        });
+      }
     });
   }
 
@@ -174,29 +198,45 @@ export class PenalidadesComponent implements OnInit {
     });
   }
 
+  // confirmarEliminar(item: PenalidadDTO): void {
+  //   this.confirmService.confirm({
+  //     message: '¿Está seguro de eliminar esta penalidad?',
+  //     header: 'Confirmar eliminación',
+  //     icon: 'pi pi-exclamation-triangle',
+  //     acceptButtonStyleClass: 'p-button-danger p-button-text',
+  //     rejectButtonStyleClass: 'p-button-text p-button-text',
+  //     acceptIcon: 'none',
+  //     rejectIcon: 'none',
+  //     accept: () => {
+  //       this.eliminandoId.set(item.id);
+  //       this.service.eliminarPenalidad(this.idCiclo, item.id).subscribe({
+  //         next: res => {
+  //           this.eliminandoId.set(null);
+  //           this.msg.add({ severity: 'success', summary: 'Eliminado', detail: res.mensaje || 'Penalidad eliminada.', life: 3000 });
+  //           this.cargarPenalidades();
+  //         },
+  //         error: err => {
+  //           this.eliminandoId.set(null);
+  //           this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo eliminar la penalidad.', life: 5000 });
+  //         },
+  //       });
+  //     },
+  //   });
+  // }
+
   confirmarEliminar(item: PenalidadDTO): void {
-    this.confirmService.confirm({
-      message: '¿Está seguro de eliminar esta penalidad?',
+    this.actionService.ejecutar({
       header: 'Confirmar eliminación',
+      message: '¿Está seguro de eliminar esta penalidad?',
       icon: 'pi pi-exclamation-triangle',
-      acceptButtonStyleClass: 'p-button-danger p-button-text',
-      rejectButtonStyleClass: 'p-button-text p-button-text',
-      acceptIcon: 'none',
-      rejectIcon: 'none',
-      accept: () => {
-        this.eliminandoId.set(item.id);
-        this.service.eliminarPenalidad(this.idCiclo, item.id).subscribe({
-          next: res => {
-            this.eliminandoId.set(null);
-            this.msg.add({ severity: 'success', summary: 'Eliminado', detail: res.mensaje || 'Penalidad eliminada.', life: 3000 });
-            this.cargarPenalidades();
-          },
-          error: err => {
-            this.eliminandoId.set(null);
-            this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudo eliminar la penalidad.', life: 5000 });
-          },
-        });
-      },
+      acceptClass: 'p-button-danger p-button-text',
+      // Evaluamos el observable de forma perezosa
+      action: () => this.service.eliminarPenalidad(this.idCiclo, item.id),
+      // Manejo de estado visual
+      onStart: () => this.eliminandoId.set(item.id),
+      onComplete: () => this.eliminandoId.set(null),
+      // Refresco de la grilla correspondiente
+      onSuccess: () => this.cargarPenalidades()
     });
   }
 

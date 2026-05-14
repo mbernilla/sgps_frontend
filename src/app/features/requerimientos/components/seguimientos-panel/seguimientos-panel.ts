@@ -28,6 +28,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
 
+import { ActionOrchestratorService } from '../../../../shared/services/action-orchestrator.service';
 import { MaestraService } from '../../../../core/services/maestra.service';
 import { PersonalDTO } from '../../../../core/models/maestra.model';
 import { ApiResponse, SeguimientoDTO } from '../../models/requerimientos.models';
@@ -148,6 +149,8 @@ export class SeguimientosPanel implements OnInit, OnChanges {
     { initialValue: false },
   );
 
+  private readonly actionService = inject(ActionOrchestratorService);
+
   // ── Ciclo de vida ─────────────────────────────────────────────────────
 
   ngOnInit(): void {
@@ -267,38 +270,51 @@ export class SeguimientosPanel implements OnInit, OnChanges {
   }
 
   /** Solicita confirmación y elimina el seguimiento por su id. */
+  // eliminarSeguimiento(id: number): void {
+  //   this.confirmationService.confirm({
+  //     message:               '¿Está seguro que desea anular este seguimiento?',
+  //     header:                'Confirmar eliminación',
+  //     icon:                  'pi pi-exclamation-triangle',
+  //     acceptLabel:           'Sí, anular',
+  //     rejectLabel:           'Cancelar',
+  //     acceptButtonStyleClass: 'p-button-danger p-button-sm',
+  //     rejectButtonStyleClass: 'p-button-text p-button-sm',
+  //     accept: () => {
+  //       this.http
+  //         .delete(`${this.apiBase}/v1/seguimientos/${id}`)
+  //         .subscribe({
+  //           next: () => {
+  //             this.msg.add({
+  //               severity: 'success',
+  //               summary:  'Anulado',
+  //               detail:   'El seguimiento fue anulado correctamente.',
+  //               life:     3000,
+  //             });
+  //             this.cargarHistorial();
+  //           },
+  //           error: (err) => {
+  //             this.msg.add({
+  //               severity: 'error',
+  //               summary:  'Error al anular',
+  //               detail:   err.error?.mensaje ?? 'No se pudo anular el seguimiento.',
+  //               life:     5000,
+  //             });
+  //           },
+  //         });
+  //     },
+  //   });
+  // }
+
   eliminarSeguimiento(id: number): void {
-    this.confirmationService.confirm({
-      message:               '¿Está seguro que desea anular este seguimiento?',
-      header:                'Confirmar eliminación',
-      icon:                  'pi pi-exclamation-triangle',
-      acceptLabel:           'Sí, anular',
-      rejectLabel:           'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger p-button-sm',
-      rejectButtonStyleClass: 'p-button-text p-button-sm',
-      accept: () => {
-        this.http
-          .delete(`${this.apiBase}/v1/seguimientos/${id}`)
-          .subscribe({
-            next: () => {
-              this.msg.add({
-                severity: 'success',
-                summary:  'Anulado',
-                detail:   'El seguimiento fue anulado correctamente.',
-                life:     3000,
-              });
-              this.cargarHistorial();
-            },
-            error: (err) => {
-              this.msg.add({
-                severity: 'error',
-                summary:  'Error al anular',
-                detail:   err.error?.mensaje ?? 'No se pudo anular el seguimiento.',
-                life:     5000,
-              });
-            },
-          });
-      },
+    this.actionService.ejecutar({
+      header: 'Confirmar eliminación',
+      message: '¿Está seguro que desea anular este seguimiento?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptClass: 'p-button-danger p-button-sm',
+      acceptLabel: 'Sí, anular', // Usamos la etiqueta personalizada
+      // Retornamos directamente el Observable del HttpClient
+      action: () => this.http.delete(`${this.apiBase}/v1/seguimientos/${id}`),
+      onSuccess: () => this.cargarHistorial()
     });
   }
 
