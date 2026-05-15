@@ -669,13 +669,20 @@ export class EntregablesPanelComponent implements OnInit {
     return map[codEstado] ?? 'pi pi-circle';
   }
 
-  getColorFlujo(codEstado: string): string {
-    const map: Record<string, string> = {
-      ENT_REV: '#d97706',
-      ENT_APR: '#166534',
-      ENT_OBS: '#b91c1c',
-    };
-    return map[codEstado] ?? '#64748b';
+  getColorFlujo(estado: string): string {
+    switch (estado) {
+      case 'ENT_APR': // Aprobado
+        return '#10B981'; // Esmeralda Zen
+      case 'ENT_REV': // En Revisión
+        return '#3B82F6'; // Azul limpio
+      case 'ENT_OBS': // Observado
+        return '#F59E0B'; // Ámbar cálido
+      case 'ENT_ANU': // Anulado / Rechazado
+        return '#EF4444'; // Rojo moderno
+      case 'ENT_PEN': // Pendiente
+      default:
+        return '#94A3B8'; // Gris Pizarra (Neutro)
+    }
   }
 
   // ── Privados ──────────────────────────────────────────────────────────

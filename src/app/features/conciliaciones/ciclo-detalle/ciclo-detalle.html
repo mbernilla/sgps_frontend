@@ -5,48 +5,47 @@
 
     <!-- ── Topbar ──────────────────────────────────────────────────────── -->
     <div class="card-topbar">
-      <h1 class="card-title">
-        <i class="pi pi-sync"></i>
-        Detalle de Conciliación — Ciclo #{{ idCiclo }}
-      </h1>
-      <div class="flex items-center gap-2">
 
-        <!-- Input de archivo oculto -->
-        <input #fileInput type="file" accept=".xlsx,.xls" class="hidden"
-          (change)="onFileChange($event)" />
-
-        <p-button label="Agregar" icon="pi pi-plus-circle"
-          (click)="abrirManual()" />
-
-        <p-button label="Importar Excel" icon="pi pi-upload" severity="secondary"
-          [loading]="importando()" (click)="triggerFileInput(fileInput)" />
-
-        <p-button label="Volver" icon="pi pi-arrow-left" [text]="true" severity="secondary"
-          (click)="volverALista()" />
+      <div class="flex items-center gap-3">
+        <p-button label="Volver" icon="pi pi-arrow-left" [text]="true" severity="secondary" (click)="volverALista()" />
+        <div class="w-px h-6 bg-slate-200"></div>
+        <h1 class="card-title m-0">
+          <i class="pi pi-sync text-slate-400"></i>
+          Detalle de Conciliación — Ciclo #{{ idCiclo }}
+        </h1>
       </div>
+
+      <div class="flex items-center gap-2">
+        <input #fileInput type="file" accept=".xlsx,.xls" class="hidden" (change)="onFileChange($event)" />
+
+        <p-button label="Importar Excel" icon="pi pi-upload" severity="secondary" [loading]="importando()"
+          (click)="triggerFileInput(fileInput)" />
+
+        <p-button label="Agregar Manual" icon="pi pi-plus" (click)="abrirManual()" />
+      </div>
+
     </div>
 
     <!-- ── Dashboard de Resumen ───────────────────────────────────────── -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 pb-6">
+    <div class="flex flex-wrap justify-center gap-6 px-6 py-4">
 
-      <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-        <span class="text-slate-500 text-xs uppercase font-bold tracking-wide">Total Horas Facturadas</span>
-        <div class="text-2xl font-bold text-slate-800 mt-1">{{ totalHorasExcel() | number:'1.2-2' }}h</div>
+      <div class="flex items-center gap-3 bg-slate-50 px-5 py-2.5 rounded-lg border border-slate-200">
+        <span class="text-slate-500 text-[11px] uppercase font-bold tracking-wider">Horas Facturadas</span>
+        <span class="text-lg font-bold text-slate-800">{{ totalHorasExcel() | number:'1.2-2' }}h</span>
       </div>
 
-      <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-        <span class="text-blue-600 text-xs uppercase font-bold tracking-wide">Total Horas SGPS</span>
-        <div class="text-2xl font-bold text-blue-700 mt-1">{{ totalHorasSgps() | number:'1.2-2' }}h</div>
+      <div class="flex items-center gap-3 bg-blue-50 px-5 py-2.5 rounded-lg border border-blue-100">
+        <span class="text-blue-600 text-[11px] uppercase font-bold tracking-wider">Horas SGPS</span>
+        <span class="text-lg font-bold text-blue-800">{{ totalHorasSgps() | number:'1.2-2' }}h</span>
       </div>
 
-      <div class="p-4 rounded-lg border mt-1"
-        [class]="totalDiferencia() !== 0 ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100'">
-        <span class="text-xs uppercase font-bold tracking-wide"
+      <div class="flex items-center gap-3 px-5 py-2.5 rounded-lg border"
+        [class]="totalDiferencia() !== 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'">
+        <span class="text-[11px] uppercase font-bold tracking-wider"
           [class]="totalDiferencia() !== 0 ? 'text-red-600' : 'text-emerald-600'">Diferencia</span>
-        <div class="text-2xl font-bold mt-1"
-          [class]="totalDiferencia() !== 0 ? 'text-red-700' : 'text-emerald-700'">
+        <span class="text-lg font-bold" [class]="totalDiferencia() !== 0 ? 'text-red-700' : 'text-emerald-700'">
           {{ totalDiferencia() | number:'1.2-2' }}h
-        </div>
+        </span>
       </div>
 
     </div>
@@ -60,8 +59,7 @@
     } @else {
 
     <p-table [value]="detalles()" selectionMode="single"
-      styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
-      responsiveLayout="scroll"
+      styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" responsiveLayout="scroll"
       [paginator]="detalles().length > 10" [rows]="10" [rowsPerPageOptions]="[10, 20, 50]">
 
       <ng-template pTemplate="header">
@@ -96,30 +94,27 @@
             {{ item.horasInternasAprobadas | number:'1.2-2' }}h
           </td>
 
-          <td class="text-right font-bold"
-            [class]="item.diferenciaHoras !== 0 ? 'text-red-600' : 'text-emerald-600'">
+          <td class="text-right font-bold" [class]="item.diferenciaHoras !== 0 ? 'text-red-600' : 'text-emerald-600'">
             {{ item.diferenciaHoras | number:'1.2-2' }}h
           </td>
 
           <td class="text-center">
             @if (item.diferenciaHoras === 0) {
-            <p-tag severity="success" value="Conciliado" />
+            <span class="badge-custom badge-success">Conciliado</span>
             } @else {
-            <p-tag severity="danger" value="Pendiente" />
+            <span class="badge-custom badge-danger">Pendiente</span>
             }
           </td>
 
           <td class="text-center">
             <div class="flex gap-2 justify-center">
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="warn" size="small"
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" size="small"
                 pTooltip="Editar" tooltipPosition="top" (click)="abrirEdicion(item)" />
-              <p-button icon="pi pi-list" [rounded]="true" [text]="true" severity="info" size="small"
-                pTooltip="Seleccionar Entregables" tooltipPosition="top"
-                (click)="abrirModalEntregables(item)" />
+              <p-button icon="pi pi-list" [rounded]="true" [text]="true" severity="secondary" size="small"
+                pTooltip="Seleccionar Entregables" tooltipPosition="top" (click)="abrirModalEntregables(item)" />
               @if (!item.cuadreOk) {
               <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
-                pTooltip="Eliminar" tooltipPosition="top"
-                [loading]="eliminandoId() === item.id"
+                pTooltip="Eliminar" tooltipPosition="top" [loading]="eliminandoId() === item.id"
                 (click)="eliminar(item)" />
               }
             </div>
@@ -148,19 +143,16 @@
      MODAL — Registro Manual de Conciliación
 ════════════════════════════════════════════════════════════ -->
 <p-dialog [visible]="dialogManualVisible()" (visibleChange)="dialogManualVisible.set($event)"
-  [header]="idConciliacionEdicion() ? 'Editar Conciliación' : 'Nueva Conciliación'"
-  [modal]="true" [draggable]="false" [resizable]="false"
-  [style]="{ width: '560px' }" appendTo="body">
+  [header]="idConciliacionEdicion() ? 'Editar Conciliación' : 'Nueva Conciliación'" [modal]="true" [draggable]="false"
+  [resizable]="false" [style]="{ width: '560px' }" appendTo="body">
 
   <form [formGroup]="manualForm" class="flex flex-col gap-4 pt-2">
 
     <div class="flex flex-col gap-1.5">
       <label class="form-label">Requerimiento <span class="text-red-400">*</span></label>
-      <p-select formControlName="idRequerimiento"
-        [options]="opcionesRequerimiento()" optionLabel="label" optionValue="value"
-        [filter]="true" filterPlaceholder="Buscar por código o nombre..."
-        placeholder="Seleccione un requerimiento..." appendTo="body"
-        styleClass="w-full" [loading]="cargandoCombo()" />
+      <p-select formControlName="idRequerimiento" [options]="opcionesRequerimiento()" optionLabel="label"
+        optionValue="value" [filter]="true" filterPlaceholder="Buscar por código o nombre..."
+        placeholder="Seleccione un requerimiento..." appendTo="body" styleClass="w-full" [loading]="cargandoCombo()" />
       @if (manualForm.get('idRequerimiento')?.invalid && manualForm.get('idRequerimiento')?.touched) {
       <small class="text-red-400 text-xs">Campo requerido.</small>
       }
@@ -170,9 +162,8 @@
 
       <div class="flex flex-col gap-1.5">
         <label class="form-label">Horas Trabajadas <span class="text-red-400">*</span></label>
-        <p-inputnumber formControlName="horasTrabajadas"
-          mode="decimal" locale="en-US" [minFractionDigits]="2" [maxFractionDigits]="2" [min]="0"
-          styleClass="w-full" inputStyleClass="w-full" />
+        <p-inputnumber formControlName="horasTrabajadas" mode="decimal" locale="en-US" [minFractionDigits]="2"
+          [maxFractionDigits]="2" [min]="0" styleClass="w-full" inputStyleClass="w-full" />
         @if (manualForm.get('horasTrabajadas')?.invalid && manualForm.get('horasTrabajadas')?.touched) {
         <small class="text-red-400 text-xs">Campo requerido.</small>
         }
@@ -180,9 +171,8 @@
 
       <div class="flex flex-col gap-1.5">
         <label class="form-label">Horas Facturadas <span class="text-red-400">*</span></label>
-        <p-inputnumber formControlName="horasAprobadasExcel"
-          mode="decimal" locale="en-US" [minFractionDigits]="2" [maxFractionDigits]="2" [min]="0"
-          styleClass="w-full" inputStyleClass="w-full" />
+        <p-inputnumber formControlName="horasAprobadasExcel" mode="decimal" locale="en-US" [minFractionDigits]="2"
+          [maxFractionDigits]="2" [min]="0" styleClass="w-full" inputStyleClass="w-full" />
         @if (manualForm.get('horasAprobadasExcel')?.invalid && manualForm.get('horasAprobadasExcel')?.touched) {
         <small class="text-red-400 text-xs">Campo requerido.</small>
         }
@@ -193,10 +183,9 @@
   </form>
 
   <ng-template pTemplate="footer">
-    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
-      [disabled]="guardandoManual()" (click)="dialogManualVisible.set(false)" />
-    <p-button label="Registrar" icon="pi pi-check" [loading]="guardandoManual()"
-      (click)="guardarManual()" />
+    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true" [disabled]="guardandoManual()"
+      (click)="dialogManualVisible.set(false)" />
+    <p-button label="Registrar" icon="pi pi-check" [loading]="guardandoManual()" (click)="guardarManual()" />
   </ng-template>
 
 </p-dialog>
@@ -205,9 +194,8 @@
      MODAL — Selección de Entregables
 ════════════════════════════════════════════════════════════ -->
 <p-dialog [visible]="dialogEntregablesVisible()" (visibleChange)="dialogEntregablesVisible.set($event)"
-  header="Seleccionar Entregables"
-  [modal]="true" [draggable]="false" [resizable]="false"
-  [style]="{ width: '680px' }" appendTo="body">
+  header="Seleccionar Entregables" [modal]="true" [draggable]="false" [resizable]="false" [style]="{ width: '680px' }"
+  appendTo="body">
 
   @if (cargandoEntregables()) {
   <div class="flex flex-col items-center justify-center py-12 gap-3">
@@ -215,32 +203,34 @@
     <span class="text-sm text-gray-400">Cargando entregables...</span>
   </div>
   } @else {
-  <p-table [value]="entregablesDisponibles()"
-    [selection]="entregablesSeleccionados()"
-    (selectionChange)="entregablesSeleccionados.set($event)"
-    dataKey="id"
-    styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
-    responsiveLayout="scroll"
+  <p-table [value]="entregablesDisponibles()" [selection]="entregablesSeleccionados()"
+    (selectionChange)="entregablesSeleccionados.set($event)" dataKey="id"
+    styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" responsiveLayout="scroll"
     [paginator]="entregablesDisponibles().length > 10" [rows]="10">
 
     <ng-template pTemplate="header">
       <tr>
-        <th class="w-12" [ngStyle]="{'background-color': '#3B4FC8', 'color': '#ffffff', 'font-weight': '700', 'padding': '10px 16px'}">
+        <th class="w-12 text-center">
           <p-tableHeaderCheckbox />
         </th>
-        <th [ngStyle]="{'background-color': '#3B4FC8', 'color': '#ffffff', 'font-weight': '700', 'padding': '10px 16px'}">Entregable</th>
-        <th class="w-36 text-right" [ngStyle]="{'background-color': '#3B4FC8', 'color': '#ffffff', 'font-weight': '700', 'padding': '10px 16px'}">Horas Facturables</th>
+        <th>Entregable</th>
+        <th class="w-36">
+          <div class="flex justify-end w-full">Horas</div>
+        </th>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="body" let-ent>
       <tr>
-        <td class="w-12">
+        <td class="w-12 text-center">
           <p-tableCheckbox [value]="ent" />
         </td>
         <td>{{ ent.nombre }}</td>
-        <td class="text-right font-semibold text-blue-600">
-          {{ ent.horasFacturables | number:'1.2-2' }}h
+
+        <td class="w-36">
+          <div class="flex justify-end w-full font-semibold text-blue-600">
+            {{ ent.horasFacturables | number:'1.2-2' }}h
+          </div>
         </td>
       </tr>
     </ng-template>
@@ -263,10 +253,9 @@
   }
 
   <ng-template pTemplate="footer">
-    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
-      [disabled]="guardandoEntregables()" (click)="dialogEntregablesVisible.set(false)" />
-    <p-button label="Guardar" icon="pi pi-check" [loading]="guardandoEntregables()"
-      (click)="guardarEntregables()" />
+    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true" [disabled]="guardandoEntregables()"
+      (click)="dialogEntregablesVisible.set(false)" />
+    <p-button label="Guardar" icon="pi pi-check" [loading]="guardandoEntregables()" (click)="guardarEntregables()" />
   </ng-template>
 
 </p-dialog>

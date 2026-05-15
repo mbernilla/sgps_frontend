@@ -7,6 +7,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { Toast } from 'primeng/toast';
 import { ProgressSpinner } from 'primeng/progressspinner';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { ConciliacionService } from '../services/conciliacion.service';
 import { CicloContratoDTO } from '../models/conciliacion.models';
@@ -21,6 +22,7 @@ import { CicloContratoDTO } from '../models/conciliacion.models';
     TagModule,
     Toast,
     ProgressSpinner,
+    TooltipModule
   ],
   providers: [MessageService],
   templateUrl: './ciclos-list.html',

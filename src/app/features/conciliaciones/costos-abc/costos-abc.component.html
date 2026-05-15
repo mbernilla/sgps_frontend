@@ -1,16 +1,20 @@
 <div class="page-wrapper">
   <div class="custom-card">
 
-    <!-- Topbar -->
     <div class="card-topbar">
       <div class="flex items-center gap-3">
-        <p-button label="Volver" icon="pi pi-arrow-left" severity="secondary" [text]="true"
-          (click)="volverALista()" pTooltip="Volver a ciclos" tooltipPosition="right" />
-        <h1 class="card-title">Costos ABC</h1>
+        <p-button label="Volver" icon="pi pi-arrow-left" severity="secondary" [text]="true" (click)="volverALista()"
+          pTooltip="Volver a ciclos" tooltipPosition="right" />
+
+        <div class="w-px h-6 bg-slate-200"></div>
+
+        <h1 class="card-title m-0">
+          <i class="pi pi-chart-pie text-slate-400"></i>
+          Costos ABC
+        </h1>
       </div>
     </div>
 
-    <!-- Contenido -->
     @if (cargando()) {
     <div class="flex flex-col items-center justify-center py-24 gap-3">
       <p-progressSpinner strokeWidth="4" animationDuration=".7s" />
@@ -23,11 +27,9 @@
     </div>
     } @else {
 
-    <!-- Grupos Tecnológicos -->
     @for (grupo of gruposTecnologicos(); track grupo.codGrupoTecnologico) {
     <div class="grupo-tecnologico">
 
-      <!-- Header del Grupo Tecnológico (Collapsible) -->
       <div class="grupo-header" (click)="toggleGrupo(grupo)">
         <div class="grupo-header-content">
           <i class="pi" [ngClass]="grupo.expandido ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
@@ -51,7 +53,6 @@
         }
       </div>
 
-      <!-- Tabla de Datos del Grupo -->
       @if (grupo.expandido) {
       <p-table [value]="grupo.items" selectionMode="single"
         styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" responsiveLayout="scroll">
@@ -61,9 +62,17 @@
             <th>Gerencia</th>
             <th>Equipo</th>
             <th class="w-28 text-center">Centro Costo</th>
-            <th class="w-28 text-right">Horas Dist.</th>
-            <th class="w-32 text-right">Monto Distribuido</th>
-            <th class="w-32 text-right">Monto S/ IGV</th>
+
+            <th class="w-28">
+              <div class="flex justify-end w-full">Horas Dist.</div>
+            </th>
+            <th class="w-32">
+              <div class="flex justify-end w-full">Monto Dist.</div>
+            </th>
+            <th class="w-32">
+              <div class="flex justify-end w-full">Monto S/ IGV</div>
+            </th>
+
             <th class="w-16 text-center">Acciones</th>
           </tr>
         </ng-template>
@@ -73,34 +82,48 @@
             <td class="text-sm">{{ item.gerenciaNombre }}</td>
             <td class="text-sm">{{ item.equipoNombre }}</td>
             <td class="text-center text-sm">{{ item.codigoCentroCosto }}</td>
-            <td class="text-right text-sm">{{ item.horasDistribuidas | number:'1.2-2' }}</td>
-            <td class="text-right font-semibold text-sm">{{ item.montoDistribuido | number:'1.2-2' }}</td>
-            <td class="text-right font-semibold text-sm">{{ item.montoDistribuidoSinIgv | number:'1.2-2' }}</td>
+
+            <td>
+              <div class="flex justify-end w-full text-sm">{{ item.horasDistribuidas | number:'1.2-2' }}</div>
+            </td>
+            <td>
+              <div class="flex justify-end w-full font-semibold text-sm">{{ item.montoDistribuido | number:'1.2-2' }}</div>
+            </td>
+            <td>
+              <div class="flex justify-end w-full font-semibold text-sm">{{ item.montoDistribuidoSinIgv | number:'1.2-2' }}</div>
+            </td>
+
             <td class="text-center">
-              <p-button icon="pi pi-list" [text]="true" [rounded]="true" severity="info" size="small"
+              <p-button icon="pi pi-list" [text]="true" [rounded]="true" severity="secondary" size="small"
                 pTooltip="Ver detalles" tooltipPosition="top" (click)="abrirModalDetalles(item)" />
             </td>
           </tr>
         </ng-template>
 
-      </p-table>
+        <ng-template pTemplate="footer">
+          <tr class="bg-slate-50 border-t-2 border-slate-400">
+            <td colspan="3" class="font-bold text-slate-800 text-sm">
+              Subtotal {{ grupo.codGrupoTecnologico }}
+            </td>
+            <td>
+              <div class="flex justify-end w-full font-bold text-slate-700 text-sm">{{ grupo.totales.horasDistribuidas | number:'1.2-2' }} h</div>
+            </td>
+            <td>
+              <div class="flex justify-end w-full font-bold text-slate-700 text-sm">{{ grupo.totales.montoDistribuido | number:'1.2-2' }}</div>
+            </td>
+            <td>
+              <div class="flex justify-end w-full font-bold text-slate-700 text-sm">{{ grupo.totales.montoDistribuidoSinIgv | number:'1.2-2' }}</div>
+            </td>
+            <td></td>
+          </tr>
+        </ng-template>
 
-      <!-- Subtotal del Grupo -->
-      <div class="subtotal-row">
-        <div class="subtotal-col subtotal-col-gerencia">Subtotal {{ grupo.codGrupoTecnologico }}</div>
-        <div class="subtotal-col subtotal-col-equipo"></div>
-        <div class="subtotal-col subtotal-col-centro"></div>
-        <div class="subtotal-col subtotal-col-horas">{{ grupo.totales.horasDistribuidas | number:'1.2-2' }} h</div>
-        <div class="subtotal-col subtotal-col-monto">{{ grupo.totales.montoDistribuido | number:'1.2-2' }}</div>
-        <div class="subtotal-col subtotal-col-monto">{{ grupo.totales.montoDistribuidoSinIgv | number:'1.2-2' }}</div>
-        <div class="subtotal-col subtotal-col-acciones"></div>
-      </div>
+      </p-table>
       }
 
     </div>
     }
 
-    <!-- Suma Total General -->
     <div class="total-general">
       <div class="total-header">SUMA TOTAL</div>
       <div class="total-grid">
@@ -124,8 +147,8 @@
   </div>
 </div>
 
-<!-- Modal de Detalles del Equipo -->
-<p-dialog [visible]="modalVisible()" (visibleChange)="modalVisible.set($event)" [style]="{width: '70vw'}" [modal]="true" [closable]="true">
+<p-dialog [visible]="modalVisible()" (visibleChange)="modalVisible.set($event)" [style]="{width: '70vw'}" [modal]="true"
+  [closable]="true">
   <ng-template pTemplate="header">
     <div class="modal-header-content">
       @if (equipoSeleccionado(); as equipo) {
@@ -140,7 +163,7 @@
 
   @if (detallesEquipo().length > 0) {
   <div class="modal-content">
-    <!-- Tabla Agrupada por Código Externo -->
+
     <p-table [value]="filasAgrupadas()" styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
       responsiveLayout="scroll">
 
@@ -148,9 +171,15 @@
         <tr>
           <th>Código Externo</th>
           <th>Requerimiento</th>
-          <th class="w-28 text-right">Horas Distribuidas</th>
-          <th class="w-32 text-right">Monto Distribuido</th>
-          <th class="w-32 text-right">Monto S/ IGV</th>
+          <th class="w-28">
+            <div class="flex justify-end w-full">Horas Dist.</div>
+          </th>
+          <th class="w-32">
+            <div class="flex justify-end w-full">Monto Dist.</div>
+          </th>
+          <th class="w-32">
+            <div class="flex justify-end w-full">Monto S/ IGV</div>
+          </th>
         </tr>
       </ng-template>
 
@@ -158,22 +187,28 @@
         <tr>
           <td class="text-sm">{{ item.codExterno }}</td>
           <td class="text-sm">{{ item.requerimientoNombre }}</td>
-          <td class="text-right text-sm">{{ item.horasDistribuidas | number:'1.2-2' }}</td>
-          <td class="text-right font-semibold text-sm">{{ item.montoDistribuido | number:'1.2-2' }}</td>
-          <td class="text-right font-semibold text-sm">{{ item.montoDistribuidoSinIgv | number:'1.2-2' }}</td>
+          <td><div class="flex justify-end w-full text-sm">{{ item.horasDistribuidas | number:'1.2-2' }}</div></td>
+          <td><div class="flex justify-end w-full font-semibold text-sm">{{ item.montoDistribuido | number:'1.2-2' }}</div></td>
+          <td><div class="flex justify-end w-full font-semibold text-sm">{{ item.montoDistribuidoSinIgv | number:'1.2-2' }}</div></td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="footer">
+        <tr class="bg-slate-50 border-t-2 border-slate-800">
+          <td colspan="2" class="font-bold text-slate-800 text-sm">Total</td>
+          <td>
+            <div class="flex justify-end w-full font-bold text-slate-800 text-sm">{{ totalesModal().horasDistribuidas | number:'1.2-2' }} h</div>
+          </td>
+          <td>
+            <div class="flex justify-end w-full font-bold text-slate-800 text-sm">{{ totalesModal().montoDistribuido | number:'1.2-2' }}</div>
+          </td>
+          <td>
+            <div class="flex justify-end w-full font-bold text-slate-800 text-sm">{{ totalesModal().montoDistribuidoSinIgv | number:'1.2-2' }}</div>
+          </td>
         </tr>
       </ng-template>
 
     </p-table>
-
-    <!-- Total General -->
-    <div class="modal-subtotal-row modal-total-row">
-      <div class="modal-subtotal-col modal-subtotal-col-label">Total</div>
-      <div class="modal-subtotal-col modal-subtotal-col-empty"></div>
-      <div class="modal-subtotal-col modal-subtotal-col-horas">{{ totalesModal().horasDistribuidas | number:'1.2-2' }}</div>
-      <div class="modal-subtotal-col modal-subtotal-col-monto">{{ totalesModal().montoDistribuido | number:'1.2-2' }}</div>
-      <div class="modal-subtotal-col modal-subtotal-col-monto">{{ totalesModal().montoDistribuidoSinIgv | number:'1.2-2' }}</div>
-    </div>
 
   </div>
   } @else {

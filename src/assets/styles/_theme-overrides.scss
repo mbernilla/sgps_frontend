@@ -150,8 +150,72 @@
   color: #52525B !important;
   border: 1px solid #E4E4E7; }
 
+/* =========================================================
+   BOTONES PRIME NG (Alineación a Tema Zen / Ejecutivo)
+   ========================================================= */
 
+// Forma base
+.p-button {
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    letter-spacing: 0.3px;
+}
 
+/* --- 1. BOTONES SÓLIDOS (Con fondo de color) --- */
 
+// Primario (Negro Ejecutivo)
+.p-button:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-danger):not(.p-button-help):not(.p-button-text):not(.p-button-outlined) {
+    background-color: #18181B !important;
+    border-color: #18181B !important;
+    color: #ffffff !important;
+    &:hover { background-color: #27272A !important; border-color: #27272A !important; }
+}
 
+// Success (Esmeralda) - Excluimos los de texto para que no se pinten sólidos
+.p-button-success:not(.p-button-text):not(.p-button-outlined) {
+    background-color: #10B981 !important;
+    border-color: #10B981 !important;
+    color: #ffffff !important;
+    &:hover { background-color: #059669 !important; border-color: #059669 !important; }
+}
 
+// Danger (Rojo Coral)
+.p-button-danger:not(.p-button-text):not(.p-button-outlined) {
+    background-color: #EF4444 !important;
+    border-color: #EF4444 !important;
+    color: #ffffff !important;
+    &:hover { background-color: #DC2626 !important; border-color: #DC2626 !important; }
+}
+
+/* --- 2. BOTONES DE TEXTO (Solo iconos para las grillas) --- */
+
+// Texto Secundario (Gris, ideal para los 3 puntos y botón "Volver")
+.p-button-secondary.p-button-text {
+    color: #64748B !important;
+    background-color: transparent !important;
+    &:hover {
+        background-color: #F1F5F9 !important;
+        color: #0F172A !important;
+    }
+}
+
+// Texto Success (Esmeralda transparente, ideal para el relojito de historial)
+.p-button-success.p-button-text {
+    color: #10B981 !important;
+    background-color: transparent !important;
+    &:hover {
+        background-color: #ECFDF5 !important; // Emerald 50 súper suave
+        color: #059669 !important;
+    }
+}
+
+// Texto Danger (Rojo transparente, ideal para basureros)
+.p-button-danger.p-button-text {
+    color: #EF4444 !important;
+    background-color: transparent !important;
+    &:hover {
+        background-color: #FEF2F2 !important; // Red 50 súper suave
+        color: #DC2626 !important;
+    }
+}

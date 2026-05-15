@@ -1,5 +1,5 @@
-/* Anulamos el bloque fantasma del Timeline de PrimeNG */
 :host ::ng-deep {
+    /* 1. Estructura (Tu código original - Ocultar lado izquierdo) */
     .p-timeline-event-opposite {
         display: none !important;
         flex: 0 !important;
@@ -9,5 +9,30 @@
     .p-timeline-event-content {
         width: 100%;
         padding-right: 0 !important;
+    }
+
+    /* 2. La Línea Conectora Zen */
+    .p-timeline .p-timeline-event-connector {
+        background-color: #CBD5E1 !important; /* Slate 300 */
+        width: 3px !important;                /* Grosor exacto para ser visible */
+    }
+}
+
+/* 3. El Marcador con anillo blanco (Perforación visual) */
+.zen-marker {
+    border: 3px solid #ffffff !important;
+    box-shadow: 0 0 0 1px #E4E4E7; /* Anillo sutil gris por fuera */
+}
+
+/* 4. La Tarjeta de Contenido Minimalista */
+.zen-card {
+    background: #FFFFFF;
+    border: 1px solid #E4E4E7;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02); /* Sombra casi imperceptible */
+    transition: border-color 0.2s ease;
+
+    &:hover {
+        border-color: #CBD5E1; /* Se oscurece un poco al pasar el mouse */
     }
 }

@@ -44,9 +44,8 @@
         <tr [pSelectableRow]="req" [ngClass]="{'flash-row': req.id === idResaltado()}">
 
           <td class="text-center">
-            <p-button icon="pi pi-history" [text]="true" [rounded]="true"
-              styleClass="text-emerald-600 hover:bg-emerald-50" pTooltip="Ver Seguimientos" tooltipPosition="top"
-              (click)="abrirSeguimientos(req)" />
+            <p-button icon="pi pi-history" [text]="true" [rounded]="true" severity="success" pTooltip="Ver Seguimientos"
+              tooltipPosition="top" (click)="abrirSeguimientos(req)" />
           </td>
 
           <td class="font-medium text-gray-700">
@@ -84,8 +83,7 @@
           </td>
 
           <td class="text-center">
-            <p-button icon="pi pi-ellipsis-v" [text]="true" [rounded]="true"
-              styleClass="text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" pTooltip="Acciones"
+            <p-button icon="pi pi-ellipsis-v" [text]="true" [rounded]="true" severity="secondary" pTooltip="Acciones"
               tooltipPosition="top" (click)="abrirMenu($event, req)" />
           </td>
 

@@ -22,7 +22,6 @@ import { DatePicker } from 'primeng/datepicker';
 import { Textarea } from 'primeng/textarea';
 import { Button } from 'primeng/button';
 import { Timeline } from 'primeng/timeline';
-import { Tag } from 'primeng/tag';
 import { Toast } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ConfirmDialog } from 'primeng/confirmdialog';
@@ -76,7 +75,6 @@ interface SeguimientoCreateDTO {
     Textarea,
     Button,
     Timeline,
-    Tag,
     Toast,
     ToggleSwitchModule,
     ConfirmDialog,

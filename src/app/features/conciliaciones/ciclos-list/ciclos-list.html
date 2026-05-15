@@ -19,8 +19,7 @@
     } @else {
 
     <p-table [value]="ciclos()" selectionMode="single"
-      styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
-      responsiveLayout="scroll"
+      styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" responsiveLayout="scroll"
       [paginator]="ciclos().length > 10" [rows]="10" [rowsPerPageOptions]="[10, 20, 50]">
 
       <ng-template pTemplate="header">
@@ -37,18 +36,18 @@
         <tr [pSelectableRow]="ciclo">
 
           <td>
-            <span class="font-semibold text-gray-800">{{ ciclo.nombreCiclo }}</span>
+            <span class="font-semibold text-slate-800">{{ ciclo.nombreCiclo }}</span>
           </td>
 
-          <td class="text-center text-sm text-gray-600">
+          <td class="text-center text-sm text-slate-600">
             {{ ciclo.fechaInicio | date:'dd/MM/yyyy' }} — {{ ciclo.fechaFin | date:'dd/MM/yyyy' }}
           </td>
 
           <td class="text-center">
             @if (!ciclo.esCerrado) {
-            <p-tag value="Abierto" severity="success" />
+            <span class="badge-custom badge-success">Abierto</span>
             } @else {
-            <p-tag value="Cerrado" severity="secondary" />
+            <span class="badge-custom badge-secondary">Cerrado</span>
             }
           </td>
 
@@ -59,11 +58,14 @@
           <td class="text-center">
             <div class="flex gap-2 justify-center">
               <p-button icon="pi pi-arrow-right" [rounded]="true" [text]="true" severity="secondary" size="small"
-                pTooltip="Ver detalle" tooltipPosition="top" (click)="irADetalle(ciclo.id)" />
-              <p-button icon="pi pi-shield" [rounded]="true" [text]="true" severity="warn" size="small"
-                pTooltip="Ver Penalidades" tooltipPosition="top" (click)="irAPenalidades(ciclo.id)" />
-              <p-button icon="pi pi-chart-bar" [rounded]="true" [text]="true" severity="info" size="small"
-                pTooltip="Costos ABC" tooltipPosition="top" (click)="irACostosABC(ciclo.id)" />
+                pTooltip="Ver detalle" tooltipPosition="top" tooltipAppendTo="body" (click)="irADetalle(ciclo.id)" />
+
+              <p-button icon="pi pi-shield" [rounded]="true" [text]="true" severity="secondary" size="small"
+                pTooltip="Ver Penalidades" tooltipPosition="top" tooltipAppendTo="body"
+                (click)="irAPenalidades(ciclo.id)" />
+
+              <p-button icon="pi pi-chart-pie" [rounded]="true" [text]="true" severity="secondary" size="small"
+                pTooltip="Costos ABC" tooltipPosition="top" tooltipAppendTo="body" (click)="irACostosABC(ciclo.id)" />
             </div>
           </td>
 
