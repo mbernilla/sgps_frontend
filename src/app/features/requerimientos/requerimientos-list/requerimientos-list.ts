@@ -245,16 +245,36 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
     });
   }
 
-  getEstimacionClass(estimacion: string): string {
-    if (!estimacion) return '';
-    if (estimacion.startsWith('RFC')) return 'code-rfc';
+  // getEstimacionClass(estimacion: string): string {
+  //   if (!estimacion) return '';
+  //   if (estimacion.startsWith('RFC')) return 'code-rfc';
 
-    const classes: { [key: string]: string } = {
-      'EST-INI': 'code-ini',
-      'EST-ANA': 'code-ana',
-      'EST-DIS': 'code-dis'
-    };
+  //   const classes: { [key: string]: string } = {
+  //     'EST-INI': 'code-ini',
+  //     'EST-ANA': 'code-ana',
+  //     'EST-DIS': 'code-dis'
+  //   };
 
-    return classes[estimacion] || 'badge-default'; // 'badge-default' por si llega algo inesperado
-  }
+  //   return classes[estimacion] || 'badge-default'; // 'badge-default' por si llega algo inesperado
+  // }
+
+  // // Añade este método en tu clase RequerimientosList
+  // getBadgeEstimacion(estimacion: string): string {
+  //   if (!estimacion) return '';
+
+  //   const valor = estimacion.trim().toUpperCase();
+
+  //   if (valor.startsWith('RFC')) {
+  //     return 'badge-rfc';
+  //   } else if (valor.startsWith('EST-INI')) {
+  //     return 'badge-est-ini';
+  //   } else if (valor.startsWith('EST-ANA')) {
+  //     return 'badge-est-ana';
+  //   } else if (valor.startsWith('EST-DIS')) {
+  //     return 'badge-est-dis';
+  //   }
+
+  //   // Un gris por defecto por si en el futuro aparece un código no mapeado
+  //   return 'badge-secondary';
+  // }
 }

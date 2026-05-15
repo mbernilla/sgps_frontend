@@ -20,21 +20,21 @@
       </div>
     </div>
 
-    <p-table [value]="requerimientos()" selectionMode="single" [(selection)]="requerimientoSeleccionado"
-      [lazy]="true" (onLazyLoad)="onLazyLoad($event)" [first]="primeraFila"
-      dataKey="id" [paginator]="true" [rows]="filtroActual.size" [totalRecords]="totalRegistros()"
-      [loading]="cargando()" [rowsPerPageOptions]="[5, 10, 20, 50]" sortMode="multiple"
-      styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" responsiveLayout="scroll">
+    <p-table [value]="requerimientos()" selectionMode="single" [(selection)]="requerimientoSeleccionado" [lazy]="true"
+      (onLazyLoad)="onLazyLoad($event)" [first]="primeraFila" dataKey="id" [paginator]="true" [rows]="filtroActual.size"
+      [totalRecords]="totalRegistros()" [loading]="cargando()" [rowsPerPageOptions]="[5, 10, 20, 50]"
+      sortMode="multiple" styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
+      responsiveLayout="scroll">
 
       <ng-template pTemplate="header">
         <tr>
           <th class="w-12 text-center">Seg.</th>
           <th pSortableColumn="codigo" class="w-48">Código <p-sortIcon field="codigo"></p-sortIcon></th>
-          <th pSortableColumn="nombre" class="min-w-[15rem]">Nombre del Proyecto <p-sortIcon
-              field="nombre"></p-sortIcon></th>
+          <th pSortableColumn="nombre" class="min-w-[15rem]">Nombre <p-sortIcon field="nombre"></p-sortIcon></th>
           <th pSortableColumn="ultimaEstimacion" class="w-40">Última Est. <p-sortIcon field="ultimaEstimacion" /></th>
-          <th pSortableColumn="totalHorasAprobadas">Horas Aprobadas <p-sortIcon field="totalHorasAprobadas" /></th>
-          <th class="text-center" pSortableColumn="horasFacturadas">H. Facturadas <p-sortIcon field="horasFacturadas" /></th>
+          <th pSortableColumn="totalHorasAprobadas">H.Aprobadas <p-sortIcon field="totalHorasAprobadas" /></th>
+          <th class="text-center" pSortableColumn="horasFacturadas">H. Facturadas <p-sortIcon field="horasFacturadas" />
+          </th>
           <th pSortableColumn="estado" class="w-40 text-center">Estado <p-sortIcon field="estado"></p-sortIcon></th>
           <th class="w-12 text-center"></th>
         </tr>
@@ -44,29 +44,27 @@
         <tr [pSelectableRow]="req" [ngClass]="{'flash-row': req.id === idResaltado()}">
 
           <td class="text-center">
-            <p-button icon="pi pi-history" [text]="true" [rounded]="true" severity="secondary"
-              pTooltip="Ver Seguimientos" tooltipPosition="top" (click)="abrirSeguimientos(req)" />
+            <p-button icon="pi pi-history" [text]="true" [rounded]="true"
+              styleClass="text-emerald-600 hover:bg-emerald-50" pTooltip="Ver Seguimientos" tooltipPosition="top"
+              (click)="abrirSeguimientos(req)" />
           </td>
 
           <td class="font-medium text-gray-700">
             {{ req.codigoInternoFormateado }}
             @if (req.codExterno) {
-              <span class="text-gray-500 text-sm">({{ req.codExterno }})</span>
+            <span class="text-gray-500 text-sm">({{ req.codExterno }})</span>
             }
           </td>
           <td class="font-medium" [title]="req.nombre">{{ req.nombre }}</td>
 
-<td class="text-center">
-  @if (req.ultimaEstimacion) {
-    <span class="badge-custom badge-info">
-      {{ req.ultimaEstimacion }}
-    </span>
-  } @else {
-    <span class="text-gray-400 italic text-sm">Sin estimar</span>
-  }
-</td>
+          <td class="text-center">
+            <span class="est-code-tag"
+              [ngClass]="req.ultimaEstimacion ? (req.ultimaEstimacion.toUpperCase().startsWith('RFC') ? 'tag-rfc' : 'tag-' + req.ultimaEstimacion.toLowerCase().replace('-','')) : 'tag-default'">
+              {{ req.ultimaEstimacion || 'Sin estimar' }}
+            </span>
+          </td>
 
-          <td class="text-right font-semibold text-blue-600">
+          <td class="text-right font-semibold text-slate-700">
             @if (req.totalHorasAprobadas > 0) {
             <i class="pi pi-clock text-xs mr-1"></i>
             {{ req.totalHorasAprobadas | number:'1.0-2' }} h
@@ -75,7 +73,7 @@
             }
           </td>
 
-          <td class="text-center font-bold text-blue-600">
+          <td class="text-center font-bold text-slate-800">
             {{ req.horasFacturadas || 0 | number:'1.2-2' }}
           </td>
 
@@ -86,7 +84,8 @@
           </td>
 
           <td class="text-center">
-            <p-button icon="pi pi-ellipsis-v" [text]="true" [rounded]="true" severity="secondary" pTooltip="Acciones"
+            <p-button icon="pi pi-ellipsis-v" [text]="true" [rounded]="true"
+              styleClass="text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" pTooltip="Acciones"
               tooltipPosition="top" (click)="abrirMenu($event, req)" />
           </td>
 

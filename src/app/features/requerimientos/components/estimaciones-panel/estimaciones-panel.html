@@ -31,9 +31,7 @@
 
   <!-- ── Sección Cabecera ───────────────────────────────────────────────── -->
   <div class="est-content-top">
-    <app-requerimiento-cabecera
-      [cabecera]="cabecera()"
-      [cargando]="cargandoCabecera()" />
+    <app-requerimiento-cabecera [cabecera]="cabecera()" [cargando]="cargandoCabecera()" />
   </div>
 
   <!-- ── Contenido principal ───────────────────────────────────────────── -->
@@ -132,8 +130,8 @@
             <th class="min-w-[200px]">Tipo de Estimación</th>
             <th class="min-w-[160px]">Modificador Tarifa</th>
             <th class="w-28 text-center">Estado</th>
-            <th class="w-28 text-center">Fecha Est.</th>
-            <th class="w-28 text-center">Fecha Aprob.</th>
+            <th class="w-28 text-center">F.Estim.</th>
+            <th class="w-28 text-center">F.Aprob.</th>
             <th class="w-20 text-center">Horas</th>
             <th>Comentario</th>
             <th class="w-44 text-center">Acciones</th>
@@ -147,8 +145,9 @@
                 pTooltip="Ver fases" tooltipPosition="top" (click)="verDetalle(est)" />
             </td>
             <td>
-              <span class="est-code-tag" [ngClass]="'tag-' + est.codigoEstimacion.toLowerCase().replace('-','')">
-                {{ est.codigoEstimacionDescripcion }}
+              <span class="est-code-tag"
+                [ngClass]="est.codigoEstimacion ? (est.codigoEstimacion.toUpperCase().startsWith('RFC') ? 'tag-rfc' : 'tag-' + est.codigoEstimacion.toLowerCase().replace('-','')) : 'tag-default'">
+                {{ est.codigoEstimacionDescripcion || 'Sin descripción' }}
               </span>
             </td>
             <td>

@@ -1,21 +1,15 @@
 /* src/app/features/requerimientos/requerimientos-list/requerimientos-list.scss */
 
 :host {
-  --brand:        #3B4FC8;
-  --brand-dark:   #2d3fb0;
-  --brand-light:  #eef0fb;
-  --header-bg:    #4a5568;   /* slate-600ish */
-  --header-text:  #ffffff;
-  --row-border:   #e2e8f0;
-  --row-hover:    #e6f2fa;  /* MBS: mouse encima grilla*/
-  --text-main:    #1e293b;
-  --text-muted:   #64748b;
-  --link-blue:    #3B4FC8;
-  --badge-alta:   #ef4444;
-  --badge-media:  #f59e0b;
-  --badge-baja:   #22c55e;
+  /* Mapeo temporal al tema Zen */
+  --brand:        #18181B; /* Casi negro */
+  --brand-dark:   #000000;
+  --brand-light:  #F4F4F5;
+  --text-main:    #18181B;
+  --text-muted:   #71717A;
+  --link-blue:    #10B981; /* Acento esmeralda */
   --radius:       6px;
-  --shadow:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow:       0 1px 3px rgba(0,0,0,.05), 0 1px 2px rgba(0,0,0,.03);
 }
 
 .page-wrapper {
@@ -100,19 +94,8 @@
 .btn-primary:hover { background: var(--brand-dark); }
 
 /* Badges personalizados de Claude */
-.badge-custom {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: .2px;
-}
-.badge-info { background: #e0f2fe; color: #0284c7; }
-.badge-warn { background: #fef3c7; color: #d97706; }
-.badge-success { background: #dcfce7; color: #166534; }
-.badge-danger { background: #fee2e2; color: #b91c1c; }
-.badge-secondary { background: #f1f5f9; color: #475569; }
+
+
 
 .link-ver {
   color: var(--link-blue);
@@ -122,61 +105,3 @@
 }
 .link-ver:hover { text-decoration: underline; }
 
-/* Inyección profunda a PrimeNG para forzar el diseño calcado */
-::ng-deep {
-  .p-datatable .p-datatable-thead > tr > th {
-    background: var(--header-bg) !important;
-    color: var(--header-text) !important;
-    padding: 12px 16px !important;
-    font-size: 13px;
-    font-weight: 600;
-    border: none !important;
-  }
-
-  .p-datatable .p-datatable-tbody > tr > td {
-    padding: 11px 16px !important;
-    border-bottom: 1px solid var(--row-border) !important;
-    font-size: 13.5px;
-    color: var(--text-main);
-  }
-
-  /* :not() espeja la lógica interna de PrimeNG 20: el hover solo aplica
-     a filas NO seleccionadas, igual que su propia regla interna. */
-  .p-datatable .p-datatable-tbody > tr:hover:not(.p-datatable-row-selected) > td {
-    background: var(--row-hover) !important;
-  }
-}
-
-/* =========================================================
-   OVERRIDE DE PRIMENG: Animación de Fila Nueva
-   ─────────────────────────────────────────────────────────
-   @keyframes DEBE declararse en el scope global (fuera de
-   :host / ::ng-deep).  Dos razones:
-   1. CSS no permite !important dentro de @keyframes; si lo
-      ponemos dentro de ::ng-deep el animador pierde la
-      cascada frente a cualquier regla !important de PrimeNG.
-   2. Usamos box-shadow inset en lugar de background-color
-      para NO competir con las reglas de background de PrimeNG
-      (que actúan sobre <tr>) ni con nuestros propios overrides
-      de <td>.  Un inset de spread enorme cubre toda la celda
-      visualmente sin tocar background-color.
-   ========================================================= */
-@keyframes flashFadeOut {
-  0%, 60% { box-shadow: inset 0 0 0 9999px rgba(194, 241, 220, 0.85); } /*MBS: Nuevo registro se desvanece*/
-  100%    { box-shadow: inset 0 0 0 9999px rgba(254, 240, 138, 0); }
-}
-
-:host ::ng-deep {
-  /* Una sola regla alcanza filas pares, impares y cualquier otra
-     variante de striped porque box-shadow no pelea con background. */
-  .p-datatable .p-datatable-tbody > tr.flash-row > td {
-    animation: flashFadeOut 2s ease-out forwards !important; /*MBS: Tiempo que dura color nuevo registro*/
-  }
-
-  /* [pSelectableRow] agrega .p-datatable-row-selected al <tr>, NO .p-highlight
-     (confirmado en primeng-table.mjs línea 260). Esta es la regla correcta. */
-  .p-datatable .p-datatable-tbody > tr.p-datatable-row-selected > td {
-    background-color: #cde6f7 !important; /*MBS: seleccionar una fila en la grilla*/
-    color: #2b79b1 !important; /*MBS: Texto en la fila seleccionada*/
-  }
-}

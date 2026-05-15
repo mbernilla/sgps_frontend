@@ -1,0 +1,157 @@
+// src/assets/styles/_theme-overrides.scss
+
+@use 'variables' as *;
+/* =========================================================
+   OVERRIDE DE PRIMENG: DATATABLE (GRILLAS GLOBALES)
+   ========================================================= */
+
+.p-datatable {
+
+    // 1. Cabeceras (Estilo Zen)
+    .p-datatable-thead > tr > th {
+        background-color: $bg-body !important; // Un gris muy tenue
+        color: $text-main !important;         // Texto sutil
+        padding: 12px 16px !important;
+        font-size: 13px;
+        font-weight: 600;
+        border: none !important;
+        border-bottom: 2px solid $border-color !important; // Línea separadora limpia
+    }
+
+    // 2. Filas y Celdas
+    .p-datatable-tbody > tr > td {
+        padding: 11px 16px !important;
+        border-bottom: 1px solid $border-color !important;
+        font-size: 13.5px;
+        color: $text-main;
+        background-color: $bg-surface !important; // Fondo blanco
+    }
+
+    // 3. Hover (Pasar el mouse)
+    .p-datatable-tbody > tr:hover:not(.p-datatable-row-selected) > td {
+        background-color: #FAFAFA !important; // Apenas un destello de gris para Zen
+    }
+
+    // 4. Fila Seleccionada
+    .p-datatable-tbody > tr.p-datatable-row-selected > td {
+        background-color: #F4F4F5 !important; // Gris un poco más oscuro
+        color: $primary-color !important;     // Texto casi negro
+        font-weight: 500;
+    }
+}
+
+/* =========================================================
+   ANIMACIONES GLOBALES
+   ========================================================= */
+@keyframes flashFadeOut {
+  0%, 60% { box-shadow: inset 0 0 0 9999px rgba(16, 185, 129, 0.15); } /* Zen Esmeralda súper suave */
+  100%    { box-shadow: inset 0 0 0 9999px rgba(16, 185, 129, 0); }
+}
+
+.p-datatable .p-datatable-tbody > tr.flash-row > td {
+  animation: flashFadeOut 2s ease-out forwards !important;
+}
+
+/* =========================================================
+   BADGES (PÍLDORAS DE ESTADO) - ESTILO ZEN / SOFT UI
+   ========================================================= */
+
+.badge-custom {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    white-space: nowrap;
+}
+
+// Para estimaciones o tags informativos (Gris elegante)
+// Para estimaciones o tags informativos (Azul pastel muy elegante)
+.badge-info {
+    background-color: $state-info-bg !important;
+    color: $state-info-text !important;
+    border: none; // Quitamos el borde para que sea más limpio
+}
+
+// Estados de Éxito / Aprobado
+.badge-success {
+    background-color: $state-success-bg !important;
+    color: $state-success-text !important;
+}
+
+// Estados Pendiente / Advertencia
+.badge-warn {
+    background-color: $state-warning-bg !important;
+    color: $state-warning-text !important;
+}
+
+// Estados Rechazado / Peligro
+.badge-danger {
+    background-color: $state-danger-bg !important;
+    color: $state-danger-text !important;
+}
+
+// Estado Secundario o Borrador
+.badge-secondary {
+    background-color: #FAFAFA !important;
+    color: $text-muted !important;
+    border: 1px dashed $border-color;
+}
+
+/* =========================================================
+   BADGES DE ESTIMACIÓN GLOBALES (Basado en códigos)
+   ========================================================= */
+
+.est-code-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    font-family: ui-monospace, monospace;
+    white-space: nowrap;
+}
+
+// 1. EST-INI: Inicial (Cian pálido Zen)
+.tag-estini {
+  background-color: #CCFBF1 !important;
+  color: #115E59 !important;
+  border: none !important; }
+
+// 2. EST-ANA: Análisis (Púrpura pálido Zen)
+.tag-estana {
+  background-color: #F3E8FF !important;
+  color: #6B21A8 !important;
+  border: none !important; }
+
+// 3. EST-DIS: Diseño (Azul pálido Zen)
+.tag-estdis {
+  background-color: #DBEAFE !important;
+  color: #1E40AF !important;
+  border: none !important; }
+
+// 4. RFC: Control de Cambios (Índigo pálido Zen)
+// 4. RFC: Control de Cambios (Gris Pizarra Zen)
+.tag-rfc {
+    background-color: #FFEDD5 !important;
+    color: #334155 !important;
+    border: none !important;
+}
+
+// 5. Fallback por defecto (Gris Zen)
+.tag-default {
+  background-color: #F4F4F5 !important;
+  color: #52525B !important;
+  border: 1px solid #E4E4E7; }
+
+
+
+
+
+

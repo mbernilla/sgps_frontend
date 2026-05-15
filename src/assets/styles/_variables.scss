@@ -1,0 +1,28 @@
+// ─── 1. LA FUENTE ───
+$font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+// ─── 2. PALETA MONOCROMÁTICA ZEN ───
+$bg-body: #E4E4E7;          // Fondo principal (Gris zinc muy sutil, descansa la vista)
+$bg-surface: #FFFFFF;       // Fondo de tarjetas y tablas (Blanco puro para contrastar)
+
+$text-main: #18181B;        // Texto principal (Casi negro, elegante)
+$text-muted: #71717A;       // Texto secundario (Para descripciones o placeholders)
+
+$border-color: #E4E4E7;     // Bordes súper finos y limpios
+
+// ─── 3. ACENTOS Y ACCIONES (El toque de color) ───
+$primary-color: #18181B;    // En el modo Zen, los botones primarios son negros o grises muy oscuros
+$accent-color: #10B981;     // Tu color esmeralda (Para destacar iconos o notificaciones)
+
+// ─── 4. ESTADOS (Soft UI - Fondos pastel) ───
+$state-success-bg: #D1FAE5;
+$state-success-text: #065F46;
+
+$state-warning-bg: #FEF3C7;
+$state-warning-text: #92400E;
+
+$state-danger-bg: #FEE2E2;
+$state-danger-text: #991B1B;
+
+$state-info-bg: #DBEAFE;
+$state-info-text: #1E40AF;

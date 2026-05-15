@@ -1,5 +1,25 @@
 /* PrimeIcons */
+@use 'assets/styles/variables' as *;
+@use 'assets/styles/theme-overrides';
 @import "primeicons/primeicons.css";
+
+
+
+// 3. Reseteamos el body para que tome nuestro estilo Zen
+body {
+    background-color: $bg-body;
+    color: $text-main;
+    font-family: $font-family-base;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased; // Hace que la fuente se vea más nítida
+    -moz-osx-font-smoothing: grayscale;
+}
+
+// 4. Enseñamos a PrimeNG a usar nuestra fuente (respetando sus iconos)
+.p-component {
+    font-family: $font-family-base;
+}
 
 .p-confirm-dialog-message {
     word-break: break-word;
