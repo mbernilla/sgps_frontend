@@ -214,7 +214,7 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
       message: `¿Estás seguro de que deseas eliminar el requerimiento <b>"${nombre}"</b>?`,
       icon: 'pi pi-exclamation-triangle',
       acceptClass: 'p-button-danger p-button-sm',
-      action: () => this.requerimientoService.eliminar(id),
+      action: () => this.requerimientoService.delete(id),
       onSuccess: () => this.cargarData()
     });
   }
