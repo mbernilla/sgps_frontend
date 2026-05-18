@@ -219,3 +219,51 @@
         color: #DC2626 !important;
     }
 }
+
+/* =========================================================
+   DATEPICKER (CALENDARIOS)
+   ========================================================= */
+
+/* Domando el botón del icono del calendario para que no se aplaste */
+.p-datepicker-trigger {
+    width: 2.5rem !important; /* Ancho fijo elegante */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #F8FAFC !important; /* Un gris muy tenue (Slate 50) */
+    border-color: #E2E8F0 !important; /* Borde sutil (Slate 200) */
+    color: #475569 !important; /* Icono gris ejecutivo (Slate 600) */
+
+    &:hover {
+        background-color: #F1F5F9 !important; /* Slate 100 al pasar el mouse */
+        color: #0F172A !important; /* Se oscurece el icono */
+    }
+}
+
+/* =========================================================
+   DATEPICKER (ÍCONO DENTRO DEL INPUT)
+   ========================================================= */
+
+.p-datepicker {
+    position: relative;
+    display: inline-block;
+
+    /* Forzamos al ícono (sea SVG o clase nativa) a pegarse a la derecha */
+    .p-datepicker-input-icon,
+    > svg,
+    > i {
+        position: absolute !important;
+        right: 14px !important; /* Separación elegante del borde derecho */
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        margin-top: 0 !important;
+        color: #94a3b8 !important; /* Color gris (Slate 400) */
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    /* Le damos espacio interno al input para que las fechas largas no tapen el ícono */
+    .p-inputtext {
+        padding-right: 2.5rem !important;
+    }
+}

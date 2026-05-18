@@ -1,5 +1,5 @@
-import { Component, inject, effect, signal, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router'; // <-- Añadido ActivatedRoute
+import { Component, inject, effect, signal, OnInit, DestroyRef } from '@angular/core'; // <-- Añadido DestroyRef
+import { Router, ActivatedRoute } from '@angular/router';
 import {
   ReactiveFormsModule,
   FormBuilder,
@@ -20,8 +20,8 @@ import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
 import { Toast } from 'primeng/toast';
 import { Checkbox } from 'primeng/checkbox';
-import { MultiSelectModule } from 'primeng/multiselect'; // <-- Añadido para Tecnologías
-import { AutoCompleteModule } from 'primeng/autocomplete'; // <-- Añadido para Personal
+import { MultiSelectModule } from 'primeng/multiselect';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { MessageService } from 'primeng/api';
 
 import { FormSelectComponent } from '../../../shared/components/form-select/form-select';
@@ -71,8 +71,8 @@ const ESTADO_OPTS = [
     Textarea,
     Toast,
     Checkbox,
-    MultiSelectModule, // <-- Añadido
-    AutoCompleteModule // <-- Añadido
+    MultiSelectModule,
+    AutoCompleteModule
   ],
   providers: [MessageService],
   templateUrl: './requerimientos-form.html',
@@ -83,10 +83,11 @@ export class RequerimientosFormComponent implements OnInit {
   // ── Servicios ─────────────────────────────────────────────────────────
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute); // <-- Inyectado para leer URL
+  private readonly route = inject(ActivatedRoute);
   private readonly service = inject(RequerimientoService);
   private readonly maestra = inject(MaestraService);
   private readonly msg = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef); // <-- Inyectado para prevenir Memory Leaks
 
   readonly equiposPorGerencia = signal<Record<number, EquipoDTO[]>>({});
 
@@ -122,7 +123,7 @@ export class RequerimientosFormComponent implements OnInit {
     estado: this.fb.nonNullable.control('REQ_REG', Validators.required),
     distribucionCostos: this.fb.array<FormGroup>([], sumaPorcentajeValidator),
     personal: this.fb.array([]),
-    tecnologias: this.fb.control<number[]>([], Validators.required), // <-- Cambiado a array de números
+    tecnologias: this.fb.control<number[]>([], Validators.required),
   });
 
   // ── Señales: valores de controles clave ───────────────────────────────
@@ -216,14 +217,11 @@ export class RequerimientosFormComponent implements OnInit {
   ngOnInit(): void {
     this.cargarMaestrasExtra();
 
-    // 👇 Detección de Modo por URL
-    //const path = this.route.snapshot.url[0]?.path;
     const urlCompleta = this.router.url;
     const idParam = this.route.snapshot.paramMap.get('id');
 
     if (idParam) {
       this.reqId = Number(idParam);
-      //this.modo = path === 'ver' ? 'VER' : 'EDITAR';
       this.modo = urlCompleta.includes('/ver/') ? 'VER' : 'EDITAR';
       this.cargarRequerimiento(this.reqId);
     }
@@ -234,7 +232,6 @@ export class RequerimientosFormComponent implements OnInit {
     this.service.obtenerPorId(id).subscribe({
       next: (data) => {
 
-        // Helper interno para parsear fechas del Backend
         const parseDate = (dateStr: string | null): Date | null => {
           if (!dateStr) return null;
           const soloFecha = dateStr.split('T')[0];
@@ -242,7 +239,6 @@ export class RequerimientosFormComponent implements OnInit {
           return new Date(+y, +m - 1, +d);
         };
 
-        // 1. Cabecera general
         this.form.patchValue({
           idContrato: data.idContrato,
           idFabrica: data.idFabrica,
@@ -260,20 +256,17 @@ export class RequerimientosFormComponent implements OnInit {
           descripcion: data.descripcion,
           fechaSolicitud: parseDate(data.fechaSolicitud),
           fechaInicio: parseDate(data.fechaInicioReal),
-          // 2. Tecnologías (mapeamos del objeto a solo un array de IDs para el MultiSelect)
           tecnologias: (data.tecnologias || []).map((t: any) => t.idTecnologia)
         });
 
-        // 3. Distribución de Costos
         this.costosArr.clear();
         if (data.distribucionCostos) {
           data.distribucionCostos.forEach((c: any) => {
-            this.cargarEquiposFila(data.idGerencia); // Asegurar caché para mostrar nombres
+            this.cargarEquiposFila(data.idGerencia);
             this.costosArr.push(this.buildCostoRow(data.idGerencia, c.idEquipo, c.porcentaje, c.codigoCentroCosto));
           });
         }
 
-        // 4. Personal Asignado
         this.personalArr.clear();
         if (data.personal) {
           data.personal.forEach((p: any) => {
@@ -284,7 +277,6 @@ export class RequerimientosFormComponent implements OnInit {
               parseDate(p.fechaFinAsignacion)
             );
 
-            // Reconstruimos objeto parcial para el AutoComplete por si la maestra aún carga
             const personalInfo = this.listaPersonal().find(x => x.id === p.idPersonal)
               || { id: p.idPersonal, nombresApellidos: p.nombresApellidos, correo: '', rolProyectoDescripcion: '' };
 
@@ -293,7 +285,6 @@ export class RequerimientosFormComponent implements OnInit {
           });
         }
 
-        // 5. Bloquear si es Solo Lectura
         if (this.modo === 'VER') {
           setTimeout(() => {
             this.form.disable({ emitEvent: false });
@@ -337,12 +328,40 @@ export class RequerimientosFormComponent implements OnInit {
     fInicio: Date | null = null,
     fFin: Date | null = null
   ): FormGroup {
-    return this.fb.group({
+    const fila = this.fb.group({
       personalObj: this.fb.control<PersonalDTO | null>(null, Validators.required),
       esResponsablePrincipal: this.fb.nonNullable.control(esResp),
       fechaInicioAsignacion: this.fb.control<Date | null>(fInicio, Validators.required),
       fechaFinAsignacion: this.fb.control<Date | null>(fFin)
     });
+
+    // ── BLINDAJE ANTI-MONOS: Reaccionar al cambio de Fecha Inicio ──
+    fila.get('fechaInicioAsignacion')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((nuevaFechaInicio: Date | null) => {
+        const controlFin = fila.get('fechaFinAsignacion');
+        const fechaFinActual = controlFin?.value;
+
+        if (nuevaFechaInicio && fechaFinActual) {
+          // Limpiamos las horas para comparar estrictamente los días
+          const inicio = new Date(nuevaFechaInicio.getFullYear(), nuevaFechaInicio.getMonth(), nuevaFechaInicio.getDate());
+          const fin = new Date(fechaFinActual.getFullYear(), fechaFinActual.getMonth(), fechaFinActual.getDate());
+
+          if (inicio.getTime() > fin.getTime()) {
+            controlFin?.setValue(null); // Blanqueamos la Fecha Fin
+
+            // Avisamos al usuario que corregimos el error
+            this.msg.add({
+              severity: 'info',
+              summary: 'Fecha ajustada',
+              detail: 'La fecha de fin se limpió porque era anterior a la nueva fecha de inicio.',
+              life: 4000
+            });
+          }
+        }
+      });
+
+    return fila;
   }
 
   // ── Acciones sobre filas ─────────────────────────────────────────────
@@ -395,7 +414,7 @@ export class RequerimientosFormComponent implements OnInit {
       nombre: raw.nombre,
       descripcion: raw.descripcion,
       fechaSolicitud: toDateStr(raw.fechaSolicitud) ?? '',
-      fechaInicioReal: toDateStr(raw.fechaInicio), // Mapeado para el PUT
+      fechaInicioReal: toDateStr(raw.fechaInicio),
 
       distribucionCostos: raw.distribucionCostos.map((c: any) => ({
         idEquipo: c.idEquipo,
@@ -424,7 +443,6 @@ export class RequerimientosFormComponent implements OnInit {
 
           console.error('🐞 [FORM] Error del backend completo:', err);
 
-          // 2. Extrae el mensaje de forma defensiva (cubriendo inglés y español)
           const mensajeReal = err.error?.message || err.error?.mensaje || err.message || 'Error del servidor.';
 
           this.msg.add({
@@ -445,7 +463,6 @@ export class RequerimientosFormComponent implements OnInit {
 
           setTimeout(() => {
             console.log('🐞 [FORM] Navegando con state:', { nuevoIdDestacado: nuevoId });
-            // Navegamos mandando el ID en el estado oculto del Router
             this.router.navigate(['/requerimientos'], { state: { nuevoIdDestacado: nuevoId } });
           }, 1500);
         },

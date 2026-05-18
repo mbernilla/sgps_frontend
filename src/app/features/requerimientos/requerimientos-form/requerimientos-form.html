@@ -81,12 +81,16 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium text-slate-600">Fecha Solicitud *</label>
-          <p-datepicker formControlName="fechaSolicitud" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" />
+          <p-datepicker formControlName="fechaSolicitud" dateFormat="dd/mm/yy"
+            [showIcon]="true" iconDisplay="input"
+            styleClass="w-full" inputStyleClass="w-full" />
         </div>
 
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium text-slate-600">Fecha Inicio</label>
-          <p-datepicker formControlName="fechaInicio" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" />
+          <p-datepicker formControlName="fechaInicio" dateFormat="dd/mm/yy"
+            [showIcon]="true" iconDisplay="input"
+            styleClass="w-full" inputStyleClass="w-full" />
         </div>
 
         <div class="flex flex-col gap-1">
@@ -153,11 +157,12 @@
         <table class="min-w-full text-sm">
           <thead class="bg-slate-50 text-slate-600">
             <tr>
-              <th class="px-4 py-2.5 text-left font-medium w-48">Gerencia</th>
-              <th class="px-4 py-2.5 text-left font-medium w-48">Equipo</th>
-              <th class="px-4 py-2.5 text-left font-medium">Código C.C.</th>
-              <th class="px-4 py-2.5 text-left font-medium w-36">Porcentaje (%)</th>
-              @if (modo !== 'VER') { <th class="px-4 py-2.5 text-center font-medium w-20">Quitar</th> }
+              <th class="px-4 py-2.5 text-left font-medium w-[280px]">Gerencia</th>
+              <th class="px-4 py-2.5 text-left font-medium w-[280px]">Equipo</th>
+
+              <th class="px-4 py-2.5 text-center font-medium w-[120px]">Código C.C.</th>
+              <th class="px-4 py-2.5 text-right font-medium w-[130px]">Porcentaje (%)</th>
+              @if (modo !== 'VER') { <th class="px-4 py-2.5 text-center font-medium w-[80px]">Quitar</th> }
             </tr>
           </thead>
           <tbody formArrayName="distribucionCostos" class="divide-y divide-slate-100">
@@ -165,20 +170,20 @@
             <tr [formGroupName]="i" class="hover:bg-slate-50 transition-colors">
               <td class="px-4 py-2">
                 <p-select formControlName="idGerencia" [options]="gerencias()" optionLabel="nombre" optionValue="id"
-                  placeholder="Gerencia" styleClass="w-full" appendTo="body"
+                  placeholder="Gerencia" styleClass="w-[280px]" appendTo="body"
                   (onChange)="alCambiarGerenciaFila(i, $event.value)" />
               </td>
               <td class="px-4 py-2">
                 <p-select formControlName="idEquipo" [options]="equiposPorGerencia()[c.value.idGerencia] || []"
-                  optionLabel="nombre" optionValue="id" placeholder="Equipo" styleClass="w-full" appendTo="body"
+                  optionLabel="nombre" optionValue="id" placeholder="Equipo" styleClass="w-[280px]" appendTo="body"
                   (onChange)="alCambiarEquipoFila(i, $event.value)" />
               </td>
               <td class="px-4 py-2">
-                <input pInputText formControlName="codigoCentroCosto" class="w-full bg-slate-50"
+                <input pInputText formControlName="codigoCentroCosto" class="w-full bg-slate-50 text-center"
                   placeholder="Automático" readonly />
               </td>
               <td class="px-4 py-2">
-                <input pInputText type="number" formControlName="porcentaje" class="w-full" placeholder="0" min="0.01"
+                <input pInputText type="number" formControlName="porcentaje" class="w-full text-right" placeholder="0" min="0.01"
                   max="100" />
               </td>
               @if (modo !== 'VER') {
@@ -192,8 +197,8 @@
           </tbody>
           <tfoot class="bg-slate-50 border-t border-slate-200">
             <tr>
-              <td colspan="2" class="px-4 py-2 text-right text-sm font-medium text-slate-600">Suma total:</td>
-              <td class="px-4 py-2 text-sm font-bold" [class.text-green-600]="sumaPorcentajes === 100"
+              <td colspan="3" class="px-4 py-2 text-right text-sm font-medium text-slate-600">Suma total:</td>
+              <td class="px-4 py-2 text-right text-sm font-bold" [class.text-green-600]="sumaPorcentajes === 100"
                 [class.text-red-600]="sumaPorcentajes !== 100 && costosArr.length > 0 && modo !== 'VER'">
                 {{ sumaPorcentajes }}%
                 @if (sumaPorcentajes === 100) { <i class="pi pi-check-circle ml-1"></i> }
@@ -224,11 +229,11 @@
         <table class="min-w-full text-sm">
           <thead class="bg-slate-50 text-slate-600">
             <tr>
-              <th class="px-4 py-2.5 text-left font-medium min-w-[250px]">Colaborador *</th>
-              <th class="px-4 py-2.5 text-center font-medium w-32">¿Responsable?</th>
-              <th class="px-4 py-2.5 text-left font-medium w-40">F. Inicio * </th>
-              <th class="px-4 py-2.5 text-left font-medium w-40">F. Fin</th>
-              @if (modo !== 'VER') { <th class="px-4 py-2.5 text-center font-medium w-20">Quitar</th> }
+              <th class="px-4 py-2.5 text-left font-medium w-[300px]">Colaborador *</th>
+              <th class="px-4 py-2.5 text-center font-medium w-[100px]">¿Responsable?</th>
+              <th class="px-4 py-2.5 text-left font-medium w-[150px]">F. Inicio * </th>
+              <th class="px-4 py-2.5 text-left font-medium w-[150px]">F. Fin</th>
+              @if (modo !== 'VER') { <th class="px-4 py-2.5 text-center font-medium w-[80px]">Quitar</th> }
             </tr>
           </thead>
           <tbody formArrayName="personal" class="divide-y divide-slate-100">
@@ -237,7 +242,8 @@
               <td class="px-4 py-2">
                 <p-autoComplete formControlName="personalObj" [suggestions]="personalFiltrado()"
                   (completeMethod)="filtrarPersonal($event)" optionLabel="nombresApellidos" dataKey="id"
-                  field="nombresApellidos" [dropdown]="true" placeholder="Buscar colaborador..." styleClass="w-full"
+                  field="nombresApellidos" [dropdown]="true" placeholder="Buscar colaborador..."
+                  styleClass="w-full" inputStyleClass="w-full text-ellipsis overflow-hidden whitespace-nowrap"
                   [forceSelection]="true" appendTo="body">
                   <ng-template let-per pTemplate="item">
                     <div>
@@ -252,11 +258,14 @@
               </td>
               <td class="px-4 py-2">
                 <p-datepicker formControlName="fechaInicioAsignacion" dateFormat="dd/mm/yy" appendTo="body"
-                  styleClass="w-full" placeholder="Inicio" />
+                  [showIcon]="true" iconDisplay="input"
+                  styleClass="w-full" inputStyleClass="w-full text-center" placeholder="Inicio" />
               </td>
               <td class="px-4 py-2">
                 <p-datepicker formControlName="fechaFinAsignacion" dateFormat="dd/mm/yy" appendTo="body"
-                  styleClass="w-full" placeholder="Fin" />
+                  [showIcon]="true" iconDisplay="input"
+                  styleClass="w-full" inputStyleClass="w-full text-center" placeholder="Fin"
+                  [minDate]="p.get('fechaInicioAsignacion')?.value" />
               </td>
               @if (modo !== 'VER') {
               <td class="px-4 py-2 text-center">
