@@ -14,15 +14,28 @@ export class RequerimientoService {
     return this.http.post(this.apiUrl, data);
   }
 
-    // 1. Obtener un requerimiento específico por ID
   obtenerPorId(id: number): Observable<any> {
-    // ⚠️ Ojo: Usa this.API_URL o this.base (como lo tengas nombrado en tu proyecto)
     return this.http.get<any>(`${environment.baseUrl}/v1/requerimientos/${id}`)
-      .pipe(map(res => res.data)); // Extraemos directamente el nodo "data"
+      .pipe(map(res => res.data));
   }
 
-  // 2. Actualizar un requerimiento existente (PUT)
   actualizar(id: number, payload: any): Observable<any> {
     return this.http.put<any>(`${environment.baseUrl}/v1/requerimientos/${id}`, payload);
+  }
+
+  iniciar(id: number, fecha: string): Observable<unknown> {
+    return this.http.put(`${this.apiUrl}/${id}/iniciar`, { fecha });
+  }
+
+  finalizar(id: number, fecha: string): Observable<unknown> {
+    return this.http.put(`${this.apiUrl}/${id}/finalizar`, { fecha });
+  }
+
+  desestimar(id: number, motivo: string): Observable<unknown> {
+    return this.http.put(`${this.apiUrl}/${id}/desestimar`, { motivo });
+  }
+
+  anular(id: number, motivo: string): Observable<unknown> {
+    return this.http.put(`${this.apiUrl}/${id}/anular`, { motivo });
   }
 }

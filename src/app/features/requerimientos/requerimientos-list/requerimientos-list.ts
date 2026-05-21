@@ -157,7 +157,7 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
         items: [
           { label: 'Ver', icon: 'pi pi-eye', command: () => this.router.navigate(['/requerimientos/ver', req.id]) },
           { label: 'Editar', icon: 'pi pi-pencil', command: () => this.router.navigate(['/requerimientos/editar', req.id]) },
-          { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'menu-danger', command: () => this.confirmarEliminacion(req.id, req.nombre) },
+          //{ label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'menu-danger', command: () => this.confirmarEliminacion(req.id, req.nombre) },
         ],
       },
       {

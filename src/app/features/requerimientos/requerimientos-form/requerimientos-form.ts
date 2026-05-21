@@ -1,4 +1,4 @@
-import { Component, inject, effect, signal, OnInit, DestroyRef } from '@angular/core'; // <-- Añadido DestroyRef
+import { Component, inject, effect, signal, OnInit, DestroyRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import {
   ReactiveFormsModule,
@@ -11,8 +11,8 @@ import {
 } from '@angular/forms';
 import { switchMap, of } from 'rxjs';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 
-// Imports de PrimeNG
 import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
 import { Button } from 'primeng/button';
@@ -20,6 +20,7 @@ import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
 import { Toast } from 'primeng/toast';
 import { Checkbox } from 'primeng/checkbox';
+import { Dialog } from 'primeng/dialog';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { MessageService } from 'primeng/api';
@@ -63,6 +64,7 @@ const ESTADO_OPTS = [
   standalone: true,
   imports: [
     ReactiveFormsModule,
+    FormsModule,
     FormSelectComponent,
     Select,
     DatePicker,
@@ -71,6 +73,7 @@ const ESTADO_OPTS = [
     Textarea,
     Toast,
     Checkbox,
+    Dialog,
     MultiSelectModule,
     AutoCompleteModule
   ],
@@ -117,7 +120,10 @@ export class RequerimientosFormComponent implements OnInit {
     nombre: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(200)]),
     descripcion: this.fb.nonNullable.control('', Validators.required),
     fechaSolicitud: this.fb.control<Date | null>(null, Validators.required),
-    fechaInicio: this.fb.control<Date | null>(null),
+    fechaInicio: this.fb.control<Date | null>({ value: null, disabled: true }),
+    fechaFin: this.fb.control<Date | null>({ value: null, disabled: true }),
+    estadoDescripcion: this.fb.control<string>(''),
+
     tipoRequerimiento: this.fb.nonNullable.control('', Validators.required),
     prioridad: this.fb.nonNullable.control('', Validators.required),
     estado: this.fb.nonNullable.control('REQ_REG', Validators.required),
@@ -144,6 +150,19 @@ export class RequerimientosFormComponent implements OnInit {
   readonly gruposTec = toSignal(this.maestra.getConceptos('GRP_TEC'), { initialValue: [] });
 
   readonly nombreFabricaVisual = signal<string>('—');
+
+  // ── Señales: Máquina de Estados y Modales ─────────────────────────────
+  readonly estadoActual = signal<string>('REQ_REG');
+  readonly mostrarModalFecha = signal(false);
+  readonly mostrarModalMotivo = signal(false);
+  readonly cargandoTransicion = signal(false);
+  readonly tituloModalFecha = signal('Selecciona una fecha');
+  readonly tituloModalMotivo = signal('Ingresa el motivo');
+
+  fechaSeleccionada: Date | null = null;
+  motivoIngresado: string = '';
+
+  private accionActual: 'iniciar' | 'finalizar' | 'desestimar' | 'anular' | null = null;
 
   // ── Señales: maestras dinámicas (cascade) ─────────────────────────────
   readonly equipos = toSignal(
@@ -256,8 +275,12 @@ export class RequerimientosFormComponent implements OnInit {
           descripcion: data.descripcion,
           fechaSolicitud: parseDate(data.fechaSolicitud),
           fechaInicio: parseDate(data.fechaInicioReal),
+          fechaFin: parseDate(data.fechaFinReal),
+          estadoDescripcion: data.estadoDescripcion || 'Registrado',
           tecnologias: (data.tecnologias || []).map((t: any) => t.idTecnologia)
         });
+
+        this.estadoActual.set(data.codEstado);
 
         this.costosArr.clear();
         if (data.distribucionCostos) {
@@ -509,5 +532,120 @@ export class RequerimientosFormComponent implements OnInit {
 
   cancelar(): void {
     this.router.navigate(['/requerimientos']);
+  }
+
+  // ── Métodos para Máquina de Estados ──────────────────────────────────
+  abrirModalFecha(accion: 'iniciar' | 'finalizar'): void {
+    this.accionActual = accion;
+    this.fechaSeleccionada = null;
+    this.tituloModalFecha.set(
+      accion === 'iniciar' ? 'Fecha de Inicio' : 'Fecha de Finalización'
+    );
+    this.mostrarModalFecha.set(true);
+  }
+
+  cerrarModalFecha(): void {
+    this.mostrarModalFecha.set(false);
+    this.fechaSeleccionada = null;
+    this.accionActual = null;
+  }
+
+  confirmarModalFecha(): void {
+    if (!this.fechaSeleccionada || !this.reqId || !this.accionActual) return;
+
+    const fecha = this.formatearFecha(this.fechaSeleccionada);
+    this.cargandoTransicion.set(true);
+
+    const accion = this.accionActual;
+
+    if (accion === 'iniciar') {
+      this.service.iniciar(this.reqId, fecha).subscribe({
+        next: () => this.manejarExitoTransicion(accion),
+        error: (err) => this.manejarErrorTransicion(err)
+      });
+    } else if (accion === 'finalizar') {
+      this.service.finalizar(this.reqId, fecha).subscribe({
+        next: () => this.manejarExitoTransicion(accion),
+        error: (err) => this.manejarErrorTransicion(err)
+      });
+    }
+  }
+
+  abrirModalMotivo(accion: 'desestimar' | 'anular'): void {
+    this.accionActual = accion;
+    this.motivoIngresado = '';
+    this.tituloModalMotivo.set(
+      accion === 'desestimar' ? 'Motivo de Desestimación' : 'Motivo de Anulación'
+    );
+    this.mostrarModalMotivo.set(true);
+  }
+
+  cerrarModalMotivo(): void {
+    this.mostrarModalMotivo.set(false);
+    this.motivoIngresado = '';
+    this.accionActual = null;
+  }
+
+  confirmarModalMotivo(): void {
+    if (!this.motivoIngresado || this.motivoIngresado.length < 15 || !this.reqId || !this.accionActual) {
+      return;
+    }
+
+    this.cargandoTransicion.set(true);
+    const accion = this.accionActual;
+
+    if (accion === 'desestimar') {
+      this.service.desestimar(this.reqId, this.motivoIngresado).subscribe({
+        next: () => this.manejarExitoTransicion(accion),
+        error: (err) => this.manejarErrorTransicion(err)
+      });
+    } else if (accion === 'anular') {
+      this.service.anular(this.reqId, this.motivoIngresado).subscribe({
+        next: () => this.manejarExitoTransicion(accion),
+        error: (err) => this.manejarErrorTransicion(err)
+      });
+    }
+  }
+
+  private manejarExitoTransicion(accion: string): void {
+    this.cargandoTransicion.set(false);
+    this.cerrarModalFecha();
+    this.cerrarModalMotivo();
+
+    const mensajes: Record<string, { summary: string; detail: string }> = {
+      iniciar: { summary: 'Iniciado', detail: 'El requerimiento ha sido iniciado correctamente.' },
+      finalizar: { summary: 'Finalizado', detail: 'El requerimiento ha sido finalizado correctamente.' },
+      desestimar: { summary: 'Desestimado', detail: 'El requerimiento ha sido desestimado correctamente.' },
+      anular: { summary: 'Anulado', detail: 'El requerimiento ha sido anulado correctamente.' }
+    };
+
+    const msg = mensajes[accion] || { summary: 'Éxito', detail: 'Operación completada.' };
+    this.msg.add({ severity: 'success', summary: msg.summary, detail: msg.detail, life: 3000 });
+
+    setTimeout(() => {
+      if (this.reqId) {
+        this.cargarRequerimiento(this.reqId);
+      }
+    }, 1500);
+  }
+
+  private manejarErrorTransicion(err: any): void {
+    this.cargandoTransicion.set(false);
+
+    const mensajeReal = err.error?.mensaje || err.error?.message || err.message || 'Error del servidor.';
+
+    this.msg.add({
+      severity: 'error',
+      summary: 'Error en la transición',
+      detail: mensajeReal,
+      life: 5000
+    });
+  }
+
+  private formatearFecha(date: Date): string {
+    const año = date.getFullYear();
+    const mes = String(date.getMonth() + 1).padStart(2, '0');
+    const día = String(date.getDate()).padStart(2, '0');
+    return `${año}-${mes}-${día}`;
   }
 }
