@@ -44,8 +44,19 @@
         <tr [pSelectableRow]="req" [ngClass]="{'flash-row': req.id === idResaltado()}">
 
           <td class="text-center">
-            <p-button icon="pi pi-history" [text]="true" [rounded]="true" severity="success" pTooltip="Ver Seguimientos"
-              tooltipPosition="top" (click)="abrirSeguimientos(req)" />
+            <div class="relative inline-block">
+
+              <p-button icon="pi pi-history" [text]="true" [rounded]="true" severity="success"
+                pTooltip="Ver Seguimientos" tooltipPosition="top" (click)="abrirSeguimientos(req)" />
+
+              @if (req.cantidadPendientes > 0) {
+              <span
+                class="absolute top-0 right-0 flex items-center justify-center bg-red-50 text-red-500 text-[9px] font-bold w-4 h-4 rounded-full border border-red-200 shadow-sm pointer-events-none">
+                {{ req.cantidadPendientes > 9 ? '9+' : req.cantidadPendientes }}
+              </span>
+              }
+
+            </div>
           </td>
 
           <td class="font-medium text-gray-700">
@@ -131,7 +142,9 @@
   </ng-template>
 
   @if (reqSeleccionadoParaSeguimiento(); as req) {
-  <app-seguimientos-panel [idRequerimiento]="req.id" />
+  <app-seguimientos-panel [idRequerimiento]="req.id"
+  (onCambio)="cargarData()"
+   />
   }
 
 </p-drawer>

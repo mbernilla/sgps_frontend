@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
@@ -10,12 +10,13 @@ import {
   EntregableGridDTO,
   EvaluacionRequest,
   FlujoBitacoraDTO,
-  NuevaVersionRequest,
   PresupuestoDesgloseDTO,
   RegistroEntregableRequest,
   RequerimientoFaseDTO,
   SaldoFaseDTO,
-  UploadResponseDTO,
+  UploadIntentRequest,
+  UploadIntentResponse,
+  ArchivoUploadResponseDTO
 } from '../models/entregables.models';
 
 @Injectable({ providedIn: 'root' })
@@ -78,12 +79,6 @@ export class EntregablesService {
     );
   }
 
-  subirNuevaVersion(idEntregable: number, payload: NuevaVersionRequest): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(
-      `${this.base}/entregables/${idEntregable}/versiones`, payload
-    );
-  }
-
   editar(idEntregable: number, payload: EditarEntregableRequest): Observable<ApiResponse<void>> {
     return this.http.put<ApiResponse<void>>(
       `${this.base}/entregables/${idEntregable}`, payload
@@ -102,23 +97,82 @@ export class EntregablesService {
     );
   }
 
-  uploadArchivo(
-    idRequerimiento: number,
-    file: File,
-    tipo: 'entregables' | 'feedback'
-  ): Observable<ApiResponse<UploadResponseDTO>> {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('tipo', tipo);
-    return this.http.post<ApiResponse<UploadResponseDTO>>(
-      `${this.base}/archivos/upload/${idRequerimiento}`, formData
+  // ========================================================================
+  // ── NUEVA ARQUITECTURA DE ARCHIVOS ──────────────────────────────────────
+  // ========================================================================
+
+  /**
+   * PASO 1 (Intención): Pide permiso al backend para subir una versión.
+   */
+  solicitarIntencion(idEntregable: number, payload: UploadIntentRequest): Observable<ApiResponse<UploadIntentResponse>> {
+    return this.http.post<ApiResponse<UploadIntentResponse>>(
+      `${this.base}/entregables/${idEntregable}/intencion`, payload
     );
   }
 
-  downloadArchivo(ruta: string, nombre: string): Observable<Blob> {
-    const params = new HttpParams().set('ruta', ruta).set('nombre', nombre);
-    return this.http.get(
-      `${this.base}/archivos/download`, { params, responseType: 'blob' }
+  /**
+   * PASO 2 (Subida y Commit): Envía el binario junto con el token generado.
+   */
+  subirNuevaVersionSegura(idEntregable: number, uploadToken: string, subRutaDestino: string, file: File): Observable<ApiResponse<number>> {
+    const formData = new FormData();
+    formData.append('uploadToken', uploadToken);
+    formData.append('subRutaDestino', subRutaDestino);
+    formData.append('file', file);
+
+    return this.http.post<ApiResponse<number>>(
+      `${this.base}/entregables/${idEntregable}/subir-file`, formData
     );
   }
+
+  /**
+   * EVIDENCIAS: Subida directa al temporal (Usado por el modal de Observaciones)
+   */
+  uploadEvidencia(idRequerimiento: number, file: File): Observable<ApiResponse<ArchivoUploadResponseDTO>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ApiResponse<ArchivoUploadResponseDTO>>(
+      `${this.base}/entregables/observaciones/evidencias`, // <-- Apuntando a la nueva ruta
+      formData
+    );
+  }
+
+  /**
+   * DESCARGAS SEGURAS POR ID (Evita Path Traversal)
+   */
+  downloadArchivoSeguro(idArchivo: number, tipo: 'ENTREGABLE' | 'OBSERVACION'): Observable<Blob> {
+    const url = tipo === 'ENTREGABLE'
+      ? `${this.base}/entregables/archivos/${idArchivo}/descargar`
+      : `${this.base}/entregables/observaciones/archivos/${idArchivo}/descargar`;
+
+    return this.http.get(url, { responseType: 'blob' });
+  }
+
+  /**
+   * NUEVA VERSIÓN (CON PROGRESO REACTIVO)
+   */
+  subirNuevaVersionConProgreso(idEntregable: number, uploadToken: string, subRutaDestino: string, file: File): Observable<HttpEvent<ApiResponse<number>>> {
+    const formData = new FormData();
+    formData.append('uploadToken', uploadToken);
+    formData.append('subRutaDestino', subRutaDestino);
+    formData.append('file', file);
+
+    return this.http.post<ApiResponse<number>>(
+      `${this.base}/entregables/${idEntregable}/subir-file`, formData,
+      { reportProgress: true, observe: 'events' } // 👈 ¡La magia del progreso!
+    );
+  }
+
+  /**
+   * EVIDENCIAS TEMP (CON PROGRESO REACTIVO)
+   */
+  uploadEvidenciaConProgreso(idRequerimiento: number, file: File): Observable<HttpEvent<ApiResponse<ArchivoUploadResponseDTO>>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ApiResponse<ArchivoUploadResponseDTO>>(
+      `${this.base}/entregables/requerimientos/${idRequerimiento}/observaciones`, formData,
+      { reportProgress: true, observe: 'events' }
+    );
+  }
+
+
 }

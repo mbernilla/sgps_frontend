@@ -42,11 +42,19 @@ export interface RequerimientoGridDTO {
   totalHorasAprobadas?: number;
   horasFacturadas?: number;
   esActivo?: boolean;
+  cantidadPendientes: number;
 }
 
 export interface ApiResponse<T> {
   mensaje: string;
   data: T;
+}
+
+export interface ArchivoGlobalDTO {
+  id: number;
+  nombreOriginal: string;
+  rutaFisica: string;
+  tamanoKb: number;
 }
 
 export interface SeguimientoDTO {
@@ -60,4 +68,6 @@ export interface SeguimientoDTO {
   fechaPlazo: string | null;
   fechaAtencion: string | null;
   idPersonalResponsable: number;
+
+  archivos?: ArchivoGlobalDTO[];
 }

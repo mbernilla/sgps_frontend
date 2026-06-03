@@ -46,6 +46,8 @@ export interface EntregableGridDTO {
   idCatalogoEntregable: number;
   idEstimacion?: number;
   nombreEntregable: string;
+  extensionesPermitidas: string;
+  tamanioMaximoMb: number;
   codEstado: string;
   estadoDescripcion: string;
   horasFacturables: number;
@@ -54,6 +56,7 @@ export interface EntregableGridDTO {
   fechaAprobacionPlan: string;
   fechaEntregaReal?: string;
   fechaAprobacionReal: string | null;
+  idArchivoVersion?: number;
   nombreArchivo?: string;
   rutaArchivo?: string;
   nombreCiclo?: string | null;
@@ -114,4 +117,23 @@ export interface EditarEntregableRequest {
   horasFacturables: number;
   fechaEntregaPlan: string;
   fechaAprobacionPlan: string;
+}
+
+// ── NUEVAS INTERFACES PARA SUBIDA DE ARCHIVOS (ARQUITECTURA 2 PASOS) ──
+
+export interface UploadIntentRequest {
+  nombreArchivo: string;
+  tamanioKb: number;
+}
+
+export interface UploadIntentResponse {
+  uploadToken: string;
+  subRutaDestino: string;
+}
+
+export interface ArchivoUploadResponseDTO {
+  nombreArchivoOriginal: string;
+  nombreArchivoFisico: string;
+  rutaRelativaFileServer: string;
+  tamanioKb: number;
 }

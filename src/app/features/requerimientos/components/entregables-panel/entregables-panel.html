@@ -1,11 +1,7 @@
 <p-toast key="ent" />
 
-<!-- ════════════════════════════════════════════════════════════
-     PÁGINA COMPLETA — Gestión de Entregables
-════════════════════════════════════════════════════════════ -->
 <div class="ent-page">
 
-  <!-- ── Topbar ───────────────────────────────────────────────────────── -->
   <div class="ent-topbar">
     <div class="ent-topbar__inner">
       <div class="flex items-center gap-3">
@@ -23,14 +19,12 @@
     </div>
   </div>
 
-  <!-- ── Sección Cabecera ────────────────────────────────────────────── -->
   <div class="ent-content-top">
     <app-requerimiento-cabecera
       [cabecera]="cabecera()"
       [cargando]="cargandoCabecera()" />
   </div>
 
-  <!-- ── Contenido principal ──────────────────────────────────────────── -->
   <div class="ent-content">
 
     @if (cargandoFases()) {
@@ -52,7 +46,6 @@
     </div>
     }
 
-    <!-- ── Resumen Horas (Compacto) ────────────────────────────────────── -->
     <div class="ent-horas-container">
       <div class="ent-horas-summary">
         <div class="ent-horas-item">
@@ -121,13 +114,11 @@
 
         <p-accordion-content>
 
-          <!-- Toolbar de la fase -->
           <div class="ent-fase-toolbar">
             <p-button label="Nuevo Entregable" icon="pi pi-plus-circle" size="small"
               (click)="abrirNuevo(fase)" />
           </div>
 
-          <!-- Spinner por fase -->
           @if (cargandoPorFase()[fase.id]) {
           <div class="flex items-center justify-center py-10 gap-2">
             <p-progressSpinner strokeWidth="4" animationDuration=".7s" [style]="{ width: '32px', height: '32px' }" />
@@ -135,7 +126,6 @@
           </div>
           } @else {
 
-          <!-- Tabla de entregables -->
           <p-table [value]="entregablesPorFase()[fase.id] || []"
             styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines">
 
@@ -225,7 +215,7 @@
                     @if (ent.rutaArchivo) {
                     <p-button icon="pi pi-download" [text]="true" [rounded]="true" severity="secondary" size="small"
                       pTooltip="Descargar archivo" tooltipPosition="top"
-                      (click)="descargarArchivo(ent.rutaArchivo, ent.nombreArchivo ?? ent.nombreEntregable)" />
+                      (click)="descargarArchivo(ent.idArchivo || ent.idArchivoVersion, ent.nombreArchivo ?? ent.nombreEntregable, 'ENTREGABLE')" />
                     }
 
                     <p-button icon="pi pi-list" [text]="true" [rounded]="true" severity="secondary" size="small"
@@ -258,9 +248,6 @@
 </div>
 
 
-<!-- ════════════════════════════════════════════════════════════
-     MODAL — Nuevo Entregable
-════════════════════════════════════════════════════════════ -->
 <p-dialog [visible]="dialogNuevoVisible()" (visibleChange)="dialogNuevoVisible.set($event)"
   [header]="(idEntregableEdicion() ? 'Editar Entregable' : 'Nuevo Entregable') + ' — ' + (faseParaNuevo()?.faseDescripcion ?? '')"
   [modal]="true" [draggable]="false" [resizable]="false"
@@ -382,9 +369,6 @@
 </p-dialog>
 
 
-<!-- ════════════════════════════════════════════════════════════
-     MODAL — Evaluación (Aprobar / Observar)
-════════════════════════════════════════════════════════════ -->
 <p-dialog [visible]="dialogEvalVisible()" (visibleChange)="dialogEvalVisible.set($event)"
   [header]="modoEval() === 'aprobar' ? 'Aprobar Entregable' : 'Observar Entregable'"
   [modal]="true" [draggable]="false" [resizable]="false"
@@ -403,8 +387,9 @@
       <label class="form-label">
         Comentario <span class="text-red-400">*</span>
       </label>
-      <textarea pTextarea [formControl]="comentarioCtrl" rows="4" class="w-full resize-none"
-        [placeholder]="modoEval() === 'aprobar' ? 'Confirme la aprobación e incluya observaciones finales...' : 'Describa con detalle las observaciones o correcciones requeridas...'">
+      <textarea pTextarea [formControl]="comentarioCtrl" rows="2" [autoResize]="true"
+        class="w-full text-sm text-gray-700 placeholder:text-sm placeholder:text-gray-400 placeholder:font-light"
+        [placeholder]="modoEval() === 'aprobar' ? 'Confirme la aprobación e incluya observaciones finales...' : 'Describa con detalle las observaciones requeridas...'">
       </textarea>
       @if (comentarioCtrl.invalid && comentarioCtrl.touched) {
       <small class="text-red-400 text-xs">El comentario es requerido.</small>
@@ -413,11 +398,15 @@
 
     @if (modoEval() === 'observar') {
     <div class="flex flex-col gap-1.5">
-      <label class="form-label">Archivos de Evidencia (opcional)</label>
-      <p-fileUpload mode="advanced" [multiple]="true" [auto]="false"
-        chooseLabel="Adjuntar evidencias" chooseIcon="pi pi-paperclip"
-        [showUploadButton]="false" [showCancelButton]="false"
-        (onSelect)="onArchivosEvalSeleccionados($event)" styleClass="w-full" />
+      <app-file-uploader
+        [clearTrigger]="dialogEvalVisible()"
+        [multiple]="true"
+        [maxFileSizeMb]="10"
+        allowedExtensions="*"
+        title="Adjuntar evidencias (Opcional)"
+        subtitle="Suelte imágenes o documentos aquí"
+        (onFileAccepted)="onEvidenciaFileAccepted($event)">
+      </app-file-uploader>
     </div>
     }
 
@@ -430,7 +419,8 @@
     <p-button label="Confirmar Aprobación" icon="pi pi-check-circle" severity="success"
       [loading]="guardandoEval()" (click)="guardarEvaluacion()" />
     } @else {
-    <p-button label="Registrar Observación" icon="pi pi-times-circle" severity="danger"
+    <p-button label="Registrar Observación" icon="pi pi-refresh"
+      styleClass="bg-orange-400 hover:bg-orange-500 border-none text-white"
       [loading]="guardandoEval()" (click)="guardarEvaluacion()" />
     }
   </ng-template>
@@ -438,9 +428,6 @@
 </p-dialog>
 
 
-<!-- ════════════════════════════════════════════════════════════
-     MODAL — Bitácora de Flujo
-════════════════════════════════════════════════════════════ -->
 <p-dialog [visible]="dialogBitacoraVisible()" (visibleChange)="dialogBitacoraVisible.set($event)"
   [header]="tituloDialogBitacora()"
   [modal]="true" [draggable]="false" [resizable]="false"
@@ -494,7 +481,7 @@
             </span>
           </div>
           <p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="info"
-            (onClick)="descargarArchivo(item.rutaArchivoVersion, item.nombreArchivoVersion!)" />
+            (onClick)="descargarArchivo(item.idArchivoVersion!, item.nombreArchivoVersion!, 'ENTREGABLE')" />
         </div>
         }
 
@@ -503,7 +490,7 @@
           <span class="text-xs w-full" style="color: var(--ep-muted)">Anexos:</span>
           @for (archivo of item.archivos; track archivo.id ?? archivo.nombreArchivo) {
           <button type="button" class="ent-archivo-chip"
-            (click)="descargarArchivo(archivo.rutaArchivo, archivo.nombreArchivo)">
+            (click)="descargarArchivo(archivo.id!, archivo.nombreArchivo, 'OBSERVACION')">
             <i class="pi pi-file text-xs"></i>
             <span>{{ archivo.nombreArchivo }}</span>
             <i class="pi pi-download text-xs opacity-60"></i>
@@ -520,9 +507,6 @@
 </p-dialog>
 
 
-<!-- ════════════════════════════════════════════════════════════
-     MODAL — Nueva Versión
-════════════════════════════════════════════════════════════ -->
 <p-dialog [visible]="dialogVersionVisible()" (visibleChange)="dialogVersionVisible.set($event)"
   header="Subir Nueva Versión"
   [modal]="true" [draggable]="false" [resizable]="false"
@@ -535,25 +519,25 @@
       <span class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Entregable</span>
       <p class="text-sm font-medium text-slate-800 m-0">{{ entregableVersion()!.nombreEntregable }}</p>
     </div>
-    }
 
-    <div class="flex flex-col gap-1.5">
-      <label class="form-label">Archivo <span class="text-red-400">*</span></label>
-      <p-fileUpload mode="basic" [auto]="false" chooseLabel="Seleccionar archivo"
-        chooseIcon="pi pi-paperclip" [maxFileSize]="52428800"
-        (onSelect)="onArchivoVersionSeleccionado($event)" styleClass="w-full" />
-      @if (archivoVersion) {
-      <small class="text-green-600 text-xs">{{ archivoVersion.name }}</small>
-      }
+    <div class="flex flex-col gap-1.5 mt-2">
+      <app-file-uploader
+        [clearTrigger]="dialogVersionVisible()"
+        [multiple]="false"
+        [maxFileSizeMb]="entregableVersion()!.tamanioMaximoMb || 50"
+        [allowedExtensions]="entregableVersion()!.extensionesPermitidas || '*'"
+        title="Subir archivo oficial"
+        subtitle="Arrastra el documento final aquí"
+        (onFileAccepted)="onNuevaVersionFileAccepted($event)">
+      </app-file-uploader>
     </div>
+    }
 
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true"
-      [disabled]="guardandoVersion()" (click)="dialogVersionVisible.set(false)" />
-    <p-button label="Subir Versión" icon="pi pi-upload" [loading]="guardandoVersion()"
-      (click)="guardarNuevaVersion()" />
+    <p-button label="Cerrar" icon="pi pi-times" severity="secondary" [text]="true"
+      (click)="dialogVersionVisible.set(false)" />
   </ng-template>
 
 </p-dialog>
@@ -561,9 +545,6 @@
 <p-confirmDialog [style]="{ width: '450px' }" />
 
 
-<!-- ════════════════════════════════════════════════════════════
-     MODAL — Desglose de Presupuesto
-════════════════════════════════════════════════════════════ -->
 <p-dialog [header]="'Desglose de Presupuesto: ' + desgloseFaseNombre()"
   [(visible)]="desgloseVisible" [modal]="true"
   [style]="{ width: '500px' }" [draggable]="false" [resizable]="false" appendTo="body">

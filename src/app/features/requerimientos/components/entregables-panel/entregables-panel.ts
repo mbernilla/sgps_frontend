@@ -1,6 +1,8 @@
 import { Component, DestroyRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, of, take } from 'rxjs';
+import { forkJoin, of, take, switchMap } from 'rxjs';
+import { HttpEvent, HttpEventType } from '@angular/common/http';
+import { FileUploaderComponent } from '../../../../shared/components/file-uploader/file-uploader.component';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -17,7 +19,6 @@ import { Dialog } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { Popover } from 'primeng/popover';
 import { ProgressSpinner } from 'primeng/progressspinner';
-import { FileUpload } from 'primeng/fileupload';
 import { TimelineModule } from 'primeng/timeline';
 import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
 import { TagModule } from 'primeng/tag';
@@ -39,11 +40,19 @@ import {
   RegistroEntregableRequest,
   RequerimientoFaseDTO,
   SaldoFaseDTO,
+  UploadIntentRequest
 } from '../../models/entregables.models';
 import { EstimacionDTO } from '../../models/estimaciones.models';
 
 interface FileSelectEvent {
   currentFiles: File[];
+}
+
+interface FileAcceptedEvent {
+  file: File;
+  onProgress: (pct: number) => void;
+  onSuccess: () => void;
+  onError: (msg: string) => void;
 }
 
 @Component({
@@ -62,7 +71,6 @@ interface FileSelectEvent {
     Dialog,
     TooltipModule,
     ProgressSpinner,
-    FileUpload,
     TimelineModule,
     Accordion,
     AccordionPanel,
@@ -72,6 +80,7 @@ interface FileSelectEvent {
     ConfirmDialog,
     Popover,
     RequerimientoCabeceraComponent,
+    FileUploaderComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './entregables-panel.html',
@@ -174,7 +183,6 @@ export class EntregablesPanelComponent implements OnInit {
   readonly entregableEval = signal<EntregableGridDTO | null>(null);
   readonly modoEval = signal<'aprobar' | 'observar'>('aprobar');
   readonly guardandoEval = signal(false);
-  private archivosEval: File[] = [];
   readonly comentarioCtrl = new FormControl('', { nonNullable: true, validators: Validators.required });
 
   // ── Modal: Bitácora ───────────────────────────────────────────────────
@@ -195,7 +203,7 @@ export class EntregablesPanelComponent implements OnInit {
 
   private readonly actionService = inject(ActionOrchestratorService);
 
-  archivoVersion: File | null = null;
+  evidenciasSubidas: ArchivoAdjuntoDTO[] = [];
 
   // ── Ciclo de vida ─────────────────────────────────────────────────────
   ngOnInit(): void {
@@ -410,29 +418,6 @@ export class EntregablesPanelComponent implements OnInit {
     }
   }
 
-  // eliminarEntregable(id: number): void {
-  //   const idFase = this.getFaseDeEntregable(id);
-  //   this.confirmService.confirm({
-  //     message: '¿Estás seguro de que deseas eliminar este entregable planificado? Esta acción lo ocultará del sistema y liberará las horas estimadas.',
-  //     header: 'Confirmar Eliminación',
-  //     icon: 'pi pi-exclamation-triangle',
-  //     acceptButtonStyleClass: 'p-button-danger p-button-text',
-  //     rejectButtonStyleClass: 'p-button-text p-button-text',
-  //     acceptIcon: 'none',
-  //     rejectIcon: 'none',
-  //     accept: () => {
-  //       this.service.eliminar(id).pipe(take(1)).subscribe({
-  //         next: res => {
-  //           this.msg.add({ key: 'ent', severity: 'success', summary: 'Eliminado', detail: res.mensaje || 'Entregable eliminado.', life: 3000 });
-  //           if (idFase !== null) this.recargarFase(idFase);
-  //           this.cargarFases();
-  //         },
-  //         error: err => this.toastError(err.error?.mensaje || 'No se pudo eliminar el entregable.'),
-  //       });
-  //     },
-  //   });
-  // }
-
   eliminarEntregable(id: number): void {
     // Calculamos el idFase antes de abrir el modal
     const idFase = this.getFaseDeEntregable(id);
@@ -451,29 +436,6 @@ export class EntregablesPanelComponent implements OnInit {
       }
     });
   }
-
-  // anularEntregable(id: number): void {
-  //   const idFase = this.getFaseDeEntregable(id);
-  //   this.confirmService.confirm({
-  //     message: '¿Estás seguro de que deseas ANULAR este entregable? El registro se mantendrá visible para auditoría, pero su flujo se detendrá permanentemente y sus horas dejarán de ser facturables.',
-  //     header: 'Confirmar Anulación',
-  //     icon: 'pi pi-info-circle',
-  //     acceptButtonStyleClass: 'p-button-danger p-button-text',
-  //     rejectButtonStyleClass: 'p-button-text p-button-text',
-  //     acceptIcon: 'none',
-  //     rejectIcon: 'none',
-  //     accept: () => {
-  //       this.service.anular(id).pipe(take(1)).subscribe({
-  //         next: res => {
-  //           this.msg.add({ key: 'ent', severity: 'warn', summary: 'Anulado', detail: res.mensaje || 'Entregable anulado.', life: 3000 });
-  //           if (idFase !== null) this.recargarFase(idFase);
-  //           this.cargarFases();
-  //         },
-  //         error: err => this.toastError(err.error?.mensaje || 'No se pudo anular el entregable.'),
-  //       });
-  //     },
-  //   });
-  // }
 
   anularEntregable(id: number): void {
     const idFase = this.getFaseDeEntregable(id);
@@ -496,12 +458,27 @@ export class EntregablesPanelComponent implements OnInit {
     this.entregableEval.set(ent);
     this.modoEval.set(modo);
     this.comentarioCtrl.reset('');
-    this.archivosEval = [];
+    this.evidenciasSubidas = []; // Limpiamos la cola de evidencias
     this.dialogEvalVisible.set(true);
   }
 
-  onArchivosEvalSeleccionados(event: FileSelectEvent): void {
-    this.archivosEval = event.currentFiles;
+  onEvidenciaFileAccepted(event: FileAcceptedEvent): void {
+    this.service.uploadEvidenciaConProgreso(this.idRequerimiento, event.file).subscribe({
+      next: (httpEvent: HttpEvent<any>) => {
+        if (httpEvent.type === HttpEventType.UploadProgress) {
+          const pct = Math.round(100 * httpEvent.loaded / (httpEvent.total || 1));
+          event.onProgress(pct);
+        } else if (httpEvent.type === HttpEventType.Response) {
+          event.onSuccess();
+          const dto = httpEvent.body.data;
+          this.evidenciasSubidas.push({
+            nombreArchivo: dto.nombreArchivoOriginal,
+            rutaArchivo: dto.rutaRelativaFileServer
+          });
+        }
+      },
+      error: (err: any) => event.onError('Fallo de conexión. Intente de nuevo.')
+    });
   }
 
   guardarEvaluacion(): void {
@@ -509,57 +486,26 @@ export class EntregablesPanelComponent implements OnInit {
 
     const idEnt = this.entregableEval()!.id;
     const modo = this.modoEval();
-    const codEstado = modo === 'aprobar' ? 'ENT_APR' : 'ENT_OBS';
-    const comentario = this.comentarioCtrl.value;
-
-    this.guardandoEval.set(true);
-
-    const doEvaluar = (adjuntos: ArchivoAdjuntoDTO[] = []) => {
-      const payload: EvaluacionRequest = {
-        codEstado,
-        comentarioResumen: comentario,
-        ...(adjuntos.length ? { archivosAdjuntos: adjuntos } : {}),
-      };
-      this.service.evaluar(idEnt, payload).pipe(take(1)).subscribe({
-        next: () => {
-          this.guardandoEval.set(false);
-          this.dialogEvalVisible.set(false);
-          this.msg.add({
-            key: 'ent', severity: 'success',
-            summary: modo === 'aprobar' ? 'Aprobado' : 'Observado',
-            detail: 'Evaluación registrada correctamente.', life: 3000,
-          });
-          this.recargarTodasLasFases();
-          this.cargarFases();
-        },
-        error: err => {
-          this.guardandoEval.set(false);
-          this.toastError(err.error?.mensaje || 'No se pudo registrar la evaluación.');
-        },
-      });
+    const payload: EvaluacionRequest = {
+      codEstado: modo === 'aprobar' ? 'ENT_APR' : 'ENT_OBS',
+      comentarioResumen: this.comentarioCtrl.value,
+      ...(this.evidenciasSubidas.length ? { archivosAdjuntos: this.evidenciasSubidas } : {}),
     };
 
-    if (modo === 'observar' && this.archivosEval.length > 0) {
-      forkJoin(
-        this.archivosEval.map(f =>
-          this.service.uploadArchivo(this.idRequerimiento, f, 'feedback').pipe(take(1))
-        )
-      ).subscribe({
-        next: responses => {
-          const adjuntos: ArchivoAdjuntoDTO[] = responses.map(r => ({
-            nombreArchivo: r.data.nombreArchivoOriginal,
-            rutaArchivo: r.data.rutaFileServer,
-          }));
-          doEvaluar(adjuntos);
-        },
-        error: () => {
-          this.guardandoEval.set(false);
-          this.toastError('No se pudieron subir los archivos de evidencia.');
-        },
-      });
-    } else {
-      doEvaluar();
-    }
+    this.guardandoEval.set(true);
+    this.service.evaluar(idEnt, payload).pipe(take(1)).subscribe({
+      next: () => {
+        this.guardandoEval.set(false);
+        this.dialogEvalVisible.set(false);
+        this.msg.add({ key: 'ent', severity: 'success', summary: modo === 'aprobar' ? 'Aprobado' : 'Observado', detail: 'Evaluación registrada correctamente.', life: 3000 });
+        this.recargarTodasLasFases();
+        this.cargarFases();
+      },
+      error: (err: any) => {
+        this.guardandoEval.set(false);
+        this.toastError(err.error?.mensaje || 'No se pudo registrar la evaluación.');
+      },
+    });
   }
 
   // ── Modal: Desglose de Presupuesto ───────────────────────────────────
@@ -589,62 +535,62 @@ export class EntregablesPanelComponent implements OnInit {
   // ── Modal: Nueva Versión ──────────────────────────────────────────────
   abrirNuevaVersion(ent: EntregableGridDTO): void {
     this.entregableVersion.set(ent);
-    this.archivoVersion = null;
     this.dialogVersionVisible.set(true);
   }
 
-  onArchivoVersionSeleccionado(event: FileSelectEvent): void {
-    this.archivoVersion = event.currentFiles[0] ?? null;
-  }
 
-  guardarNuevaVersion(): void {
-    if (!this.archivoVersion) { this.toastError('Debe seleccionar un archivo.'); return; }
-
+  onNuevaVersionFileAccepted(event: FileAcceptedEvent): void {
     const ent = this.entregableVersion()!;
-    this.guardandoVersion.set(true);
-    this.service.uploadArchivo(this.idRequerimiento, this.archivoVersion, 'entregables')
-      .pipe(take(1))
-      .subscribe({
-        next: uploadRes => {
-          const payload: NuevaVersionRequest = {
-            nombreArchivo: uploadRes.data.nombreArchivoOriginal,
-            rutaFileServer: uploadRes.data.rutaFileServer,
-            tamanioKb: uploadRes.data.tamanioKb,
-          };
-          this.service.subirNuevaVersion(ent.id, payload).pipe(take(1)).subscribe({
-            next: () => {
-              this.guardandoVersion.set(false);
-              this.dialogVersionVisible.set(false);
-              this.msg.add({ key: 'ent', severity: 'success', summary: 'Nueva versión', detail: 'Versión registrada correctamente.', life: 3000 });
-              const idFase = this.getFaseDeEntregable(ent.id);
-              if (idFase !== null) this.recargarFase(idFase);
-              this.cargarFases();
-            },
-            error: err => {
-              this.guardandoVersion.set(false);
-              this.toastError(err.error?.mensaje || 'No se pudo registrar la nueva versión.');
-            },
-          });
-        },
-        error: err => {
-          this.guardandoVersion.set(false);
-          this.toastError(err.error?.mensaje || 'No se pudo subir el archivo.');
-        },
-      });
+    const intentPayload: UploadIntentRequest = {
+      nombreArchivo: event.file.name,
+      tamanioKb: Math.round(event.file.size / 1024)
+    };
+
+    this.service.solicitarIntencion(ent.id, intentPayload).pipe(
+      take(1),
+      switchMap(intentRes => {
+        return this.service.subirNuevaVersionConProgreso(
+          ent.id,
+          intentRes.data.uploadToken,
+          intentRes.data.subRutaDestino,
+          event.file
+        );
+      })
+    ).subscribe({
+      next: (httpEvent: HttpEvent<any>) => {
+        if (httpEvent.type === HttpEventType.UploadProgress) {
+          const pct = Math.round(100 * httpEvent.loaded / (httpEvent.total || 1));
+          event.onProgress(pct);
+        } else if (httpEvent.type === HttpEventType.Response) {
+          event.onSuccess();
+          this.msg.add({ key: 'ent', severity: 'success', summary: 'Nueva versión', detail: 'Versión registrada correctamente.' });
+
+          setTimeout(() => {
+            this.dialogVersionVisible.set(false);
+            const idFase = this.getFaseDeEntregable(ent.id);
+            if (idFase !== null) this.recargarFase(idFase);
+            this.cargarFases();
+          }, 1000);
+        }
+      },
+      error: (err: any) => {
+        event.onError(err.error?.mensaje || 'Error al procesar el archivo.');
+      }
+    });
   }
 
   // ── Descarga de archivos ──────────────────────────────────────────────
-  descargarArchivo(ruta: string, nombre: string): void {
-    this.service.downloadArchivo(ruta, nombre).pipe(take(1)).subscribe({
-      next: blob => {
+  descargarArchivo(idArchivo: number, nombreOriginal: string, tipo: 'ENTREGABLE' | 'OBSERVACION'): void {
+    this.service.downloadArchivoSeguro(idArchivo, tipo).pipe(take(1)).subscribe({
+      next: (blob: Blob) => {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = nombre;
+        anchor.download = nombreOriginal;
         anchor.click();
         URL.revokeObjectURL(url);
       },
-      error: () => this.toastError('No se pudo descargar el archivo.'),
+      error: (err: any) => this.toastError('No se pudo descargar el archivo.'),
     });
   }
 

@@ -1,0 +1,91 @@
+/* ════════════════════════════════════════════════════════════
+   DISEÑO ZEN — Uploader Component
+════════════════════════════════════════════════════════════ */
+
+.file-uploader-container {
+  width: 100%;
+}
+
+.uploader-dropzone {
+  border: 1.5px dashed #cbd5e1; /* Gris muy suave */
+  border-radius: 12px; /* Curvas más amigables y orgánicas */
+  background-color: #fafafa; /* Blanco roto / muy sutil */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Transición Zen (suave y natural) */
+  cursor: pointer;
+
+  &.is-dragging {
+    /* En lugar del azul fuerte, usamos un tono esmeralda/teal muy pálido para el fondo */
+    border-color: #10B981; /* Esmeralda Zen */
+    background-color: rgba(16, 185, 129, 0.04);
+    transform: scale(1.01);
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.08); /* Sombra difuminada */
+  }
+
+  .dropzone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem; /* Más "aire" o espacio negativo */
+    pointer-events: none;
+
+    i {
+      transition: color 0.3s ease;
+    }
+  }
+
+  /* Botón secundario minimalista */
+  .btn-browse {
+    pointer-events: auto;
+    background-color: transparent;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.85rem;
+    border-radius: 20px; /* Botón tipo píldora, más orgánico */
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f1f5f9;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+/* ── LISTA DE ARCHIVOS (Tarjetas Minimalistas) ── */
+.file-item {
+  background-color: #ffffff;
+  border: 1px solid #f1f5f9; /* Borde casi invisible */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02); /* Sombra levísima */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  }
+
+  /* Estados Zen */
+  &.status-error { border-color: rgba(239, 68, 68, 0.3); } /* Rojo sutil */
+  &.status-success { border-color: rgba(16, 185, 129, 0.3); } /* Esmeralda sutil */
+
+  /* Barra de progreso unificada y elegante */
+  .progress-track {
+    width: 100%;
+    height: 3px; /* Más delgada y sutil */
+    background-color: #f8fafc;
+
+    .progress-fill {
+      height: 100%;
+      background-color: #10B981; /* El verde Esmeralda Zen como protagonista de la acción */
+      transition: width 0.4s ease-out; /* Movimiento fluido */
+    }
+  }
+}

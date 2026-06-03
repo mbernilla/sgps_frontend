@@ -1,0 +1,74 @@
+<div class="file-uploader-container">
+
+  <div class="uploader-dropzone"
+       [class.is-dragging]="isDragging()"
+       (dragover)="onDragOver($event)"
+       (dragleave)="onDragLeave($event)"
+       (drop)="onDrop($event)">
+
+    <div class="dropzone-content">
+      <i class="pi pi-cloud-upload text-4xl mb-3" [class.text-blue-500]="isDragging()" [class.text-gray-400]="!isDragging()"></i>
+      <h3 class="text-base font-semibold text-gray-700 m-0">{{ title }}</h3>
+      <p class="text-sm text-gray-500 mt-1 mb-4">{{ subtitle }}</p>
+
+      <input type="file" #fileInput class="hidden"
+             [multiple]="multiple"
+             [accept]="allowedExtensions !== '*' ? allowedExtensions : ''"
+             (change)="onFileSelected($event)">
+
+      <button type="button" class="btn-browse" (click)="fileInput.click()">
+        Explorar archivos
+      </button>
+    </div>
+  </div>
+
+  @if (files().length > 0) {
+  <div class="file-list mt-4 flex flex-col gap-2">
+    @for (item of files(); track item.id) {
+    <div class="file-item shadow-sm" [ngClass]="'status-' + item.status">
+
+      <div class="flex items-center justify-between p-3">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <i class="pi text-2xl" [ngClass]="getFileIcon(item.file.name)"></i>
+          <div class="flex flex-col overflow-hidden">
+            <span class="text-sm font-semibold text-gray-700 truncate" [title]="item.file.name">
+              {{ item.file.name }}
+            </span>
+            <span class="text-xs text-gray-400">{{ formatSize(item.file.size) }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 ml-2">
+          @if (item.status === 'uploading') {
+            <span class="text-xs font-bold text-blue-600">{{ item.progress | number:'1.0-0' }}%</span>
+          } @else if (item.status === 'success') {
+            <i class="pi pi-check-circle text-green-500 text-lg"></i>
+          } @else if (item.status === 'error') {
+            <i class="pi pi-exclamation-circle text-red-500 text-lg" [title]="item.errorMessage"></i>
+          }
+
+          @if (item.status === 'pending' || item.status === 'error') {
+            <button type="button" class="text-gray-400 hover:text-red-500 transition-colors" (click)="removeFile(item.id)">
+              <i class="pi pi-times"></i>
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (item.status === 'uploading' || item.status === 'success') {
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="item.progress">
+        </div>
+      </div>
+      }
+
+      @if (item.status === 'error' && item.errorMessage) {
+        <div class="text-xs text-red-500 px-3 pb-2 pt-1 bg-red-50 rounded-b">
+          {{ item.errorMessage }}
+        </div>
+      }
+    </div>
+    }
+  </div>
+  }
+</div>
