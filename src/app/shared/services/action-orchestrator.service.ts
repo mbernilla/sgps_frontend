@@ -39,8 +39,6 @@ export class ActionOrchestratorService {
         //console.log('[ActionOrchestrator] 1. Evaluando la acción...');
         if (config.onStart) config.onStart();
 
-        // Si this.requerimientoService es undefined, explotará aquí y caerá al catch,
-        // permitiendo que el modal siga su ciclo natural de cierre.
         const accionObservable = config.action();
 
         //console.log('[ActionOrchestrator] 2. Suscribiendo al backend...');

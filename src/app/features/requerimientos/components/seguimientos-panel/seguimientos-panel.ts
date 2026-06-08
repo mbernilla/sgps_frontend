@@ -9,7 +9,7 @@ import {
   inject,
   signal,
   Output,
-  EventEmitter
+  EventEmitter,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs/operators';
@@ -85,6 +85,7 @@ interface SeguimientoCreateDTO {
 export class SeguimientosPanel implements OnInit, OnChanges {
 
   @Input({ required: true }) idRequerimiento!: number;
+  @Input() idSeguimientoDestacado: number | null = null;
 
   @Output() onCambio = new EventEmitter<void>();
 
@@ -92,11 +93,9 @@ export class SeguimientosPanel implements OnInit, OnChanges {
   private readonly fb = inject(FormBuilder);
   private readonly maestra = inject(MaestraService);
   private readonly msg = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly actionService = inject(ActionOrchestratorService);
 
-  // 👇 INYECTAMOS EL NUEVO SERVICIO 👇
   private readonly seguimientosService = inject(SeguimientosService);
 
   readonly apiBase = environment.baseUrl;
@@ -429,6 +428,7 @@ export class SeguimientosPanel implements OnInit, OnChanges {
         next: (res) => {
           this.seguimientos.set(res.data ?? []);
           console.log('[Historial OK]', res.data);
+          this.resaltarSeguimientoDestacado();
         },
         error: (err) => {
           this.seguimientos.set([]);
@@ -478,5 +478,45 @@ export class SeguimientosPanel implements OnInit, OnChanges {
         });
       }
     });
+  }
+
+  // 2. Método de animación
+  resaltarSeguimientoDestacado(): void {
+    if (!this.idSeguimientoDestacado) return;
+
+    const idBuscado = 'seg-' + this.idSeguimientoDestacado;
+    let intentos = 0;
+
+    // Buscamos la tarjeta cada 200 milisegundos (Buscador Activo)
+    const buscador = setInterval(() => {
+      const elemento = document.getElementById(idBuscado);
+      intentos++;
+
+      if (elemento) {
+        // ¡Lo encontramos! Detenemos la búsqueda
+        clearInterval(buscador);
+
+        console.log('Tarjeta encontrada:', idBuscado); // Te servirá para confirmar en consola
+
+        // 1. Hacemos scroll
+        elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // 2. Pintamos de amarillo
+        elemento.style.transition = 'background-color 0.8s ease';
+        elemento.style.backgroundColor = '#fefce8';
+
+        // 3. Regresamos al color original a los 3 segundos
+        setTimeout(() => {
+          // Lo dejamos vacío ('') para que retome las clases CSS originales de tu .zen-card
+          elemento.style.backgroundColor = '';
+          this.idSeguimientoDestacado = null;
+        }, 3000);
+
+      } else if (intentos >= 15) {
+        // Si después de 3 segundos (15 intentos * 200ms) no existe, nos rendimos para no saturar memoria
+        clearInterval(buscador);
+        console.warn('El Deep Link falló: No se encontró la tarjeta', idBuscado);
+      }
+    }, 200);
   }
 }

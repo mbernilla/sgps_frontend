@@ -184,7 +184,7 @@
       </ng-template>
 
       <ng-template pTemplate="content" let-seg>
-        <div class="zen-card p-3.5 mb-5 space-y-2">
+        <div [id]="'seg-' + seg.id" class="zen-card p-3.5 mb-5 space-y-2">
 
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">

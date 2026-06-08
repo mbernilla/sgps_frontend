@@ -24,7 +24,7 @@ import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'pr
 import { TagModule } from 'primeng/tag';
 
 import { ActionOrchestratorService } from '../../../../shared/services/action-orchestrator.service';
-import { RequerimientoCabeceraComponent } from '../../../../shared/components/requerimiento-cabecera/requerimiento-cabecera';
+import { RequerimientoCabeceraComponent } from '../../requerimiento-cabecera/requerimiento-cabecera';
 import { EntregablesService } from '../../services/entregables.service';
 import { EstimacionesService } from '../../services/estimaciones.service';
 import { RequerimientoCabeceraDTO } from '../../../../core/models/requerimiento-cabecera.model';

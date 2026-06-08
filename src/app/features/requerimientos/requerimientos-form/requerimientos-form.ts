@@ -1,14 +1,6 @@
 import { Component, inject, effect, signal, OnInit, DestroyRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import {
-  ReactiveFormsModule,
-  FormBuilder,
-  FormArray,
-  FormGroup,
-  Validators,
-  AbstractControl,
-  ValidationErrors,
-} from '@angular/forms';
+import {ReactiveFormsModule, FormBuilder, FormArray,  FormGroup, Validators,AbstractControl, ValidationErrors,} from '@angular/forms';
 import { switchMap, of } from 'rxjs';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -27,13 +19,8 @@ import { MessageService } from 'primeng/api';
 
 import { FormSelectComponent } from '../../../shared/components/form-select/form-select';
 import { MaestraService } from '../../../core/services/maestra.service';
-import { RequerimientoService } from '../requerimiento.service';
-import {
-  RequerimientoRegistroRequestDTO,
-  DistribucionCostoDTO,
-  PersonalDTO,
-  TecnologiaDTO,
-} from '../requerimiento.model';
+import { RequerimientosService } from '../services/requerimientos.service';
+import { PersonalDTO } from '../models/requerimientos.models';
 import {
   EquipoDTO,
   ModuloDTO,
@@ -87,7 +74,7 @@ export class RequerimientosFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly service = inject(RequerimientoService);
+  private readonly service = inject(RequerimientosService);
   private readonly maestra = inject(MaestraService);
   private readonly msg = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef); // <-- Inyectado para prevenir Memory Leaks
@@ -472,7 +459,8 @@ export class RequerimientosFormComponent implements OnInit {
             severity: 'error',
             summary: 'Error al actualizar',
             detail: mensajeReal,
-            life: 5000 });
+            life: 5000
+          });
         }
       });
     } else {

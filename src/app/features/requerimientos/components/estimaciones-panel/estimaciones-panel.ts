@@ -19,7 +19,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { Dialog } from 'primeng/dialog';
 
-import { RequerimientoCabeceraComponent } from '../../../../shared/components/requerimiento-cabecera/requerimiento-cabecera';
+import { RequerimientoCabeceraComponent } from '../../requerimiento-cabecera/requerimiento-cabecera';
 import { RequerimientoCabeceraDTO } from '../../../../core/models/requerimiento-cabecera.model';
 import { ApiResponse } from '../../../../core/models/api-response.model';
 import { EstimacionesService, CONTRATO_ACTIVO_ID } from '../../services/estimaciones.service';

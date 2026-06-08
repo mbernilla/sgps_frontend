@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
@@ -40,9 +40,11 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
   private readonly reqService = inject(RequerimientosService);
   private readonly router = inject(Router);
 
-  private readonly requerimientoService = inject(RequerimientosService);
+  private readonly service = inject(RequerimientosService);
 
   private readonly actionService = inject(ActionOrchestratorService);
+
+  private readonly route = inject(ActivatedRoute);
 
   // ── Estado reactivo ────────────────────────────────────────────────────
   requerimientos = signal<RequerimientoGridDTO[]>([]);
@@ -61,6 +63,8 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
   // Para el panel lateral de seguimientos
   mostrarSidebarSeguimientos = signal(false);
   reqSeleccionadoParaSeguimiento = signal<RequerimientoGridDTO | null>(null);
+
+  idSeguimientoDestacado = signal<number | null>(null);
 
   // Menú contextual de acciones por fila
   menuItems = signal<MenuItem[]>([]);
@@ -100,19 +104,117 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
     });
 
     // Restaurar el filtro guardado si existe
-    const filtroGuardado = this.requerimientoService.obtenerFiltroGuardado();
+    const filtroGuardado = this.service.obtenerFiltroGuardado();
     if (filtroGuardado) {
       this.filtroActual = { ...filtroGuardado };
       // Comunicar a la tabla en qué fila debe empezar para que dispare
       // onLazyLoad con el page/size correcto
       this.primeraFila = (this.filtroActual.page - 1) * this.filtroActual.size;
-      this.requerimientoService.limpiarFiltroGuardado();
+      this.service.limpiarFiltroGuardado();
     }
 
     // Limpiar estado de navegación del historial
     if (history.state?.nuevoIdDestacado) {
       window.history.replaceState({}, '');
     }
+
+    // // 3. ¡LA MAGIA DEL DEEP LINKING!
+    // this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+    //   const idReq = params['abrirReq'];
+    //   const idSeg = params['resaltarSeg'];
+
+    //   if (idReq && idSeg) {
+    //     // Guardamos el ID del seguimiento para pasárselo al panel
+    //     this.idSeguimientoDestacado.set(Number(idSeg));
+
+    //     // Simulamos la apertura del panel lateral enviando un objeto parcial
+    //     // Si tu panel necesita el objeto completo, Angular lo manejará bien porque es un Partial implícito
+    //     this.abrirSeguimientos({ id: Number(idReq) } as RequerimientoGridDTO);
+
+    //     // Opcional: Limpiamos la URL para que quede limpia en el navegador sin recargar la página
+    //     this.router.navigate([], {
+    //       relativeTo: this.route,
+    //       queryParams: { abrirReq: null, resaltarSeg: null },
+    //       queryParamsHandling: 'merge',
+    //       replaceUrl: true
+    //     });
+    //   }
+    // });
+
+    // 3. ¡LA MAGIA DEL DEEP LINKING CON HIDRATACIÓN!
+    // this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+    //   const idReq = params['abrirReq'];
+    //   const idSeg = params['resaltarSeg'];
+
+    //   if (idReq && idSeg) {
+    //     this.idSeguimientoDestacado.set(Number(idSeg));
+
+    //     // Llamamos al endpoint que me acabas de mostrar
+    //     this.req2Service.obtenerPorId(Number(idReq)).subscribe({
+    //       next: (reqCompleto) => {
+    //         // Extraemos el objeto real desde res.data
+    //         //const reqCompleto = res.data;
+
+    //         // Abrimos el panel lateral pasándole toda la data rica (códigos, nombres, etc.)
+    //         this.abrirSeguimientos(reqCompleto);
+    //       },
+    //       error: (err) => {
+    //         console.error('No se pudo hidratar el requerimiento', err);
+    //         // Fallback: Si el backend falla, igual abrimos el panel con el ID pelado
+    //         this.abrirSeguimientos({ id: Number(idReq) } as RequerimientoGridDTO);
+    //       }
+    //     });
+
+    //     // Limpiamos la URL para no dejar rastro
+    //     this.router.navigate([], {
+    //       relativeTo: this.route,
+    //       queryParams: { abrirReq: null, resaltarSeg: null },
+    //       queryParamsHandling: 'merge',
+    //       replaceUrl: true
+    //     });
+    //   }
+    // });
+
+    // 3. ¡LA MAGIA DEL DEEP LINKING (MODO DEBUG)!
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      const idReq = params['abrirReq'];
+      const idSeg = params['resaltarSeg'];
+
+      console.log('1. [DeepLink] Parámetros leídos de URL:', { idReq, idSeg });
+
+      if (idReq && idSeg) {
+        console.log('2. [DeepLink] Iniciando hidratación para Req:', idReq);
+        this.idSeguimientoDestacado.set(Number(idSeg));
+
+        // Llamamos al endpoint
+        this.reqService.obtenerPorId(Number(idReq)).subscribe({
+          next: (reqCompleto) => {
+            console.log('3. [DeepLink] Data hidratada del backend:', reqCompleto);
+
+            // Abrimos el panel
+            this.abrirSeguimientos(reqCompleto);
+            console.log('4. [DeepLink] Orden de abrir panel ejecutada.');
+
+            // 👇 ARQUITECTURA: Comentamos temporalmente la limpieza de URL
+            // para evitar que el Router cancele el dibujado del HTML.
+            /*
+            setTimeout(() => {
+              this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { abrirReq: null, resaltarSeg: null },
+                queryParamsHandling: 'merge',
+                replaceUrl: true
+              });
+            }, 500);
+            */
+          },
+          error: (err) => {
+            console.error('3b. [DeepLink] Error en hidratación', err);
+            this.abrirSeguimientos({ id: Number(idReq) } as RequerimientoGridDTO);
+          }
+        });
+      }
+    });
 
     // NO llamar cargarData() aquí — la tabla lazy lo hace a través de onLazyLoad
   }
@@ -173,14 +275,14 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
 
   // ── Navegación con guardado de filtro ──────────────────────────────────
   private irAEstimaciones(idRequerimiento: number): void {
-    this.requerimientoService.guardarFiltro(this.filtroActual);
+    this.service.guardarFiltro(this.filtroActual);
     this.router.navigate(['/requerimientos', idRequerimiento, 'estimaciones'], {
       state: { nuevoIdDestacado: idRequerimiento }
     });
   }
 
   private irAEntregables(idRequerimiento: number): void {
-    this.requerimientoService.guardarFiltro(this.filtroActual);
+    this.service.guardarFiltro(this.filtroActual);
     this.router.navigate(['/requerimientos', idRequerimiento, 'entregables'], {
       state: { nuevoIdDestacado: idRequerimiento }
     });
@@ -214,7 +316,7 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
       message: `¿Estás seguro de que deseas eliminar el requerimiento <b>"${nombre}"</b>?`,
       icon: 'pi pi-exclamation-triangle',
       acceptClass: 'p-button-danger p-button-sm',
-      action: () => this.requerimientoService.delete(id),
+      action: () => this.service.delete(id),
       onSuccess: () => this.cargarData()
     });
   }

@@ -42,7 +42,6 @@
         </div>
       </a>
 
-      <!-- Divisor sección Maestros -->
       <div class="pt-2 pb-1" *ngIf="!isSidebarCollapsed()">
         <div class="border-t border-slate-700 mb-2"></div>
         <p class="px-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Maestros</p>
@@ -67,29 +66,33 @@
     <header class="bg-white shadow-sm border-b border-slate-200 h-16 px-6 flex items-center justify-between flex-shrink-0 z-10">
 
       <div>
-        <button
-          (click)="toggleSidebar()"
-          class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors focus:outline-none"
-          title="Alternar Menú">
+        <button (click)="toggleSidebar()" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors focus:outline-none" title="Alternar Menú">
           <i class="pi pi-bars text-xl"></i>
         </button>
       </div>
 
-      <div *ngIf="usuarioActual() as user"
-     class="flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-slate-50 transition-all border border-transparent hover:border-slate-200"
-     [title]="user.nombre">
+      <div class="relative flex items-center">
 
-  <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm shadow-sm">
-    {{ user.iniciales }}
-  </div>
+        <div *ngIf="usuarioActual() as user"
+             (click)="userMenu.toggle($event)"
+             class="cursor-pointer flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-slate-50 transition-all border border-transparent hover:border-slate-200"
+             [title]="user.nombre">
 
-  <div class="hidden sm:flex flex-col items-start leading-tight">
-    <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Conectado como</span>
-    <span class="text-sm font-semibold text-slate-700">{{ user.email }}</span>
-  </div>
+          <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm shadow-sm">
+            {{ user.iniciales }}
+          </div>
 
-  <i class="pi pi-angle-down text-slate-400 text-xs ml-1"></i>
-</div>
+          <div class="hidden sm:flex flex-col items-start leading-tight">
+            <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Conectado como</span>
+            <span class="text-sm font-semibold text-slate-700">{{ user.email }}</span>
+          </div>
+
+          <i class="pi pi-angle-down text-slate-400 text-xs ml-1"></i>
+        </div>
+
+        <p-menu #userMenu [model]="userMenuItems" [popup]="true" styleClass="w-56 mt-2" appendTo="body"></p-menu>
+
+      </div>
 
     </header>
 

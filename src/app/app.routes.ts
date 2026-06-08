@@ -1,91 +1,78 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { RequerimientosFormComponent } from './features/requerimientos/requerimientos-form/requerimientos-form';
-//import { RequerimientosListComponent } from './features/requerimientos/requerimientos-list/requerimientos-list';
+
+// 👇 1. Importa tu Layout
+import { LayoutComponent } from './layout/layout'; // Ajusta el path a tu archivo real
 
 export const routes: Routes = [
-  // Raíz: el guard de requerimientos redirige a /login si no hay sesión
-  { path: '', redirectTo: 'requerimientos', pathMatch: 'full' },
 
-  // Login (público)
+  // ==========================================
+  // RUTAS PÚBLICAS (Se renderizan sin Layout)
+  // ==========================================
   {
     path: 'login',
-    loadComponent: () =>
-      import('./features/auth/login/login.component').then(m => m.LoginComponent),
+    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent),
   },
 
-  // Requerimientos (protegido)
+  // ==========================================
+  // RUTAS PRIVADAS (Se renderizan DENTRO del Layout)
+  // ==========================================
   {
-    path: 'requerimientos',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/requerimientos/requerimientos-list/requerimientos-list').then(
-        m => m.RequerimientosListComponent
-      ),
-  },
-  {
-    path: 'requerimientos/nuevo',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/requerimientos/requerimientos-form/requerimientos-form').then(
-        m => m.RequerimientosFormComponent
-      ),
+    path: '',
+    component: LayoutComponent, // El Layout es el contenedor padre
+    canActivate: [authGuard],   // Protegemos TODAS las rutas hijas de un solo golpe
+    children: [
+      { path: '', redirectTo: 'requerimientos', pathMatch: 'full' },
+
+      // Requerimientos
+      {
+        path: 'requerimientos',
+        loadComponent: () => import('./features/requerimientos/requerimientos-list/requerimientos-list').then(m => m.RequerimientosListComponent),
+      },
+      {
+        path: 'requerimientos/nuevo',
+        loadComponent: () => import('./features/requerimientos/requerimientos-form/requerimientos-form').then(m => m.RequerimientosFormComponent),
+      },
+      { path: 'requerimientos/editar/:id', component: RequerimientosFormComponent },
+      { path: 'requerimientos/ver/:id',    component: RequerimientosFormComponent },
+      {
+        path: 'requerimientos/:id/estimaciones',
+        loadComponent: () => import('./features/requerimientos/components/estimaciones-panel/estimaciones-panel').then(m => m.EstimacionesPanelComponent),
+      },
+      {
+        path: 'requerimientos/:id/entregables',
+        loadComponent: () => import('./features/requerimientos/components/entregables-panel/entregables-panel').then(m => m.EntregablesPanelComponent),
+      },
+
+      // Conciliaciones
+      {
+        path: 'conciliaciones/maestro',
+        loadComponent: () => import('./features/conciliaciones/ciclos-list/ciclos-list').then(m => m.CiclosListComponent),
+      },
+      {
+        path: 'conciliaciones/gestion/:id',
+        loadComponent: () => import('./features/conciliaciones/ciclo-detalle/ciclo-detalle').then(m => m.CicloDetalleComponent),
+      },
+      {
+        path: 'conciliaciones/ciclos/:idCiclo/penalidades',
+        loadComponent: () => import('./features/conciliaciones/penalidades/penalidades.component').then(m => m.PenalidadesComponent),
+      },
+      {
+        path: 'conciliaciones/ciclos/:idCiclo/costos-abc',
+        loadComponent: () => import('./features/conciliaciones/costos-abc/costos-abc.component').then(m => m.CostosAbcComponent),
+      },
+
+      // Maestros
+      {
+        path: 'maestros/sistemas',
+        loadComponent: () => import('./features/maestros/sistemas/sistemas-admin').then(m => m.SistemasAdminComponent),
+      },
+    ]
   },
 
-  { path: 'requerimientos/editar/:id', component: RequerimientosFormComponent, canActivate: [authGuard] },
-  { path: 'requerimientos/ver/:id',   component: RequerimientosFormComponent, canActivate: [authGuard] },
-
-  {
-    path: 'requerimientos/:id/estimaciones',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/requerimientos/components/estimaciones-panel/estimaciones-panel').then(
-        m => m.EstimacionesPanelComponent
-      ),
-  },
-  {
-    path: 'requerimientos/:id/entregables',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/requerimientos/components/entregables-panel/entregables-panel').then(
-        m => m.EntregablesPanelComponent
-      ),
-  },
-
-  // Conciliaciones
-  {
-    path: 'conciliaciones/maestro',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/conciliaciones/ciclos-list/ciclos-list').then(m => m.CiclosListComponent),
-  },
-  {
-    path: 'conciliaciones/gestion/:id',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/conciliaciones/ciclo-detalle/ciclo-detalle').then(m => m.CicloDetalleComponent),
-  },
-  {
-    path: 'conciliaciones/ciclos/:idCiclo/penalidades',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/conciliaciones/penalidades/penalidades.component').then(m => m.PenalidadesComponent),
-  },
-  {
-    path: 'conciliaciones/ciclos/:idCiclo/costos-abc',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/conciliaciones/costos-abc/costos-abc.component').then(m => m.CostosAbcComponent),
-  },
-
-  // Maestros
-  {
-    path: 'maestros/sistemas',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/maestros/sistemas/sistemas-admin').then(m => m.SistemasAdminComponent),
-  },
-
-  // Wildcard
+  // ==========================================
+  // WILDCARD (Ruta no encontrada)
+  // ==========================================
   { path: '**', redirectTo: 'login' },
 ];

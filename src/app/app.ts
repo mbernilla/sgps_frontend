@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { LayoutComponent } from './layout/layout';
+import { RouterOutlet } from '@angular/router';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-root',
-  imports: [LayoutComponent, ConfirmDialog],
+  imports: [ConfirmDialog, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
