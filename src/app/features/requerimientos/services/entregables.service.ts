@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams, HttpEvent } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpEvent, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
@@ -139,12 +139,15 @@ export class EntregablesService {
   /**
    * DESCARGAS SEGURAS POR ID (Evita Path Traversal)
    */
-  downloadArchivoSeguro(idArchivo: number, tipo: 'ENTREGABLE' | 'OBSERVACION'): Observable<Blob> {
+  downloadArchivoSeguro(idArchivo: number, tipo: 'ENTREGABLE' | 'OBSERVACION'): Observable<HttpResponse<Blob>> {
     const url = tipo === 'ENTREGABLE'
       ? `${this.base}/entregables/archivos/${idArchivo}/descargar`
       : `${this.base}/entregables/observaciones/archivos/${idArchivo}/descargar`;
 
-    return this.http.get(url, { responseType: 'blob' });
+    return this.http.get(url, {
+      responseType: 'blob',
+      observe: 'response' // 👈 Le decimos a Angular que traiga los Headers
+    });
   }
 
   /**

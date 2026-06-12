@@ -1,6 +1,6 @@
 import { Component, DestroyRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, of, take, switchMap } from 'rxjs';
+import { of, take, switchMap } from 'rxjs';
 import { HttpEvent, HttpEventType } from '@angular/common/http';
 import { FileUploaderComponent } from '../../../../shared/components/file-uploader/file-uploader.component';
 import { CommonModule } from '@angular/common';
@@ -35,7 +35,6 @@ import {
   EntregableGridDTO,
   EvaluacionRequest,
   FlujoBitacoraDTO,
-  NuevaVersionRequest,
   PresupuestoDesgloseDTO,
   RegistroEntregableRequest,
   RequerimientoFaseDTO,
@@ -211,6 +210,17 @@ export class EntregablesPanelComponent implements OnInit {
     this.cargarCabecera();
     this.cargarFases();
     this.cargarEstimaciones();
+
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      const idArchivoDescarga = params['descargaFisica'];
+
+      if (idArchivoDescarga) {
+        // Reutilizamos tu método existente.
+        // Pasamos un nombre genérico porque desde la URL no sabemos el original aún,
+        // pero como tu backend manda el header Content-Disposition, el navegador usará el nombre real.
+        this.descargarArchivo(Number(idArchivoDescarga), `archivo_${idArchivoDescarga}`, 'ENTREGABLE');
+      }
+    });
   }
 
   volverALista(): void {
@@ -582,13 +592,31 @@ export class EntregablesPanelComponent implements OnInit {
   // ── Descarga de archivos ──────────────────────────────────────────────
   descargarArchivo(idArchivo: number, nombreOriginal: string, tipo: 'ENTREGABLE' | 'OBSERVACION'): void {
     this.service.downloadArchivoSeguro(idArchivo, tipo).pipe(take(1)).subscribe({
-      next: (blob: Blob) => {
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = nombreOriginal;
-        anchor.click();
-        URL.revokeObjectURL(url);
+      next: (response) => {
+        let nombreFinal = nombreOriginal; // 👈 Valor por defecto (Grilla)
+
+        // Buscamos el header (Angular normaliza los headers en minúsculas)
+        const contentDisposition = response.headers.get('content-disposition');
+
+        if (contentDisposition) {
+          // Expresión regular robusta para extraer el filename="archivo.pdf"
+          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+          if (matches && matches[1]) {
+            nombreFinal = matches[1].replace(/['"]/g, ''); // Limpiamos las comillas extra
+          }
+        }
+
+        // El archivo físico ahora vive dentro de response.body
+        const blob = response.body;
+
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+          anchor.href = url;
+          anchor.download = nombreFinal; // 👈 Nombre final consolidado
+          anchor.click();
+          URL.revokeObjectURL(url);
+        }
       },
       error: (err: any) => this.toastError('No se pudo descargar el archivo.'),
     });
