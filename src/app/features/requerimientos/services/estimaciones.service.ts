@@ -13,7 +13,8 @@ import {
   ModificadorTarifaDTO,
 } from '../models/estimaciones.models';
 
-export const CONTRATO_ACTIVO_ID = 2;
+//TODO Cambiar el contrato
+export const CONTRATO_ACTIVO_ID = 222;
 
 @Injectable({ providedIn: 'root' })
 export class EstimacionesService {
