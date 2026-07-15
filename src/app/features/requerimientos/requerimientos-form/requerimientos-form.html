@@ -211,12 +211,12 @@
         <table class="min-w-full text-sm">
           <thead class="bg-slate-50 text-slate-600">
             <tr>
-              <th class="px-4 py-2.5 text-left font-medium w-[280px]">Gerencia</th>
-              <th class="px-4 py-2.5 text-left font-medium w-[280px]">Equipo</th>
+              <th class="px-4 py-2.5 text-left font-medium w-70">Gerencia</th>
+              <th class="px-4 py-2.5 text-left font-medium w-70">Equipo</th>
 
-              <th class="px-4 py-2.5 text-center font-medium w-[120px]">Código C.C.</th>
-              <th class="px-4 py-2.5 text-right font-medium w-[130px]">Porcentaje (%)</th>
-              @if (modo !== 'VER') { <th class="px-4 py-2.5 text-center font-medium w-[80px]">Quitar</th> }
+              <th class="px-4 py-2.5 text-center font-medium w-30">Código C.C.</th>
+              <th class="px-4 py-2.5 text-right font-medium w-32.5">Porcentaje (%)</th>
+              @if (modo !== 'VER') { <th class="px-4 py-2.5 text-center font-medium w-20">Quitar</th> }
             </tr>
           </thead>
           <tbody formArrayName="distribucionCostos" class="divide-y divide-slate-100">
@@ -283,11 +283,11 @@
         <table class="min-w-full text-sm">
           <thead class="bg-slate-50 text-slate-600">
             <tr>
-              <th class="px-4 py-2.5 text-left font-medium w-[300px]">Colaborador *</th>
-              <th class="px-4 py-2.5 text-center font-medium w-[100px]">¿Responsable?</th>
-              <th class="px-4 py-2.5 text-left font-medium w-[150px]">F. Inicio * </th>
-              <th class="px-4 py-2.5 text-left font-medium w-[150px]">F. Fin</th>
-              @if (modo !== 'VER') { <th class="px-4 py-2.5 text-center font-medium w-[80px]">Quitar</th> }
+              <th class="px-4 py-2.5 text-left font-medium w-75">Colaborador *</th>
+              <th class="px-4 py-2.5 text-center font-medium w-25">¿Responsable?</th>
+              <th class="px-4 py-2.5 text-left font-medium w-37.5">F. Inicio * </th>
+              <th class="px-4 py-2.5 text-left font-medium w-37.5">F. Fin</th>
+              @if (modo !== 'VER') { <th class="px-4 py-2.5 text-center font-medium w-20">Quitar</th> }
             </tr>
           </thead>
           <tbody formArrayName="personal" class="divide-y divide-slate-100">
