@@ -4,17 +4,24 @@ import { RouterModule, RouterOutlet, Router } from '@angular/router';
 import { AuthService } from '../core/services/auth.service'; // Verifica que esta ruta sea la correcta en tu proyecto
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
+import { FormsModule } from '@angular/forms';
+
+import { ContratoApiService } from '../features/maestros/contratos/service/ContratoApiService';
+import { ContextoGlobalService } from '../core/services/contexto-global.service';
+import { ContratoSelectorDTO, GrupoContrato } from '../features/maestros/models/contrato-selector.model';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet, MenuModule],
+  imports: [CommonModule, RouterModule, RouterOutlet, MenuModule, FormsModule],
   templateUrl: './layout.html',
   styleUrl: './layout.scss'
 })
 export class LayoutComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly contratoApi = inject(ContratoApiService);
+  private readonly contextoGlobal = inject(ContextoGlobalService);
 
   isSidebarCollapsed = signal<boolean>(true);
 
@@ -23,6 +30,9 @@ export class LayoutComponent implements OnInit {
 
   // Opciones del menú desplegable de usuario
   userMenuItems: MenuItem[] = [];
+  contratosAgrupados: GrupoContrato[] = [];
+  idContratoSeleccionado: number | null = null;
+  private contratosPlanos: ContratoSelectorDTO[] = [];
 
   ngOnInit(): void {
     const payload = this.authService.getPayload();
@@ -55,6 +65,94 @@ export class LayoutComponent implements OnInit {
         command: () => this.logout()
       }
     ];
+
+    this.cargarComboContratos();
+  }
+
+  cargarComboContratos(): void {
+    this.contratoApi.listarContratosSelector().subscribe({
+      next: (data) => {
+        this.contratosPlanos = data; // <-- Guardamos la lista plana para búsquedas rápidas
+        this.contratosAgrupados = this.agruparPorFabrica(data);
+
+        // Si hay contratos disponibles y no hay ninguno seleccionado globalmente
+        if (data.length > 0 && !this.contextoGlobal.idContratoActivo()) {
+          this.seleccionarContrato(data[0].id);
+        } else {
+          // Sincronizar el select con el estado actual
+          this.idContratoSeleccionado = this.contextoGlobal.idContratoActivo();
+        }
+      },
+      error: (err) => console.error('Error cargando contratos del selector', err)
+    });
+  }
+
+  private agruparPorFabrica(contratos: ContratoSelectorDTO[]): GrupoContrato[] {
+    const mapa = new Map<string, ContratoSelectorDTO[]>();
+
+    contratos.forEach(contrato => {
+      if (!mapa.has(contrato.fabricaNombre)) {
+        mapa.set(contrato.fabricaNombre, []);
+      }
+      mapa.get(contrato.fabricaNombre)!.push(contrato);
+    });
+
+    return Array.from(mapa.entries()).map(([fabricaNombre, lista]) => ({
+      fabricaNombre,
+      contratos: lista
+    }));
+  }
+
+  onCambioContrato(nuevoId: number): void {
+    const idNumerico = Number(nuevoId);
+    this.seleccionarContrato(idNumerico, true);
+  }
+
+  private seleccionarContrato(id: number, isManual: boolean = false): void {
+    this.idContratoSeleccionado = id;
+
+    const contratoCompleto = this.contratosPlanos.find(c => c.id === id);
+
+    if (contratoCompleto) {
+      this.contextoGlobal.setContratoActivo({
+        id: contratoCompleto.id,
+        codigoContrato: contratoCompleto.codigoContrato,
+        fabricaNombre: contratoCompleto.fabricaNombre
+      });
+
+      // --- LÓGICA DE REDIRECCIÓN INTELIGENTE ---
+
+      // 1. Obtenemos la ruta limpia (sin parámetros tipo ?id=1)
+      const urlActual = this.router.url.split('?')[0];
+
+      // 2. Definimos nuestras pantallas "Padre" (donde es seguro quedarse)
+      const rutasPadreSeguras = [
+        '/requerimientos',
+        '/informes',
+        '/conciliaciones/maestro',
+        '/maestros/sistemas',
+        '/maestros/catalogo-entregables'
+      ];
+
+      // 3. Verificamos si estamos en una subpágina
+      if (!rutasPadreSeguras.includes(urlActual)) {
+
+        // Lo devolvemos al padre correspondiente según la sección donde esté
+        if (urlActual.startsWith('/conciliaciones')) {
+          this.router.navigate(['/conciliaciones/maestro']);
+        } else if (urlActual.startsWith('/maestros')) {
+          this.router.navigate(['/maestros/sistemas']);
+        } else {
+          // Por defecto, si estaba en crear requerimiento, editar, etc.
+          this.router.navigate(['/requerimientos']);
+        }
+
+      }
+
+      // Si el usuario SÍ estaba en una ruta padre (ej. /conciliaciones/maestro),
+      // no hacemos ningún router.navigate(). El effect() que pusimos en esa
+      // pantalla se encargará de refrescar la grilla silenciosamente.
+    }
   }
 
   toggleSidebar(): void {

@@ -80,17 +80,6 @@ export class PenalidadesComponent implements OnInit {
     this.cargarCombos();
   }
 
-  // private cargarPenalidades(): void {
-  //   this.cargando.set(true);
-  //   this.service.getPenalidadesPorCiclo(this.idCiclo).subscribe({
-  //     next: res => { this.penalidades.set(res.data); this.cargando.set(false); },
-  //     error: err => {
-  //       this.cargando.set(false);
-  //       this.msg.add({ severity: 'error', summary: 'Error', detail: err.error?.mensaje || 'No se pudieron cargar las penalidades.', life: 5000 });
-  //     },
-  //   });
-  // }
-
   private cargarPenalidades(): void {
     this.cargando.set(true);
 
@@ -113,7 +102,7 @@ export class PenalidadesComponent implements OnInit {
   }
 
   private cargarCombos(): void {
-    this.service.getSlasCombo(this.appContext.idContratoSeleccionado()).subscribe({
+    this.service.getSlasCombo().subscribe({
       next: res => this.slas.set(res.data),
       error: () => {},
     });

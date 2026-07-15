@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -9,6 +9,7 @@ import { Toast } from 'primeng/toast';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
 
+import { ContextoGlobalService } from '../../../core/services/contexto-global.service';
 import { ConciliacionService } from '../services/conciliacion.service';
 import { CicloContratoDTO } from '../models/conciliacion.models';
 
@@ -32,12 +33,25 @@ export class CiclosListComponent implements OnInit {
   private readonly router  = inject(Router);
   private readonly service = inject(ConciliacionService);
   private readonly msg     = inject(MessageService);
+  private readonly contextoGlobal = inject(ContextoGlobalService);
 
   readonly ciclos   = signal<CicloContratoDTO[]>([]);
   readonly cargando = signal(false);
 
+  constructor() {
+    effect(() => {
+      // Angular "escucha" automáticamente esta variable.
+      // Si cambia de 8 a 2 (o viceversa), el código de abajo se ejecuta solo.
+      const idContrato = this.contextoGlobal.idContratoActivo();
+
+      if (idContrato !== null) {
+        this.cargarCiclos();
+      }
+    }, { allowSignalWrites: true }); // Permitimos que cargarCiclos() modifique la señal 'cargando'
+  }
+
   ngOnInit(): void {
-    this.cargarCiclos();
+    //this.cargarCiclos();
   }
 
   private cargarCiclos(): void {

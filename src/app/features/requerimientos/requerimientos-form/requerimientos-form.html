@@ -3,13 +3,8 @@
 <div class="p-6 space-y-6 max-w-6xl mx-auto">
 
   <div class="mb-2">
-    <p-button
-      label="Volver al listado"
-      icon="pi pi-arrow-left"
-      [text]="true"
-      severity="secondary"
-      styleClass="text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors p-0"
-      (click)="cancelar()" />
+    <p-button label="Volver al listado" icon="pi pi-arrow-left" [text]="true" severity="secondary"
+      styleClass="text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors p-0" (click)="cancelar()" />
   </div>
 
   <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
@@ -20,15 +15,14 @@
         </h2>
 
         @if (modo !== 'NUEVO') {
-          <span class="px-3 py-0.5 rounded-full text-sm font-medium"
-            [class]="estadoActual() === 'REQ_REG' ? 'bg-blue-100 text-blue-700' :
+        <span class="px-3 py-0.5 rounded-full text-sm font-medium" [class]="estadoActual() === 'REQ_REG' ? 'bg-blue-100 text-blue-700' :
                      estadoActual() === 'REQ_CUR' ? 'bg-amber-100 text-amber-800' :
                      estadoActual() === 'REQ_ATE' ? 'bg-green-100 text-green-700' :
                      estadoActual() === 'REQ_ANU' ? 'bg-red-100 text-red-700' :
                      estadoActual() === 'REQ_DES' ? 'bg-white border border-dashed border-slate-400 text-slate-600' :
                      'bg-slate-100 text-slate-700'">
-            {{ form.get('estadoDescripcion')?.value || 'Desconocido' }}
-          </span>
+          {{ form.get('estadoDescripcion')?.value || 'Desconocido' }}
+        </span>
         }
       </div>
 
@@ -39,27 +33,29 @@
 
     <div class="flex flex-wrap items-center gap-3">
       @if (estadoActual() === 'REQ_REG' && modo !== 'NUEVO') {
-        <p-button label="Desestimar" severity="warn" [outlined]="true" size="small" icon="pi pi-ban" (click)="abrirModalMotivo('desestimar')" />
-        <p-button label="Anular" severity="danger" [outlined]="true" size="small" icon="pi pi-times-circle" (click)="abrirModalMotivo('anular')" />
-        <p-button label="Iniciar" severity="success" [outlined]="true" size="small" icon="pi pi-play" (click)="abrirModalFecha('iniciar')" />
+      <p-button label="Desestimar" severity="warn" [outlined]="true" size="small" icon="pi pi-ban"
+        (click)="abrirModalMotivo('desestimar')" />
+      <p-button label="Anular" severity="danger" [outlined]="true" size="small" icon="pi pi-times-circle"
+        (click)="abrirModalMotivo('anular')" />
+      <p-button label="Iniciar" severity="success" [outlined]="true" size="small" icon="pi pi-play"
+        (click)="abrirModalFecha('iniciar')" />
       }
 
       @if (estadoActual() === 'REQ_CUR') {
-        <p-button label="Anular" severity="danger" [outlined]="true" size="small" icon="pi pi-times-circle" (click)="abrirModalMotivo('anular')" />
-        <p-button label="Finalizar" severity="success" [outlined]="true" size="small" icon="pi pi-check-circle" (click)="abrirModalFecha('finalizar')" />
+      <p-button label="Anular" severity="danger" [outlined]="true" size="small" icon="pi pi-times-circle"
+        (click)="abrirModalMotivo('anular')" />
+      <p-button label="Finalizar" severity="success" [outlined]="true" size="small" icon="pi pi-check-circle"
+        (click)="abrirModalFecha('finalizar')" />
       }
 
       @if (modo !== 'VER' && (estadoActual() === 'REQ_REG' || estadoActual() === 'REQ_CUR') && modo !== 'NUEVO') {
-        <div class="hidden md:block w-px h-6 bg-slate-300 mx-1"></div>
+      <div class="hidden md:block w-px h-6 bg-slate-300 mx-1"></div>
       }
 
       @if (modo !== 'VER') {
-        <p-button
-          [label]="modo === 'NUEVO' ? 'Registrar' : 'Guardar Cambios'"
-          icon="pi pi-save"
-          size="small"
-          styleClass="bg-slate-800 border-slate-800 hover:bg-slate-700 hover:border-slate-700 text-white"
-          (click)="guardar()" />
+      <p-button [label]="modo === 'NUEVO' ? 'Registrar' : 'Guardar Cambios'" icon="pi pi-save" size="small"
+        styleClass="bg-slate-800 border-slate-800 hover:bg-slate-700 hover:border-slate-700 text-white"
+        (click)="guardar()" />
       }
     </div>
   </div>
@@ -78,7 +74,10 @@
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium text-slate-600">Fábrica <span
               class="text-slate-400 text-xs">(automático)</span></label>
-          <input pInputText [value]="nombreFabricaVisual()" class="w-full bg-slate-50" readonly tabindex="-1" [disabled]="modo === 'VER'" />
+
+          <!-- 👇 Cambiamos el [disabled] a true fijo y añadimos cursor-not-allowed y opacity -->
+          <input pInputText [value]="nombreFabricaVisual()" class="w-full bg-slate-50 cursor-not-allowed opacity-90"
+            readonly tabindex="-1" [disabled]="true" />
         </div>
 
         <div class="flex flex-col gap-1">
@@ -131,8 +130,7 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium text-slate-600">Fecha Solicitud *</label>
-          <p-datepicker formControlName="fechaSolicitud" dateFormat="dd/mm/yy"
-            [showIcon]="true" iconDisplay="input"
+          <p-datepicker formControlName="fechaSolicitud" dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input"
             styleClass="w-full" inputStyleClass="w-full" />
         </div>
 
@@ -140,8 +138,7 @@
           <label class="text-sm font-medium text-slate-600">
             Fecha Inicio <span class="text-slate-400 text-xs">(automático)</span>
           </label>
-          <p-datepicker formControlName="fechaInicio" dateFormat="dd/mm/yy"
-            [showIcon]="true" iconDisplay="input"
+          <p-datepicker formControlName="fechaInicio" dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input"
             styleClass="w-full opacity-90" inputStyleClass="w-full bg-slate-50 cursor-not-allowed text-slate-500" />
         </div>
 
@@ -149,8 +146,7 @@
           <label class="text-sm font-medium text-slate-600">
             Fecha Fin <span class="text-slate-400 text-xs">(automático)</span>
           </label>
-          <p-datepicker formControlName="fechaFin" dateFormat="dd/mm/yy"
-            [showIcon]="true" iconDisplay="input"
+          <p-datepicker formControlName="fechaFin" dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input"
             styleClass="w-full opacity-90" inputStyleClass="w-full bg-slate-50 cursor-not-allowed text-slate-500" />
         </div>
 
@@ -241,8 +237,8 @@
                   placeholder="Automático" readonly />
               </td>
               <td class="px-4 py-2">
-                <input pInputText type="number" formControlName="porcentaje" class="w-full text-right" placeholder="0" min="0.01"
-                  max="100" />
+                <input pInputText type="number" formControlName="porcentaje" class="w-full text-right" placeholder="0"
+                  min="0.01" max="100" />
               </td>
               @if (modo !== 'VER') {
               <td class="px-4 py-2 text-center">
@@ -300,9 +296,9 @@
               <td class="px-4 py-2">
                 <p-autoComplete formControlName="personalObj" [suggestions]="personalFiltrado()"
                   (completeMethod)="filtrarPersonal($event)" optionLabel="nombresApellidos" dataKey="id"
-                  field="nombresApellidos" [dropdown]="true" placeholder="Buscar colaborador..."
-                  styleClass="w-full" inputStyleClass="w-full text-ellipsis overflow-hidden whitespace-nowrap"
-                  [forceSelection]="true" appendTo="body">
+                  field="nombresApellidos" [dropdown]="true" placeholder="Buscar colaborador..." styleClass="w-full"
+                  inputStyleClass="w-full text-ellipsis overflow-hidden whitespace-nowrap" [forceSelection]="true"
+                  appendTo="body">
                   <ng-template let-per pTemplate="item">
                     <div>
                       <div class="font-medium">{{ per.nombresApellidos }}</div>
@@ -316,14 +312,13 @@
               </td>
               <td class="px-4 py-2">
                 <p-datepicker formControlName="fechaInicioAsignacion" dateFormat="dd/mm/yy" appendTo="body"
-                  [showIcon]="true" iconDisplay="input"
-                  styleClass="w-full" inputStyleClass="w-full text-center" placeholder="Inicio" />
+                  [showIcon]="true" iconDisplay="input" styleClass="w-full" inputStyleClass="w-full text-center"
+                  placeholder="Inicio" />
               </td>
               <td class="px-4 py-2">
                 <p-datepicker formControlName="fechaFinAsignacion" dateFormat="dd/mm/yy" appendTo="body"
-                  [showIcon]="true" iconDisplay="input"
-                  styleClass="w-full" inputStyleClass="w-full text-center" placeholder="Fin"
-                  [minDate]="p.get('fechaInicioAsignacion')?.value" />
+                  [showIcon]="true" iconDisplay="input" styleClass="w-full" inputStyleClass="w-full text-center"
+                  placeholder="Fin" [minDate]="p.get('fechaInicioAsignacion')?.value" />
               </td>
               @if (modo !== 'VER') {
               <td class="px-4 py-2 text-center">
@@ -342,8 +337,8 @@
     </section>
 
     <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
-      <p-button type="button" [label]="modo === 'VER' ? 'Volver al listado' : 'Cancelar'" severity="secondary" [text]="true"
-        [icon]="modo === 'VER' ? 'pi pi-arrow-left' : 'pi pi-times'" (click)="cancelar()" />
+      <p-button type="button" [label]="modo === 'VER' ? 'Volver al listado' : 'Cancelar'" severity="secondary"
+        [text]="true" [icon]="modo === 'VER' ? 'pi pi-arrow-left' : 'pi pi-times'" (click)="cancelar()" />
 
       @if (modo !== 'VER') {
       <p-button type="button" label="Guardar Requerimiento" icon="pi pi-save"
@@ -355,51 +350,27 @@
   </form>
 </div>
 
-<p-dialog
-  [visible]="mostrarModalFecha()"
-  [header]="tituloModalFecha()"
-  [modal]="true"
-  [style]="{ width: '400px' }"
+<p-dialog [visible]="mostrarModalFecha()" [header]="tituloModalFecha()" [modal]="true" [style]="{ width: '400px' }"
   (onHide)="cerrarModalFecha()">
 
   <div class="space-y-4 pt-2">
     <div class="flex flex-col gap-2">
       <label class="text-sm font-medium text-slate-600">Selecciona una fecha *</label>
-      <p-datepicker
-        [(ngModel)]="fechaSeleccionada"
-        dateFormat="dd/mm/yy"
-        [showIcon]="true"
-        iconDisplay="input"
-        styleClass="w-full"
-        inputStyleClass="w-full"
-        placeholder="Selecciona la fecha"
-        appendTo="body" />
+      <p-datepicker [(ngModel)]="fechaSeleccionada" dateFormat="dd/mm/yy" [showIcon]="true" iconDisplay="input"
+        styleClass="w-full" inputStyleClass="w-full" placeholder="Selecciona la fecha" appendTo="body" />
     </div>
   </div>
 
   <ng-template pTemplate="footer">
     <div class="flex justify-end gap-2 mt-4">
-      <p-button
-        type="button"
-        label="Cancelar"
-        severity="secondary"
-        [text]="true"
-        (click)="cerrarModalFecha()" />
-      <p-button
-        type="button"
-        label="Confirmar"
-        (click)="confirmarModalFecha()"
-        [loading]="cargandoTransicion()"
+      <p-button type="button" label="Cancelar" severity="secondary" [text]="true" (click)="cerrarModalFecha()" />
+      <p-button type="button" label="Confirmar" (click)="confirmarModalFecha()" [loading]="cargandoTransicion()"
         styleClass="bg-slate-800 border-slate-800 hover:bg-slate-700 hover:border-slate-700 text-white" />
     </div>
   </ng-template>
 </p-dialog>
 
-<p-dialog
-  [visible]="mostrarModalMotivo()"
-  [header]="tituloModalMotivo()"
-  [modal]="true"
-  [style]="{ width: '450px' }"
+<p-dialog [visible]="mostrarModalMotivo()" [header]="tituloModalMotivo()" [modal]="true" [style]="{ width: '450px' }"
   (onHide)="cerrarModalMotivo()">
 
   <div class="space-y-4 pt-2">
@@ -408,33 +379,20 @@
         Motivo *
         <span class="text-xs text-slate-400 font-normal">(mínimo 15 caracteres)</span>
       </label>
-      <textarea
-        pTextarea
-        [(ngModel)]="motivoIngresado"
-        rows="4"
-        class="w-full"
+      <textarea pTextarea [(ngModel)]="motivoIngresado" rows="4" class="w-full"
         placeholder="Ingresa el motivo detallado..."
         [class.border-red-400]="motivoIngresado.length > 0 && motivoIngresado.length < 15"></textarea>
-      @if (motivoIngresado.length > 0 && motivoIngresado.length < 15) {
-        <small class="text-red-500">Mínimo 15 caracteres. Actual: {{ motivoIngresado.length }}</small>
-      }
+      @if (motivoIngresado.length > 0 && motivoIngresado.length < 15) { <small class="text-red-500">Mínimo 15
+        caracteres. Actual: {{ motivoIngresado.length }}</small>
+        }
     </div>
   </div>
 
   <ng-template pTemplate="footer">
     <div class="flex justify-end gap-2 mt-4">
-      <p-button
-        type="button"
-        label="Cancelar"
-        severity="secondary"
-        [text]="true"
-        (click)="cerrarModalMotivo()" />
-      <p-button
-        type="button"
-        label="Confirmar"
-        (click)="confirmarModalMotivo()"
-        [disabled]="motivoIngresado.length < 15"
-        [loading]="cargandoTransicion()"
+      <p-button type="button" label="Cancelar" severity="secondary" [text]="true" (click)="cerrarModalMotivo()" />
+      <p-button type="button" label="Confirmar" (click)="confirmarModalMotivo()"
+        [disabled]="motivoIngresado.length < 15" [loading]="cargandoTransicion()"
         styleClass="bg-slate-800 border-slate-800 hover:bg-slate-700 hover:border-slate-700 text-white" />
     </div>
   </ng-template>

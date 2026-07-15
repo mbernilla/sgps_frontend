@@ -17,6 +17,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { MessageService } from 'primeng/api';
 
+import { ContextoGlobalService } from '../../../core/services/contexto-global.service';
 import { FormSelectComponent } from '../../../shared/components/form-select/form-select';
 import { MaestraService } from '../../../core/services/maestra.service';
 import { RequerimientosService } from '../services/requerimientos.service';
@@ -78,6 +79,7 @@ export class RequerimientosFormComponent implements OnInit {
   private readonly maestra = inject(MaestraService);
   private readonly msg = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef); // <-- Inyectado para prevenir Memory Leaks
+  private readonly contextoGlobal = inject(ContextoGlobalService);
 
   readonly equiposPorGerencia = signal<Record<number, EquipoDTO[]>>({});
 
@@ -95,8 +97,9 @@ export class RequerimientosFormComponent implements OnInit {
 
   // ── Formulario principal ──────────────────────────────────────────────
   readonly form = this.fb.group({
-    idContrato: this.fb.control<number | null>(null, Validators.required),
-    idFabrica: this.fb.control<number | null>(null),
+    idContrato: this.fb.control<number | null>({ value: null, disabled: true }, Validators.required),
+    idFabrica: this.fb.control<number | null>({ value: null, disabled: true }),
+
     idGerencia: this.fb.control<number | null>(null, Validators.required),
     idEquipo: this.fb.control<number | null>(null, Validators.required),
     idSistema: this.fb.control<number | null>(null, Validators.required),
@@ -120,10 +123,10 @@ export class RequerimientosFormComponent implements OnInit {
   });
 
   // ── Señales: valores de controles clave ───────────────────────────────
-  private readonly idContratoValue = toSignal(
-    this.form.controls.idContrato.valueChanges,
-    { initialValue: null as number | null }
-  );
+  // private readonly idContratoValue = toSignal(
+  //   this.form.controls.idContrato.valueChanges,
+  //   { initialValue: null as number | null }
+  // );
 
   // ── Señales: maestras estáticas ───────────────────────────────────────
   readonly gerencias = toSignal(this.maestra.getGerencias(), { initialValue: [] });
@@ -177,29 +180,47 @@ export class RequerimientosFormComponent implements OnInit {
   );
 
   // ── Effect: auto-parchear idFabrica desde contrato seleccionado ───────
-  private readonly _patchFabrica = effect(() => {
-    const idContrato = this.idContratoValue();
-    const lista = this.contratos();
-    const found = lista.find(c => c.id === idContrato);
+  // private readonly _patchFabrica = effect(() => {
+  //   const idContrato = this.idContratoValue();
+  //   const lista = this.contratos();
+  //   const found = lista.find(c => c.id === idContrato);
 
-    this.form.controls.idFabrica.setValue(
-      found?.idFabrica ?? null,
-      { emitEvent: false }
-    );
+  //   this.form.controls.idFabrica.setValue(
+  //     found?.idFabrica ?? null,
+  //     { emitEvent: false }
+  //   );
 
-    this.nombreFabricaVisual.set(found?.nombreFabrica ?? '—');
-  });
+  //   this.nombreFabricaVisual.set(found?.nombreFabrica ?? '—');
+  // });
 
   // ── Effect: Auto-seleccionar contrato si solo hay uno ─────────────────
-  private readonly _autoSelectContrato = effect(() => {
-    const lista = this.contratos();
-    if (lista.length === 1) {
-      const unicoContrato = lista[0];
-      if (this.form.controls.idContrato.value !== unicoContrato.id) {
-        this.form.controls.idContrato.setValue(unicoContrato.id);
+  // private readonly _autoSelectContrato = effect(() => {
+  //   const lista = this.contratos();
+  //   if (lista.length === 1) {
+  //     const unicoContrato = lista[0];
+  //     if (this.form.controls.idContrato.value !== unicoContrato.id) {
+  //       this.form.controls.idContrato.setValue(unicoContrato.id);
+  //     }
+  //   }
+  // });
+
+  // ── Effect: Sincronizar automáticamente con el Contexto Global ───────
+  private readonly _syncContexto = effect(() => {
+    const contratoActivo = this.contextoGlobal.contratoActual();
+    const listaContratos = this.contratos(); // Esperamos a que la maestra responda
+
+    if (contratoActivo) {
+      // 1. Inyectamos los datos visibles y bloqueados
+      this.form.controls.idContrato.setValue(contratoActivo.id, { emitEvent: false });
+      this.nombreFabricaVisual.set(contratoActivo.fabricaNombre);
+
+      // 2. Si la maestra ya cargó, extraemos el idFabrica técnico para enviarlo al Backend
+      if (listaContratos.length > 0) {
+        const found = listaContratos.find(c => c.id === contratoActivo.id);
+        this.form.controls.idFabrica.setValue(found?.idFabrica ?? null, { emitEvent: false });
       }
     }
-  });
+  }, { allowSignalWrites: true });
 
   constructor() {
     // ── Auto-rellenar la primera fila de costos al elegir Equipo Principal ──

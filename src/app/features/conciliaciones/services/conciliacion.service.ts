@@ -78,9 +78,9 @@ export class ConciliacionService {
     );
   }
 
-  getSlasCombo(idContrato: number): Observable<ApiResponse<SlaComboDTO[]>> {
+  getSlasCombo(): Observable<ApiResponse<SlaComboDTO[]>> {
     return this.http.get<ApiResponse<SlaComboDTO[]>>(
-      `${this.base}/contratos/${idContrato}/slas/combo`
+      `${this.base}/contratos/slas/combo`
     );
   }
 

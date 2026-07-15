@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, viewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, viewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -14,6 +14,7 @@ import { MenuItem } from 'primeng/api';
 import { Drawer } from 'primeng/drawer';
 import { Menu } from 'primeng/menu';
 
+import { ContextoGlobalService } from '../../../core/services/contexto-global.service';
 import { RequerimientosService } from '../services/requerimientos.service';
 import { RequerimientoGridDTO, RequerimientoFiltroDTO, OrdenDTO } from '../models/requerimientos.models';
 import { SeguimientosPanel } from '../components/seguimientos-panel/seguimientos-panel';
@@ -39,12 +40,10 @@ import { SeguimientosPanel } from '../components/seguimientos-panel/seguimientos
 export class RequerimientosListComponent implements OnInit, OnDestroy {
   private readonly reqService = inject(RequerimientosService);
   private readonly router = inject(Router);
-
   private readonly service = inject(RequerimientosService);
-
   private readonly actionService = inject(ActionOrchestratorService);
-
   private readonly route = inject(ActivatedRoute);
+  private readonly contextoGlobal = inject(ContextoGlobalService);
 
   // ── Estado reactivo ────────────────────────────────────────────────────
   requerimientos = signal<RequerimientoGridDTO[]>([]);
@@ -81,17 +80,48 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
   private readonly searchSubject = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
 
+  private primeraCarga = true;
+
   constructor() {
+    // A) Lógica original del router
     const nav = this.router.getCurrentNavigation();
     const state = nav?.extras?.state;
-
     if (state?.['nuevoIdDestacado']) {
       const idResaltado = Number(state['nuevoIdDestacado']);
       this.idResaltado.set(idResaltado);
     }
+
+    // B) MOVEMOS la recuperación del filtro AQUÍ (para que esté listo antes del efecto)
+    const filtroGuardado = this.service.obtenerFiltroGuardado();
+    if (filtroGuardado) {
+      this.filtroActual = { ...filtroGuardado };
+      this.primeraFila = (this.filtroActual.page - 1) * this.filtroActual.size;
+      this.service.limpiarFiltroGuardado();
+    }
+
+    // C) El Efecto Reactivo Inteligente
+    effect(() => {
+      const idContrato = this.contextoGlobal.idContratoActivo();
+
+      if (idContrato !== null) {
+        if (this.primeraCarga) {
+          // Es la carga inicial: Respetamos el filtro guardado (si había uno)
+          this.primeraCarga = false;
+          this.cargarData();
+        } else {
+          // El usuario cambió el combo de contrato estando ya en esta pantalla
+          // Aquí SÍ reseteamos la paginación porque es un contrato totalmente nuevo
+          this.filtroActual.page = 1;
+          this.primeraFila = 0;
+          this.filtroActual.textoBusqueda = ''; // Opcional, pero recomendado
+          this.cargarData();
+        }
+      }
+    }, { allowSignalWrites: true });
   }
 
   ngOnInit(): void {
+    // 1. Buscador (Se queda igual)
     this.searchSubject.pipe(
       debounceTime(400),
       distinctUntilChanged(),
@@ -103,79 +133,12 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
       this.cargarData();
     });
 
-    // Restaurar el filtro guardado si existe
-    const filtroGuardado = this.service.obtenerFiltroGuardado();
-    if (filtroGuardado) {
-      this.filtroActual = { ...filtroGuardado };
-      // Comunicar a la tabla en qué fila debe empezar para que dispare
-      // onLazyLoad con el page/size correcto
-      this.primeraFila = (this.filtroActual.page - 1) * this.filtroActual.size;
-      this.service.limpiarFiltroGuardado();
-    }
-
-    // Limpiar estado de navegación del historial
+    // 2. Limpieza de history (Se queda igual)
     if (history.state?.nuevoIdDestacado) {
       window.history.replaceState({}, '');
     }
 
-    // // 3. ¡LA MAGIA DEL DEEP LINKING!
-    // this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
-    //   const idReq = params['abrirReq'];
-    //   const idSeg = params['resaltarSeg'];
-
-    //   if (idReq && idSeg) {
-    //     // Guardamos el ID del seguimiento para pasárselo al panel
-    //     this.idSeguimientoDestacado.set(Number(idSeg));
-
-    //     // Simulamos la apertura del panel lateral enviando un objeto parcial
-    //     // Si tu panel necesita el objeto completo, Angular lo manejará bien porque es un Partial implícito
-    //     this.abrirSeguimientos({ id: Number(idReq) } as RequerimientoGridDTO);
-
-    //     // Opcional: Limpiamos la URL para que quede limpia en el navegador sin recargar la página
-    //     this.router.navigate([], {
-    //       relativeTo: this.route,
-    //       queryParams: { abrirReq: null, resaltarSeg: null },
-    //       queryParamsHandling: 'merge',
-    //       replaceUrl: true
-    //     });
-    //   }
-    // });
-
-    // 3. ¡LA MAGIA DEL DEEP LINKING CON HIDRATACIÓN!
-    // this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
-    //   const idReq = params['abrirReq'];
-    //   const idSeg = params['resaltarSeg'];
-
-    //   if (idReq && idSeg) {
-    //     this.idSeguimientoDestacado.set(Number(idSeg));
-
-    //     // Llamamos al endpoint que me acabas de mostrar
-    //     this.req2Service.obtenerPorId(Number(idReq)).subscribe({
-    //       next: (reqCompleto) => {
-    //         // Extraemos el objeto real desde res.data
-    //         //const reqCompleto = res.data;
-
-    //         // Abrimos el panel lateral pasándole toda la data rica (códigos, nombres, etc.)
-    //         this.abrirSeguimientos(reqCompleto);
-    //       },
-    //       error: (err) => {
-    //         console.error('No se pudo hidratar el requerimiento', err);
-    //         // Fallback: Si el backend falla, igual abrimos el panel con el ID pelado
-    //         this.abrirSeguimientos({ id: Number(idReq) } as RequerimientoGridDTO);
-    //       }
-    //     });
-
-    //     // Limpiamos la URL para no dejar rastro
-    //     this.router.navigate([], {
-    //       relativeTo: this.route,
-    //       queryParams: { abrirReq: null, resaltarSeg: null },
-    //       queryParamsHandling: 'merge',
-    //       replaceUrl: true
-    //     });
-    //   }
-    // });
-
-    // 3. ¡LA MAGIA DEL DEEP LINKING (MODO DEBUG)!
+    // 3. Deep Linking (Se queda exactamente igual)
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       const idReq = params['abrirReq'];
       const idSeg = params['resaltarSeg'];
@@ -186,27 +149,12 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
         console.log('2. [DeepLink] Iniciando hidratación para Req:', idReq);
         this.idSeguimientoDestacado.set(Number(idSeg));
 
-        // Llamamos al endpoint
+        // Llamamos al endpoint (El Interceptor ya le inyecta el Contrato ID automáticamente)
         this.reqService.obtenerPorId(Number(idReq)).subscribe({
           next: (reqCompleto) => {
             console.log('3. [DeepLink] Data hidratada del backend:', reqCompleto);
-
-            // Abrimos el panel
             this.abrirSeguimientos(reqCompleto);
             console.log('4. [DeepLink] Orden de abrir panel ejecutada.');
-
-            // 👇 ARQUITECTURA: Comentamos temporalmente la limpieza de URL
-            // para evitar que el Router cancele el dibujado del HTML.
-            /*
-            setTimeout(() => {
-              this.router.navigate([], {
-                relativeTo: this.route,
-                queryParams: { abrirReq: null, resaltarSeg: null },
-                queryParamsHandling: 'merge',
-                replaceUrl: true
-              });
-            }, 500);
-            */
           },
           error: (err) => {
             console.error('3b. [DeepLink] Error en hidratación', err);
@@ -215,8 +163,6 @@ export class RequerimientosListComponent implements OnInit, OnDestroy {
         });
       }
     });
-
-    // NO llamar cargarData() aquí — la tabla lazy lo hace a través de onLazyLoad
   }
 
   ngOnDestroy(): void {
