@@ -72,6 +72,10 @@ export const routes: Routes = [
         path: 'maestros/catalogo-entregables',
         loadComponent: () => import('./features/maestros/catalogo-entregables/catalogo-entregables.component').then(m => m.CatalogoEntregablesComponent),
       },
+      {
+        path: 'maestros/contratos-slas',
+        loadComponent: () => import('./features/maestros/contratos-slas/contratos-slas.component').then(m => m.ContratosSlasComponent),
+      },
     ]
   },
 

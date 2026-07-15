@@ -131,7 +131,8 @@ export class LayoutComponent implements OnInit {
         '/informes',
         '/conciliaciones/maestro',
         '/maestros/sistemas',
-        '/maestros/catalogo-entregables'
+        '/maestros/catalogo-entregables',
+        '/maestros/contratos-slas'
       ];
 
       // 3. Verificamos si estamos en una subpágina
