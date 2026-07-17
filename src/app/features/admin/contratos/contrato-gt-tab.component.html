@@ -1,0 +1,185 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- HEADER -->
+<div class="mb-4 flex items-center justify-between">
+  <p>Administra los grupos tecnológicos asignados a este contrato</p>
+  <p-button
+    label="Agregar Grupo"
+    icon="pi pi-plus"
+    size="small"
+    (click)="abrirNuevo()"
+    [disabled]="cargando()" />
+</div>
+
+<!-- TABLA DE GRUPOS TECNOLÓGICOS -->
+<p-table
+  [value]="gruposTec()"
+  [loading]="cargando()"
+  [paginator]="true"
+  [rows]="10"
+  [globalFilterFields]="['descripcionGrupo', 'codGrupoTecnologico']"
+  responsiveLayout="scroll"
+  styleClass="p-datatable-sm"
+  [tableStyle]="{ 'min-width': '50rem' }">
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="descripcionGrupo" style="width: 20%">
+        Grupo <p-sortIcon field="descripcionGrupo"></p-sortIcon>
+      </th>
+      <th pSortableColumn="horasContratadas" style="width: 15%">
+        Horas Contratadas <p-sortIcon field="horasContratadas"></p-sortIcon>
+      </th>
+      <th pSortableColumn="horasLineaBase" style="width: 15%">
+        Línea Base <p-sortIcon field="horasLineaBase"></p-sortIcon>
+      </th>
+      <th pSortableColumn="horasSaldoTotal" style="width: 15%">
+        Saldo Total <p-sortIcon field="horasSaldoTotal"></p-sortIcon>
+      </th>
+      <th pSortableColumn="precioUnitario" style="width: 15%">
+        Precio Unitario <p-sortIcon field="precioUnitario"></p-sortIcon>
+      </th>
+      <th style="width: 10%" class="text-center">Acciones</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-gt>
+    <tr class="hover:bg-slate-50 transition-colors">
+      <td class="font-medium text-slate-900">{{ gt.descripcionGrupo }}</td>
+      <td class="text-slate-600">{{ gt.horasContratadas | number: '1.2-2': 'en-US' }}</td>
+      <td class="text-slate-600">{{ gt.horasLineaBase | number: '1.2-2': 'en-US' }}</td>
+      <td class="text-slate-600">{{ gt.horasSaldoTotal | number: '1.2-2': 'en-US' }}</td>
+      <td class="text-slate-600">{{ gt.precioUnitario | number: '1.2-2': 'en-US' }}</td>
+      <td>
+        <div class="flex items-center justify-center gap-1">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            styleClass="p-0 w-7 h-7"
+            title="Editar"
+            (click)="editar(gt, $event)"
+            [disabled]="guardando()" />
+          <p-button
+            icon="pi pi-trash"
+            [text]="true"
+            severity="danger"
+            size="small"
+            styleClass="p-0 w-7 h-7"
+            title="Eliminar"
+            (click)="eliminar(gt, $event)"
+            [disabled]="guardando()" />
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="6" class="text-center py-8">
+        <p class="text-sm text-slate-500">No hay grupos tecnológicos asignados.</p>
+      </td>
+    </tr>
+  </ng-template>
+
+</p-table>
+
+<!-- MODAL CREAR/EDITAR -->
+<p-dialog
+  [header]="titulo()"
+  [visible]="modal()"
+  (visibleChange)="modal.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [closable]="true"
+  [style]="{ width: '550px' }">
+
+  <form [formGroup]="form" class="flex flex-col gap-4 pt-2">
+
+    <!-- Grupo Tecnológico (Select) -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Grupo Tecnológico <span class="text-red-500">*</span></label>
+      <p-select
+        formControlName="codGrupoTecnologico"
+        [options]="gruposTecOpts()"
+        optionLabel="nombre"
+        optionValue="id"
+        placeholder="Selecciona un grupo..."
+        styleClass="w-full"
+        appendTo="body"
+        [showClear]="true" />
+      @if (form.controls.codGrupoTecnologico.invalid && form.controls.codGrupoTecnologico.touched) {
+        <small class="text-red-500 text-xs">El grupo es requerido</small>
+      }
+    </div>
+
+    <!-- Horas Contratadas -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Horas Contratadas <span class="text-red-500">*</span></label>
+      <p-inputNumber
+        formControlName="horasContratadas"
+        mode="decimal"
+        [minFractionDigits]="2"
+        [maxFractionDigits]="2"
+        placeholder="0.00"
+        locale="en-US"
+        styleClass="w-full" />
+      @if (form.controls.horasContratadas.invalid && form.controls.horasContratadas.touched) {
+        <small class="text-red-500 text-xs">Las horas son requeridas (mínimo 0)</small>
+      }
+    </div>
+
+    <!-- Horas Línea Base -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Horas Línea Base <span class="text-red-500">*</span></label>
+      <p-inputNumber
+        formControlName="horasLineaBase"
+        mode="decimal"
+        [minFractionDigits]="2"
+        [maxFractionDigits]="2"
+        placeholder="0.00"
+        locale="en-US"
+        styleClass="w-full" />
+      @if (form.controls.horasLineaBase.invalid && form.controls.horasLineaBase.touched) {
+        <small class="text-red-500 text-xs">Las horas son requeridas (mínimo 0)</small>
+      }
+    </div>
+
+    <!-- Precio Unitario -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Precio Unitario <span class="text-red-500">*</span></label>
+      <p-inputNumber
+        formControlName="precioUnitario"
+        mode="decimal"
+        [minFractionDigits]="2"
+        [maxFractionDigits]="2"
+        placeholder="0.00"
+        locale="en-US"
+        styleClass="w-full" />
+      @if (form.controls.precioUnitario.invalid && form.controls.precioUnitario.touched) {
+        <small class="text-red-500 text-xs">El precio es requerido (mínimo 0)</small>
+      }
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2 pt-1">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        icon="pi pi-times"
+        [disabled]="guardando()"
+        (click)="modal.set(false)" />
+      <p-button
+        [label]="labelBtn()"
+        icon="pi pi-save"
+        [loading]="guardando()"
+        (click)="guardar()" />
+    </div>
+  </ng-template>
+
+</p-dialog>

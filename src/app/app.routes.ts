@@ -76,6 +76,20 @@ export const routes: Routes = [
         path: 'maestros/contratos-slas',
         loadComponent: () => import('./features/maestros/contratos-slas/contratos-slas.component').then(m => m.ContratosSlasComponent),
       },
+
+      // Administración
+      {
+        path: 'admin/contratos',
+        loadComponent: () => import('./features/admin/contratos/contratos-list.component').then(m => m.ContratosListComponent),
+      },
+      {
+        path: 'admin/contratos/nuevo',
+        loadComponent: () => import('./features/admin/contratos/contrato-form.component').then(m => m.ContratoFormComponent),
+      },
+      {
+        path: 'admin/contratos/editar/:id',
+        loadComponent: () => import('./features/admin/contratos/contrato-form.component').then(m => m.ContratoFormComponent),
+      },
     ]
   },
 

@@ -1,0 +1,176 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- HEADER -->
+<div class="mb-4 flex items-center justify-between">
+  <p>Administra los modificadores de tarifa aplicables a este contrato</p>
+  <p-button
+    label="Agregar Modificador"
+    icon="pi pi-plus"
+    size="small"
+    (click)="abrirNuevo()"
+    [disabled]="cargando()" />
+</div>
+
+<!-- TABLA DE MODIFICADORES -->
+<p-table
+  [value]="modificadores()"
+  [loading]="cargando()"
+  [paginator]="true"
+  [rows]="10"
+  [globalFilterFields]="['descripcionModificador', 'descripcion']"
+  responsiveLayout="scroll"
+  styleClass="p-datatable-sm"
+  [tableStyle]="{ 'min-width': '50rem' }">
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="descripcionModificador" style="width: 25%">
+        Tipo de Modificador <p-sortIcon field="descripcionModificador"></p-sortIcon>
+      </th>
+      <th pSortableColumn="porcentaje" style="width: 15%">
+        Porcentaje (%) <p-sortIcon field="porcentaje"></p-sortIcon>
+      </th>
+      <th pSortableColumn="descripcion" style="width: 45%">
+        Descripción <p-sortIcon field="descripcion"></p-sortIcon>
+      </th>
+      <th style="width: 15%" class="text-center">Acciones</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-mod>
+    <tr class="hover:bg-slate-50 transition-colors">
+      <td class="font-medium text-slate-900">{{ mod.descripcionModificador }}</td>
+      <td [ngClass]="getClaseSigno(mod.porcentaje)">
+        <span class="font-semibold">
+          {{ mod.porcentaje > 0 ? '+' : '' }}{{ mod.porcentaje | number: '1.2-2': 'en-US' }}%
+        </span>
+      </td>
+      <td class="text-slate-600 text-sm">{{ mod.descripcion }}</td>
+      <td>
+        <div class="flex items-center justify-center gap-1">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            styleClass="p-0 w-7 h-7"
+            title="Editar"
+            (click)="editar(mod, $event)"
+            [disabled]="guardando()" />
+          <p-button
+            icon="pi pi-trash"
+            [text]="true"
+            severity="danger"
+            size="small"
+            styleClass="p-0 w-7 h-7"
+            title="Eliminar"
+            (click)="eliminar(mod, $event)"
+            [disabled]="guardando()" />
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="4" class="text-center py-8">
+        <p class="text-sm text-slate-500">No hay modificadores asignados.</p>
+      </td>
+    </tr>
+  </ng-template>
+
+</p-table>
+
+<!-- MODAL CREAR/EDITAR -->
+<p-dialog
+  [header]="titulo()"
+  [visible]="modal()"
+  (visibleChange)="modal.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [closable]="true"
+  [style]="{ width: '550px' }">
+
+  <form [formGroup]="form" class="flex flex-col gap-4 pt-2">
+
+    <!-- Tipo de Modificador (Select) -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Tipo de Modificador <span class="text-red-500">*</span></label>
+      <p-select
+        formControlName="codTipoModificador"
+        [options]="tiposModificadorOpts()"
+        optionLabel="nombre"
+        optionValue="id"
+        placeholder="Selecciona un tipo..."
+        styleClass="w-full"
+        appendTo="body"
+        [showClear]="true" />
+      @if (form.controls.codTipoModificador.invalid && form.controls.codTipoModificador.touched) {
+        <small class="text-red-500 text-xs">El tipo es requerido</small>
+      }
+    </div>
+
+    <!-- Porcentaje -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Porcentaje (%) <span class="text-red-500">*</span></label>
+      <p-inputNumber
+        formControlName="porcentaje"
+        mode="decimal"
+        [min]="-100"
+        [max]="100"
+        [minFractionDigits]="2"
+        [maxFractionDigits]="2"
+        placeholder="0.00"
+        locale="en-US"
+        styleClass="w-full"
+        suffix="%" />
+      @if (form.controls.porcentaje.invalid && form.controls.porcentaje.touched) {
+        <small class="text-red-500 text-xs">
+          @if (form.controls.porcentaje.errors?.['required']) {
+            El porcentaje es requerido
+          }
+          @if (form.controls.porcentaje.errors?.['min']) {
+            El mínimo es -100%
+          }
+          @if (form.controls.porcentaje.errors?.['max']) {
+            El máximo es 100%
+          }
+        </small>
+      }
+    </div>
+
+    <!-- Descripción -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Descripción <span class="text-red-500">*</span></label>
+      <textarea
+        pTextarea
+        formControlName="descripcion"
+        placeholder="Describe el modificador..."
+        rows="3"
+        styleClass="w-full"></textarea>
+      @if (form.controls.descripcion.invalid && form.controls.descripcion.touched) {
+        <small class="text-red-500 text-xs">La descripción es requerida</small>
+      }
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2 pt-1">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        icon="pi pi-times"
+        [disabled]="guardando()"
+        (click)="modal.set(false)" />
+      <p-button
+        [label]="labelBtn()"
+        icon="pi pi-save"
+        [loading]="guardando()"
+        (click)="guardar()" />
+    </div>
+  </ng-template>
+
+</p-dialog>

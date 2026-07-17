@@ -1,0 +1,99 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- HEADER -->
+<div class="mb-5">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <i class="pi pi-file-contract text-blue-500 text-lg"></i>
+      <div>
+        <h1 class="text-xl font-semibold text-slate-800">Administración de Contratos</h1>
+        <p class="text-sm text-slate-400 mt-0.5">Gestiona todos los contratos de tu organización</p>
+      </div>
+    </div>
+    <p-button
+      label="Nuevo Contrato"
+      icon="pi pi-plus"
+      size="small"
+      (click)="nuevoContrato()"
+      [disabled]="cargando()" />
+  </div>
+</div>
+
+<!-- TABLA -->
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+  <p-table
+    [value]="contratos()"
+    [loading]="cargando()"
+    [paginator]="true"
+    [rows]="10"
+    [globalFilterFields]="['codigoContrato', 'descripcion', 'razonSocialFabrica']"
+    responsiveLayout="scroll"
+    styleClass="p-datatable-sm"
+    [tableStyle]="{ 'min-width': '50rem' }">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="codigoContrato" style="width: 15%">
+          Código <p-sortIcon field="codigoContrato"></p-sortIcon>
+        </th>
+        <th pSortableColumn="razonSocialFabrica" style="width: 20%">
+          Fábrica <p-sortIcon field="razonSocialFabrica"></p-sortIcon>
+        </th>
+        <th pSortableColumn="descripcion" style="width: 25%">
+          Descripción <p-sortIcon field="descripcion"></p-sortIcon>
+        </th>
+        <th pSortableColumn="fechaInicio" style="width: 15%">
+          Inicio <p-sortIcon field="fechaInicio"></p-sortIcon>
+        </th>
+        <th pSortableColumn="fechaTermino" style="width: 12%">
+          Término <p-sortIcon field="fechaTermino"></p-sortIcon>
+        </th>
+        <th style="width: 10%" class="text-center">Meses</th>
+        <th style="width: 10%" class="text-center">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-contrato>
+      <tr class="hover:bg-slate-50 transition-colors">
+        <td class="font-mono text-sm font-semibold text-slate-900">{{ contrato.codigoContrato }}</td>
+        <td class="font-medium text-slate-900">{{ contrato.razonSocialFabrica }}</td>
+        <td class="text-slate-600 text-sm">{{ contrato.descripcion }}</td>
+        <td class="text-slate-600 text-sm">{{ contrato.fechaInicio }}</td>
+        <td class="text-slate-600 text-sm">{{ contrato.fechaTermino }}</td>
+        <td class="text-center text-slate-600 text-sm">{{ contrato.numeroMeses }}</td>
+        <td>
+          <div class="flex items-center justify-center gap-1">
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              styleClass="p-0 w-7 h-7"
+              title="Editar"
+              (click)="editarContrato(contrato)"
+              [disabled]="cargando()" />
+            <p-button
+              icon="pi pi-trash"
+              [text]="true"
+              severity="danger"
+              size="small"
+              styleClass="p-0 w-7 h-7"
+              title="Eliminar"
+              (click)="eliminarContrato(contrato, $event)"
+              [disabled]="cargando()" />
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="text-center py-8">
+          <p class="text-sm text-slate-500">No hay contratos registrados.</p>
+        </td>
+      </tr>
+    </ng-template>
+
+  </p-table>
+</div>

@@ -1,0 +1,103 @@
+:host {
+  display: contents;
+}
+
+::ng-deep {
+  .p-tabs {
+    &.p-tabs-custom {
+      .p-tabs-nav {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+
+        .p-tabs-nav-link {
+          color: #475569;
+          border: none;
+
+          &.p-active {
+            color: #3b82f6;
+            background-color: white;
+            border-bottom: 2px solid #3b82f6;
+          }
+
+          &:hover {
+            color: #1e293b;
+          }
+
+          &.p-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+
+      .p-tabs-panels {
+        background-color: white;
+        border: none;
+      }
+    }
+  }
+
+  .p-inputtext {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease-in-out;
+
+    &:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    &.ng-invalid.ng-touched {
+      border-color: #ef4444;
+    }
+  }
+
+  .p-inputtextarea {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease-in-out;
+
+    &:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    &.ng-invalid.ng-touched {
+      border-color: #ef4444;
+    }
+  }
+
+  .p-select {
+    .p-select-trigger {
+      border-radius: 0.375rem;
+      border: 1px solid #e2e8f0;
+
+      &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+    }
+  }
+
+  .p-calendar {
+    .p-inputtext {
+      border-radius: 0.375rem;
+    }
+  }
+
+  .p-inputnumber {
+    .p-inputtext {
+      border-radius: 0.375rem;
+      border: 1px solid #e2e8f0;
+
+      &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+    }
+  }
+}
