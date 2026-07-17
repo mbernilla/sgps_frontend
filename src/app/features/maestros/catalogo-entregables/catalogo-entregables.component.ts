@@ -19,6 +19,7 @@ import { PrimeTemplate, ConfirmationService, MessageService } from 'primeng/api'
 import { ContextoGlobalService } from '../../../core/services/contexto-global.service';
 import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
 import { MaestraService } from '../../../core/services/maestra.service';
+import { ConceptoDTO } from '../../../core/models/maestra.model';
 import { CatalogoEntregableService } from './catalogo-entregable.service';
 import { ContratoApiService } from '../contratos/service/ContratoApiService';
 import { ContratoSelectorDTO } from '../models/contrato-selector.model';
@@ -26,12 +27,6 @@ import {
   CatalogoEntregableResponse,
   CatalogoEntregableRequest,
 } from './catalogo-entregable.model';
-
-interface FaseOpt {
-  id: string | number;
-  nombre: string;
-  [key: string]: any;
-}
 
 @Component({
   selector: 'app-catalogo-entregables',
@@ -69,7 +64,7 @@ export class CatalogoEntregablesComponent implements OnInit {
   // ── Estado reactivo ───────────────────────────────────────────────────────
 
   readonly entregables = signal<CatalogoEntregableResponse[]>([]);
-  readonly fasesOpts = signal<FaseOpt[]>([]);
+  readonly fasesOpts = signal<ConceptoDTO[]>([]);
   readonly contratosOrigen = signal<ContratoSelectorDTO[]>([]);
 
   readonly cargandoEntregables = signal(false);
@@ -122,7 +117,6 @@ export class CatalogoEntregablesComponent implements OnInit {
 
   private cargarFases(): void {
     this.maestra.getConceptos('FAS_PRY')
-      .pipe(map(lista => lista as unknown as FaseOpt[]))
       .subscribe({
         next: opts => this.fasesOpts.set(opts),
         error: () => this.toast('warn', 'Advertencia', 'No se cargaron las fases.'),

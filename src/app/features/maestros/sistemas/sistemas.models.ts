@@ -28,12 +28,3 @@ export interface SistemaCreateDTO {
 export interface ModuloCreateDTO {
   nombre: string;
 }
-
-/** Combo para el p-select de Grupo Tecnológico.
- *  El backend devuelve {id: 'GT1', nombre: 'GT1 (SAP, ERP)'} via LookupResponseDTO.
- *  El campo `id` es string porque viene de maestro_conceptos.id_codigo (VARCHAR).
- */
-export interface GrupoTecOpt {
-  id: string;
-  nombre: string;
-}

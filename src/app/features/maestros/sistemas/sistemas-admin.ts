@@ -16,8 +16,9 @@ import { PrimeTemplate, ConfirmationService, MessageService } from 'primeng/api'
 
 import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
 import { MaestraService } from '../../../core/services/maestra.service';
+import { ConceptoDTO } from '../../../core/models/maestra.model';
 import { SistemasService } from './sistemas.service';
-import { SistemaAdminDTO, ModuloAdminDTO, SistemaCreateDTO, ModuloCreateDTO, GrupoTecOpt } from './sistemas.models';
+import { SistemaAdminDTO, ModuloAdminDTO, SistemaCreateDTO, ModuloCreateDTO } from './sistemas.models';
 
 @Component({
   selector: 'app-sistemas-admin',
@@ -52,7 +53,7 @@ export class SistemasAdminComponent implements OnInit {
   readonly sistemas            = signal<SistemaAdminDTO[]>([]);
   readonly modulos             = signal<ModuloAdminDTO[]>([]);
   readonly sistemaSeleccionado = signal<SistemaAdminDTO | null>(null);
-  readonly grupoTecOpts        = signal<GrupoTecOpt[]>([]);
+  readonly grupoTecOpts        = signal<ConceptoDTO[]>([]);
 
   readonly cargandoSistemas = signal(false);
   readonly cargandoModulos  = signal(false);
@@ -294,14 +295,8 @@ export class SistemasAdminComponent implements OnInit {
 
   // ── Privados ──────────────────────────────────────────────────────────────
 
-  /**
-   * Carga los grupos tecnológicos desde el maestro de conceptos (GRP_TEC).
-   * El backend devuelve {id: 'GT1', nombre: 'GT1 (SAP, ERP)'} vía LookupResponseDTO.
-   * Se castea al tipo local GrupoTecOpt para evitar conflictos con ConceptoDTO del core.
-   */
   private cargarGruposTec(): void {
     this.maestra.getConceptos('GRP_TEC')
-      .pipe(map(lista => lista as unknown as GrupoTecOpt[]))
       .subscribe({
         next:  opts => this.grupoTecOpts.set(opts),
         error: ()   => this.toast('warn', 'Advertencia', 'No se cargaron los grupos tecnológicos.'),

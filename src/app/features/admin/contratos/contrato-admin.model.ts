@@ -48,11 +48,6 @@ export interface ContratoGtRequest {
   precioUnitario: number;
 }
 
-export interface GrupoTecOption {
-  id: string;
-  nombre: string;
-}
-
 export interface ContratoModificadorResponse {
   id: number;
   idContrato: number;
@@ -68,11 +63,4 @@ export interface ContratoModificadorRequest {
   porcentaje: number;
   descripcion: string;
 }
-
-export interface ConceptoDTO {
-  id: number;
-  cod: string;
-  nombre: string;
-}
-
 

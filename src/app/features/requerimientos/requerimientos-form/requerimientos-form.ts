@@ -23,6 +23,7 @@ import { MaestraService } from '../../../core/services/maestra.service';
 import { RequerimientosService } from '../services/requerimientos.service';
 import { PersonalDTO } from '../models/requerimientos.models';
 import {
+  ConceptoDTO,
   EquipoDTO,
   ModuloDTO,
   TecnologiaDTO as MaestraTecnologiaDTO,
@@ -134,10 +135,10 @@ export class RequerimientosFormComponent implements OnInit {
   readonly contratos = toSignal(this.maestra.getContratos(), { initialValue: [] });
   readonly tecnologiasDisp = toSignal(this.maestra.getTecnologias(), { initialValue: [] });
   readonly personalDisp = toSignal(this.maestra.getPersonal(), { initialValue: [] });
-  readonly tiposReq = toSignal(this.maestra.getConceptos('TIP_REQ'), { initialValue: [] });
-  readonly prioridades = toSignal(this.maestra.getConceptos('NIV_PRIO'), { initialValue: [] });
-  readonly criticidades = toSignal(this.maestra.getConceptos('NIV_CRI'), { initialValue: [] });
-  readonly gruposTec = toSignal(this.maestra.getConceptos('GRP_TEC'), { initialValue: [] });
+  readonly tiposReq = toSignal(this.maestra.getConceptos('TIP_REQ'), { initialValue: [] as ConceptoDTO[] });
+  readonly prioridades = toSignal(this.maestra.getConceptos('NIV_PRIO'), { initialValue: [] as ConceptoDTO[] });
+  readonly criticidades = toSignal(this.maestra.getConceptos('NIV_CRI'), { initialValue: [] as ConceptoDTO[] });
+  readonly gruposTec = toSignal(this.maestra.getConceptos('GRP_TEC'), { initialValue: [] as ConceptoDTO[] });
 
   readonly nombreFabricaVisual = signal<string>('—');
 

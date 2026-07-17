@@ -15,10 +15,10 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
 import { MaestraService } from '../../../core/services/maestra.service';
 import { ContratoAdminService } from './contrato-admin.service';
+import { ConceptoDTO } from '../../../core/models/maestra.model';
 import {
   ContratoGtResponse,
   ContratoGtRequest,
-  GrupoTecOption,
 } from './contrato-admin.model';
 
 @Component({
@@ -54,7 +54,7 @@ export class ContratoGtTabComponent implements OnInit {
   // ── Estado reactivo ───────────────────────────────────────────────────────
 
   readonly gruposTec = signal<ContratoGtResponse[]>([]);
-  readonly gruposTecOpts = signal<GrupoTecOption[]>([]);
+  readonly gruposTecOpts = signal<ConceptoDTO[]>([]);
 
   readonly cargando = signal(false);
   readonly guardando = signal(false);
@@ -99,7 +99,6 @@ export class ContratoGtTabComponent implements OnInit {
 
   private cargarOpciones(): void {
     this.maestra.getConceptos('GRP_TEC')
-      .pipe(map(lista => lista as unknown as GrupoTecOption[]))
       .subscribe({
         next: opts => this.gruposTecOpts.set(opts),
         error: () => this.toast('warn', 'Advertencia', 'No se cargaron los grupos tecnológicos.'),
@@ -183,7 +182,7 @@ export class ContratoGtTabComponent implements OnInit {
   }
 
   obtenerDescripcion(cod: string): string {
-    const opt = this.gruposTecOpts().find(o => o.id === cod);
+    const opt = this.gruposTecOpts().find(o => o.codigo === cod);
     return opt ? opt.nombre : cod;
   }
 }

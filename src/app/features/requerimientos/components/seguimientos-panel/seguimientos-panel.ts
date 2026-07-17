@@ -31,20 +31,11 @@ import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api'
 
 import { ActionOrchestratorService } from '../../../../shared/services/action-orchestrator.service';
 import { MaestraService } from '../../../../core/services/maestra.service';
-import { PersonalDTO } from '../../../../core/models/maestra.model';
+import { ConceptoDTO, PersonalDTO } from '../../../../core/models/maestra.model';
 import { SeguimientoDTO } from '../../models/requerimientos.models';
 import { environment } from '../../../../../environments/environment';
 
 import { SeguimientosService } from '../../services/seguimientos.service';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Interfaces locales (Intactas)
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface ConceptoSelectDTO {
-  id: string | number;
-  nombre: string;
-}
 
 /** Payload exacto que espera el endpoint POST /v1/seguimientos */
 interface SeguimientoCreateDTO {
@@ -111,7 +102,7 @@ export class SeguimientosPanel implements OnInit, OnChanges {
   readonly idsParaEliminar = signal<number[]>([]);
 
   // ── Opciones de combos (se cargan en ngOnInit) ────────────────────────
-  readonly tipoOpts = signal<ConceptoSelectDTO[]>([]);
+  readonly tipoOpts = signal<ConceptoDTO[]>([]);
   readonly personalOpts = signal<PersonalDTO[]>([]);
 
   // ── Datos del timeline ────────────────────────────────────────────────
@@ -367,7 +358,7 @@ export class SeguimientosPanel implements OnInit, OnChanges {
   // ── Helpers de resolución de catálogo ─────────────────────────────────
 
   getNombreTipo(cod: string): string {
-    return this.tipoOpts().find(t => t.id === cod)?.nombre ?? cod;
+    return this.tipoOpts().find(t => t.codigo === cod)?.nombre ?? cod;
   }
 
   getNombreResponsable(id: number): string {
@@ -378,9 +369,7 @@ export class SeguimientosPanel implements OnInit, OnChanges {
 
   private cargarMaestras(): void {
     forkJoin({
-      tipos: this.maestra.getConceptos('TIP_SEG').pipe(
-        map(lista => lista as unknown as ConceptoSelectDTO[])
-      ),
+      tipos: this.maestra.getConceptos('TIP_SEG'),
       personal: this.maestra.getPersonal(),
     }).subscribe({
       next: ({ tipos, personal }) => {

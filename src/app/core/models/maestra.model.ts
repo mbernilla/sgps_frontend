@@ -19,6 +19,7 @@ export interface ContratoDTO extends LookupDTO {
 
 export interface ConceptoDTO {
   id: number;
+  nombre: string;
   descripcion: string;
   codigo: string;
   codGrupo: string;
