@@ -1,0 +1,80 @@
+<p-toast position="top-right" />
+
+<!-- HEADER -->
+<div class="mb-4 flex items-center justify-between">
+  <p>Administra los ciclos de facturación para este contrato</p>
+  <p-button
+    label="Generar Ciclos faltantes"
+    icon="pi pi-cog"
+    size="small"
+    (click)="generarCiclos()"
+    [loading]="procesando()"
+    [disabled]="cargando() || procesando()" />
+</div>
+
+<!-- TABLA DE CICLOS -->
+<p-table
+  [value]="ciclos()"
+  [loading]="cargando()"
+  [paginator]="true"
+  [rows]="10"
+  [globalFilterFields]="['nombreCiclo']"
+  responsiveLayout="scroll"
+  styleClass="p-datatable-sm"
+  [tableStyle]="{ 'min-width': '50rem' }">
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="nombreCiclo" style="width: 20%">
+        Ciclo <p-sortIcon field="nombreCiclo"></p-sortIcon>
+      </th>
+      <th pSortableColumn="fechaInicio" style="width: 20%">
+        Fecha Inicio <p-sortIcon field="fechaInicio"></p-sortIcon>
+      </th>
+      <th pSortableColumn="fechaFin" style="width: 20%">
+        Fecha Fin <p-sortIcon field="fechaFin"></p-sortIcon>
+      </th>
+      <th pSortableColumn="esCerrado" style="width: 20%">
+        Estado <p-sortIcon field="esCerrado"></p-sortIcon>
+      </th>
+      <th style="width: 10%" class="text-center">Acciones</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-ciclo>
+    <tr class="hover:bg-slate-50 transition-colors">
+      <td class="font-medium text-slate-900">{{ ciclo.nombreCiclo }}</td>
+      <td class="text-slate-600">{{ ciclo.fechaInicio | date: 'dd/MM/yyyy' }}</td>
+      <td class="text-slate-600">{{ ciclo.fechaFin | date: 'dd/MM/yyyy' }}</td>
+      <td>
+        <p-tag
+          [value]="getEstadoBadge(ciclo.esCerrado).label"
+          [severity]="getEstadoBadge(ciclo.esCerrado).severity" />
+      </td>
+      <td>
+        <div class="flex items-center justify-center gap-1">
+          @if (puedeEliminar(ciclo)) {
+            <p-button
+              icon="pi pi-trash"
+              [text]="true"
+              severity="danger"
+              size="small"
+              styleClass="p-0 w-7 h-7"
+              title="Eliminar"
+              (click)="eliminarCiclo(ciclo, $event)"
+              [disabled]="procesando()" />
+          }
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="5" class="text-center py-8">
+        <p class="text-sm text-slate-500">No hay ciclos generados. Genera ciclos faltantes para comenzar.</p>
+      </td>
+    </tr>
+  </ng-template>
+
+</p-table>

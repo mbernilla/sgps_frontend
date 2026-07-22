@@ -10,7 +10,6 @@ import { Select } from 'primeng/select';
 import { Textarea } from 'primeng/textarea';
 import { Dialog } from 'primeng/dialog';
 import { Toast } from 'primeng/toast';
-import { ConfirmDialog } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
@@ -34,8 +33,7 @@ import { ConceptoDTO } from '../../../core/models/maestra.model';
     Select,
     Textarea,
     Dialog,
-    Toast,
-    ConfirmDialog,
+    Toast
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './contrato-modificadores-tab.component.html',
@@ -170,10 +168,10 @@ export class ContratoModificadoresTabComponent implements OnInit {
     event.stopPropagation();
 
     this.actionService.ejecutar({
-      header: 'Confirmar baja lógica',
+      header: 'Confirmar Eliminación',
       message: `¿Dar de baja el modificador "<b>${mod.descripcionModificador}</b>"?`,
       icon: 'pi pi-exclamation-triangle',
-      acceptClass: 'p-button-danger p-button-sm',
+      acceptClass: 'p-button-danger',
       action: () => this.svc.deleteModificador(this.contratoId(), mod.id),
       onSuccess: () => this.cargarModificadores(),
     });

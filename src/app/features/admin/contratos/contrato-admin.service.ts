@@ -12,6 +12,7 @@ import {
   ContratoGtRequest,
   ContratoModificadorResponse,
   ContratoModificadorRequest,
+  ContratoCicloDTO,
 } from './contrato-admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -20,6 +21,7 @@ export class ContratoAdminService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.baseUrl}/v1/admin/contratos`;
   private readonly baseFabricasUrl = `${environment.baseUrl}/v1/admin/contratos/fabricas/combo`;
+  private readonly baseCiclosUrl = `${environment.baseUrl}/v1/contratos`;
 
   getFabricas(): Observable<FabricaOption[]> {
     return this.http
@@ -118,6 +120,26 @@ export class ContratoAdminService {
   deleteModificador(idContrato: number, id: number): Observable<void> {
     return this.http
       .delete<ApiResponse<void>>(`${this.baseUrl}/${idContrato}/modificadores/${id}`)
+      .pipe(map(() => void 0));
+  }
+
+  // ── Ciclos de Facturación ────────────────────────────────────────────────────
+
+  getCiclos(idContrato: number): Observable<ContratoCicloDTO[]> {
+    return this.http
+      .get<ApiResponse<ContratoCicloDTO[]>>(`${this.baseCiclosUrl}/${idContrato}/ciclos`)
+      .pipe(map(r => r.data));
+  }
+
+  generarCiclos(idContrato: number): Observable<void> {
+    return this.http
+      .post<ApiResponse<void>>(`${this.baseCiclosUrl}/${idContrato}/ciclos/generar`, {})
+      .pipe(map(() => void 0));
+  }
+
+  eliminarCiclo(idContrato: number, idCiclo: number): Observable<void> {
+    return this.http
+      .delete<ApiResponse<void>>(`${this.baseCiclosUrl}/${idContrato}/ciclos/${idCiclo}`)
       .pipe(map(() => void 0));
   }
 }

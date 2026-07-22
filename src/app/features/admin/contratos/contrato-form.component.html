@@ -16,26 +16,43 @@
   </div>
 </div>
 
+<!-- BANNER DE CONTEXTO (modo edición) -->
+@if (!isNuevo() && contratoEnEdicion()) {
+  <div class="mb-4 bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-center gap-3">
+    <i class="pi pi-file-edit text-blue-600 text-lg"></i>
+    <div class="flex-1">
+      <p class="text-sm text-slate-600">
+        Editando contrato:
+        <span class="font-semibold text-slate-900">{{ contratoEnEdicion()?.codigoContrato }}</span>
+        •
+        <span class="text-slate-700">{{ contratoEnEdicion()?.razonSocialFabrica }}</span>
+      </p>
+    </div>
+  </div>
+}
+
 <!-- CONTENEDOR PRINCIPAL -->
 <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
 
   <!-- P-TABS CON SINTAXIS V18+ -->
-  <p-tabs value="0" class="p-tabs-custom">
+  <p-tabs [value]="activeTabIndex()" (onChange)="onTabChange($any($event).index)" class="p-tabs-custom">
 
     <!-- 1. LOS ENCABEZADOS DE LAS PESTAÑAS -->
     <p-tablist>
         <p-tab value="0">Datos Generales</p-tab>
         <p-tab value="1" [disabled]="isNuevo()">Grupos Tecnológicos</p-tab>
         <p-tab value="2" [disabled]="isNuevo()">Modificadores</p-tab>
+        <p-tab value="3" [disabled]="isNuevo()">Ciclos de Facturación</p-tab>
     </p-tablist>
 
     <!-- 2. EL CONTENIDO DE LAS PESTAÑAS -->
     <p-tabpanels>
 
         <!-- CONTENIDO TAB 1: DATOS GENERALES -->
-        <p-tabpanel value="0">
-          <form [formGroup]="form" class="p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <p-tabpanel value="0" [lazy]="false">
+          @if (!cargando() && (isNuevo() || contratoEnEdicion())) {
+            <form [formGroup]="form" class="p-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Fábrica (Dropdown) -->
               <div class="flex flex-col gap-1">
                 <label class="text-xs font-semibold text-slate-600">Fábrica <span class="text-red-500">*</span></label>
@@ -88,8 +105,8 @@
                 <label class="text-xs font-semibold text-slate-600">Fecha Contrato <span class="text-red-500">*</span></label>
                 <p-datepicker
                   formControlName="fechaContrato"
-                  dateFormat="yy-mm-dd"
-                  placeholder="yyyy-mm-dd"
+                  dateFormat="dd/mm/yy"
+                  placeholder="dd/mm/yyyy"
                   styleClass="w-full"
                   appendTo="body" />
                 @if (form.controls.fechaContrato.invalid && form.controls.fechaContrato.touched) {
@@ -102,8 +119,8 @@
                 <label class="text-xs font-semibold text-slate-600">Fecha Inicio <span class="text-red-500">*</span></label>
                 <p-datepicker
                   formControlName="fechaInicio"
-                  dateFormat="yy-mm-dd"
-                  placeholder="yyyy-mm-dd"
+                  dateFormat="dd/mm/yy"
+                  placeholder="dd/mm/yyyy"
                   styleClass="w-full"
                   appendTo="body" />
                 @if (form.controls.fechaInicio.invalid && form.controls.fechaInicio.touched) {
@@ -116,8 +133,8 @@
                 <label class="text-xs font-semibold text-slate-600">Fecha Término <span class="text-red-500">*</span></label>
                 <p-datepicker
                   formControlName="fechaTermino"
-                  dateFormat="yy-mm-dd"
-                  placeholder="yyyy-mm-dd"
+                  dateFormat="dd/mm/yy"
+                  placeholder="dd/mm/yyyy"
                   styleClass="w-full"
                   appendTo="body" />
                 @if (form.controls.fechaTermino.invalid && form.controls.fechaTermino.touched) {
@@ -138,7 +155,13 @@
                 <small class="text-red-500 text-xs">El número de meses es requerido (mínimo 1)</small>
               }
             </div>
-          </form>
+            </form>
+          } @else if (cargando()) {
+            <div class="p-8 text-center">
+              <p-progressSpinner></p-progressSpinner>
+              <p class="text-slate-500 mt-4">Cargando contrato...</p>
+            </div>
+          }
         </p-tabpanel>
 
         <!-- CONTENIDO TAB 2: GRUPOS TECNOLÓGICOS -->
@@ -171,6 +194,21 @@
           }
         </p-tabpanel>
 
+        <!-- CONTENIDO TAB 4: CICLOS DE FACTURACIÓN -->
+        <p-tabpanel value="3">
+          @if (!isNuevo()) {
+            <div class="p-4">
+              <app-contrato-ciclos-tab [contratoId]="contratoId()" (onCiclosCambiados)="recargarContrato()" />
+            </div>
+          } @else {
+            <div class="p-8 text-center">
+              <i class="pi pi-info-circle text-slate-400 text-4xl mb-3"></i>
+              <p class="text-slate-600 font-medium">Disponible después de crear</p>
+              <p class="text-slate-400 text-sm mt-1">Primero guarda el contrato para administrar sus ciclos de facturación</p>
+            </div>
+          }
+        </p-tabpanel>
+
     </p-tabpanels>
   </p-tabs>
 
@@ -191,3 +229,6 @@
     [loading]="guardando()"
     (click)="guardar()" />
 </div>
+
+<!-- CONFIRMACIÓN GLOBAL CENTRALIZADA -->
+<p-confirmDialog />

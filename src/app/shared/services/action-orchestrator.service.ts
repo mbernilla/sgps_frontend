@@ -11,6 +11,7 @@ export interface ConfirmActionConfig<T = any> {
 
   acceptLabel?: string;
   rejectLabel?: string;
+  key?: string; // Ej: 'ciclosConfirm' - Permite múltiples diálogos
 
   onStart?: () => void;       // Ideal para encender Signals (ej: eliminandoId.set(id))
   onComplete?: () => void;    // Ideal para apagar Signals vía finalize()
@@ -33,6 +34,7 @@ export class ActionOrchestratorService {
     rejectIcon: 'none',
     acceptLabel: config.acceptLabel || 'Sí, Confirmar',
     rejectLabel: config.rejectLabel || 'Cancelar',
+    key: config.key,
 
     accept: () => {
       try {

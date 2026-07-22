@@ -9,7 +9,6 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { Dialog } from 'primeng/dialog';
 import { Toast } from 'primeng/toast';
-import { ConfirmDialog } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
@@ -32,8 +31,7 @@ import {
     InputNumberModule,
     Select,
     Dialog,
-    Toast,
-    ConfirmDialog,
+    Toast
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './contrato-gt-tab.component.html',
@@ -166,10 +164,10 @@ export class ContratoGtTabComponent implements OnInit {
     event.stopPropagation();
 
     this.actionService.ejecutar({
-      header: 'Confirmar baja lógica',
+      header: 'Confirmar Eliminación',
       message: `¿Dar de baja el grupo "<b>${gt.descripcionGrupo}</b>"?`,
       icon: 'pi pi-exclamation-triangle',
-      acceptClass: 'p-button-danger p-button-sm',
+      acceptClass: 'p-button-danger',
       action: () => this.svc.deleteGrupoTecnologico(this.contratoId(), gt.id),
       onSuccess: () => this.cargarGruposTec(),
     });

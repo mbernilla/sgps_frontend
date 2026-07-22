@@ -64,3 +64,11 @@ export interface ContratoModificadorRequest {
   descripcion: string;
 }
 
+export interface ContratoCicloDTO {
+  id: number;
+  idContrato: number;
+  nombreCiclo: string;
+  fechaInicio: string;
+  fechaFin: string;
+  esCerrado: boolean;
+}

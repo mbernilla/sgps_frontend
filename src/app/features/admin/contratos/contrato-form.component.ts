@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,11 +13,14 @@ import { Textarea } from 'primeng/textarea';
 import { DatePicker } from 'primeng/datepicker';
 import { TabsModule } from 'primeng/tabs';
 import { Toast } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ProgressSpinner } from 'primeng/progressspinner';
+import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { ContratoAdminService } from './contrato-admin.service';
 import { ContratoGtTabComponent } from './contrato-gt-tab.component';
 import { ContratoModificadoresTabComponent } from './contrato-modificadores-tab.component';
+import { ContratoCiclosTabComponent } from './contrato-ciclos-tab.component';
 import {
   ContratoResponse,
   ContratoRequest,
@@ -38,10 +41,13 @@ import {
     DatePicker,
     TabsModule,
     Toast,
+    ConfirmDialog,
+    ProgressSpinner,
     ContratoGtTabComponent,
     ContratoModificadoresTabComponent,
+    ContratoCiclosTabComponent,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './contrato-form.component.html',
   styleUrl: './contrato-form.component.scss',
 })
@@ -62,6 +68,7 @@ export class ContratoFormComponent implements OnInit {
   readonly contratoEnEdicion = signal<ContratoResponse | null>(null);
   readonly isNuevo = computed(() => !this.contratoEnEdicion());
   readonly contratoId = computed(() => this.contratoEnEdicion()?.id ?? 0);
+  readonly activeTabIndex = signal<string>('0');
 
   readonly titulo = computed(() =>
     this.isNuevo() ? 'Nuevo Contrato' : `Editar Contrato`
@@ -194,6 +201,19 @@ export class ContratoFormComponent implements OnInit {
     });
   }
 
+  recargarContrato(): void {
+    const id = this.contratoEnEdicion()?.id;
+    if (id) {
+      this.svc.getContrato(id).subscribe({
+        next: contrato => {
+          this.contratoEnEdicion.set(contrato);
+          this.llenarFormulario(contrato);
+        },
+        error: () => this.toast('error', 'Error', 'No se pudo recargar el contrato.'),
+      });
+    }
+  }
+
   private llenarFormulario(contrato: ContratoResponse): void {
     this.form.patchValue({
       idFabrica: contrato.idFabrica,
@@ -225,14 +245,37 @@ export class ContratoFormComponent implements OnInit {
     };
 
     const enEdicion = this.contratoEnEdicion();
+    const mesesAnteriores = enEdicion?.numeroMeses ?? 0;
+    const mesesNuevos = dto.numeroMeses;
+
     const observer = {
       next: () => {
-        this.toast(
-          'success',
-          enEdicion ? 'Actualizado' : 'Creado',
-          'Contrato guardado correctamente.'
-        );
-        this.volverAlListado();
+        if (enEdicion) {
+          // Lógica inteligente de tabs para edición
+          if (mesesNuevos > mesesAnteriores) {
+            this.activeTabIndex.set('3');
+            this.toast(
+              'info',
+              'Plazo ampliado',
+              'Actualización guardada. Por favor genere los ciclos faltantes.'
+            );
+          } else if (mesesNuevos < mesesAnteriores) {
+            this.activeTabIndex.set('3');
+            this.toast(
+              'warn',
+              'Plazo reducido',
+              'Actualización guardada. Por favor elimine los ciclos excedentes.'
+            );
+          } else {
+            this.toast('success', 'Actualizado', 'Contrato actualizado correctamente.');
+          }
+          // Recarga el contrato para mantener sincronizado
+          this.recargarContrato();
+        } else {
+          // Para nuevos contratos, redirige
+          this.toast('success', 'Creado', 'Contrato guardado correctamente.');
+          this.volverAlListado();
+        }
       },
       error: (err: any) =>
         this.toast(
@@ -251,6 +294,10 @@ export class ContratoFormComponent implements OnInit {
         .pipe(finalize(() => this.guardando.set(false)))
         .subscribe(observer);
     }
+  }
+
+  onTabChange(value: string): void {
+    this.activeTabIndex.set(value);
   }
 
   volverAlListado(): void {
