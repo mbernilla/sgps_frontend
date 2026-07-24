@@ -207,7 +207,7 @@
                       pTooltip="Eliminar" tooltipPosition="top" (click)="eliminarEntregable(ent.id)" />
                     }
 
-                    @if (ent.codEstado !== 'ENT_PEN' && ent.codEstado !== 'ENT_ANU') {
+                    @if (ent.codEstado !== 'ENT_PEN' && ent.codEstado !== 'ENT_ANU' && !ent.nombreCiclo) {
                     <p-button icon="pi pi-ban" [text]="true" [rounded]="true" severity="danger" size="small"
                       pTooltip="Anular" tooltipPosition="top" (click)="anularEntregable(ent.id)" />
                     }

@@ -1,0 +1,333 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PAGE HEADER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="mb-5">
+  <div class="flex items-center gap-2">
+    <i class="pi pi-building text-blue-500 text-lg"></i>
+    <h1 class="text-xl font-semibold text-slate-800">Gerencias y Equipos</h1>
+  </div>
+  <p class="text-sm text-slate-400 mt-0.5 ml-7">Gestión maestra de gerencias organizacionales y sus equipos de trabajo.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     LAYOUT MAESTRO-DETALLE: 2 columnas
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+  <!-- ══════════════════════════════════════
+       PANEL IZQUIERDO — GERENCIAS
+       ══════════════════════════════════════ -->
+  <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
+
+    <!-- Cabecera del panel -->
+    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-building text-blue-500 text-sm"></i>
+        <span class="text-sm font-semibold text-slate-700">Gerencias</span>
+        <span class="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">
+          {{ gerencias().length }}
+        </span>
+      </div>
+      <p-button
+        label="Nueva Gerencia"
+        icon="pi pi-plus"
+        size="small"
+        (click)="abrirNuevaGerencia()" />
+    </div>
+
+    <!-- Tabla de gerencias -->
+    <div class="overflow-auto">
+      <p-table
+        [value]="gerencias()"
+        [loading]="cargandoGerencias()"
+        [rowHover]="true"
+        styleClass="p-datatable-sm">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Nombre</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Estado</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide w-20 text-center">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-g>
+          <tr
+            class="cursor-pointer transition-colors duration-100"
+            [class.bg-blue-50]="gerenciaSeleccionada()?.id === g.id"
+            (click)="seleccionarGerencia(g)">
+
+            <td>
+              <span class="text-sm font-medium text-slate-700">{{ g.nombre }}</span>
+            </td>
+
+            <td>
+              <p-tag
+                [severity]="g.esActivo ? 'success' : 'danger'"
+                [value]="g.esActivo ? 'Activo' : 'Inactivo'"
+                [icon]="g.esActivo ? 'pi pi-check-circle' : 'pi pi-times-circle'" />
+            </td>
+
+            <td>
+              <div class="flex items-center justify-center gap-1">
+                <p-button
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  styleClass="p-0 w-7 h-7"
+                  title="Editar gerencia"
+                  (click)="editarGerencia(g, $event)" />
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  styleClass="p-0 w-7 h-7"
+                  title="Eliminar gerencia"
+                  (click)="eliminarGerencia(g, $event)" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="3" class="text-center py-8 text-slate-400 text-sm">
+              <i class="pi pi-inbox text-3xl block mb-2 opacity-30"></i>
+              No hay gerencias registradas.
+            </td>
+          </tr>
+        </ng-template>
+
+      </p-table>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PANEL DERECHO — EQUIPOS
+       ══════════════════════════════════════ -->
+  @if (gerenciaSeleccionada()) {
+  <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
+
+    <!-- Cabecera del panel -->
+    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-users text-amber-500 text-sm"></i>
+        <span class="text-sm font-semibold text-slate-700">{{ tituloEquiposPanel() }}</span>
+        <span class="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">
+          {{ equipos().length }}
+        </span>
+      </div>
+      <p-button
+        label="Nuevo Equipo"
+        icon="pi pi-plus"
+        size="small"
+        (click)="abrirNuevoEquipo()" />
+    </div>
+
+    <!-- Tabla de equipos -->
+    <div class="overflow-auto">
+      <p-table
+        [value]="equipos()"
+        [loading]="cargandoEquipos()"
+        [rowHover]="true"
+        styleClass="p-datatable-sm">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Nombre</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Siglas</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Centro Costo</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Estado</th>
+            <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide w-20 text-center">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-e>
+          <tr class="transition-colors duration-100 hover:bg-amber-50">
+
+            <td>
+              <span class="text-sm font-medium text-slate-700">{{ e.nombre }}</span>
+            </td>
+
+            <td>
+              <span class="text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full whitespace-nowrap font-semibold">
+                {{ e.siglas }}
+              </span>
+            </td>
+
+            <td>
+              <span class="text-xs text-slate-600">{{ e.centroCosto }}</span>
+            </td>
+
+            <td>
+              <p-tag
+                [severity]="e.esActivo ? 'success' : 'danger'"
+                [value]="e.esActivo ? 'Activo' : 'Inactivo'"
+                [icon]="e.esActivo ? 'pi pi-check-circle' : 'pi pi-times-circle'" />
+            </td>
+
+            <td>
+              <div class="flex items-center justify-center gap-1">
+                <p-button
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  styleClass="p-0 w-7 h-7"
+                  title="Editar equipo"
+                  (click)="editarEquipo(e)" />
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  styleClass="p-0 w-7 h-7"
+                  title="Eliminar equipo"
+                  (click)="eliminarEquipo(e, $event)" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center py-8 text-slate-400 text-sm">
+              <i class="pi pi-inbox text-3xl block mb-2 opacity-30"></i>
+              No hay equipos para esta gerencia.
+            </td>
+          </tr>
+        </ng-template>
+
+      </p-table>
+    </div>
+
+  </div>
+  } @else {
+  <!-- Mensaje cuando no hay gerencia seleccionada -->
+  <div class="bg-slate-50 border border-slate-200 rounded-xl shadow-sm flex items-center justify-center min-h-64">
+    <div class="text-center">
+      <i class="pi pi-inbox text-slate-300 text-5xl block mb-3"></i>
+      <p class="text-slate-500 font-medium">Selecciona una gerencia para ver sus equipos</p>
+    </div>
+  </div>
+  }
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODAL: CREAR/EDITAR GERENCIA
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  [header]="tituloModalGerencia()"
+  [visible]="dialogGerenciaVisible()"
+  (visibleChange)="dialogGerenciaVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '450px' }">
+
+  <form [formGroup]="formGerencia" class="flex flex-col gap-4 pt-2">
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Nombre <span class="text-red-500">*</span></label>
+      <input
+        pInputText
+        formControlName="nombre"
+        placeholder="Ej: Gerencia de TI"
+        class="w-full" />
+      @if (formGerencia.controls.nombre.invalid && formGerencia.controls.nombre.touched) {
+      <small class="text-red-500 text-xs">El nombre es requerido</small>
+      }
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2 pt-1">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        icon="pi pi-times"
+        [disabled]="guardandoGerencia()"
+        (click)="dialogGerenciaVisible.set(false)" />
+      <p-button
+        [label]="labelBtnGerencia()"
+        icon="pi pi-save"
+        [loading]="guardandoGerencia()"
+        (click)="guardarGerencia()" />
+    </div>
+  </ng-template>
+
+</p-dialog>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODAL: CREAR/EDITAR EQUIPO
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  [header]="tituloModalEquipo()"
+  [visible]="dialogEquipoVisible()"
+  (visibleChange)="dialogEquipoVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '450px' }">
+
+  <form [formGroup]="formEquipo" class="flex flex-col gap-4 pt-2">
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Nombre <span class="text-red-500">*</span></label>
+      <input
+        pInputText
+        formControlName="nombre"
+        placeholder="Ej: Equipo de Desarrollo"
+        class="w-full" />
+      @if (formEquipo.controls.nombre.invalid && formEquipo.controls.nombre.touched) {
+      <small class="text-red-500 text-xs">El nombre es requerido</small>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Siglas <span class="text-red-500">*</span></label>
+      <input
+        pInputText
+        formControlName="siglas"
+        placeholder="Ej: DEV"
+        class="w-full" />
+      @if (formEquipo.controls.siglas.invalid && formEquipo.controls.siglas.touched) {
+      <small class="text-red-500 text-xs">Las siglas son requeridas</small>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Centro Costo <span class="text-red-500">*</span></label>
+      <input
+        pInputText
+        formControlName="centroCosto"
+        placeholder="Ej: CC-2025-001"
+        class="w-full" />
+      @if (formEquipo.controls.centroCosto.invalid && formEquipo.controls.centroCosto.touched) {
+      <small class="text-red-500 text-xs">El centro de costo es requerido</small>
+      }
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2 pt-1">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        icon="pi pi-times"
+        [disabled]="guardandoEquipo()"
+        (click)="dialogEquipoVisible.set(false)" />
+      <p-button
+        [label]="labelBtnEquipo()"
+        icon="pi pi-save"
+        [loading]="guardandoEquipo()"
+        (click)="guardarEquipo()" />
+    </div>
+  </ng-template>
+
+</p-dialog>

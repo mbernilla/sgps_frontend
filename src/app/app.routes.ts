@@ -69,6 +69,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/maestros/sistemas/sistemas-admin').then(m => m.SistemasAdminComponent),
       },
       {
+        path: 'maestros/gerencias',
+        loadComponent: () => import('./features/maestros/gerencias/gerencias-admin.component').then(m => m.GerenciasAdminComponent),
+      },
+      {
         path: 'maestros/catalogo-entregables',
         loadComponent: () => import('./features/maestros/catalogo-entregables/catalogo-entregables.component').then(m => m.CatalogoEntregablesComponent),
       },

@@ -362,21 +362,36 @@ export class EntregablesPanelComponent implements OnInit {
     const idEdicion = this.idEntregableEdicion();
     const fase = this.faseParaNuevo()!;
 
-    // Validación de horas (excluye el propio entregable al editar)
-    const existentes = this.entregablesPorFase()[fase.id] ?? [];
-    const horasExistentes = existentes
-      .filter(e => e.id !== idEdicion)
-      .reduce((acc, e) => acc + e.horasFacturables, 0);
-    const estimacion = (this.estimaciones() || []).find(e => e.id === v.idEstimacion);
-    if (estimacion) {
-      const faseEst = (estimacion.fases || []).find(f => f.codFase === fase.codFase);
-      if (faseEst && (horasExistentes + v.horasFacturables) > faseEst.horasEstimadas) {
-        this.toastError(
-          `Las horas facturables (${(horasExistentes + v.horasFacturables).toFixed(2)}h) superan las estimadas para la fase "${fase.faseDescripcion}" (${faseEst.horasEstimadas.toFixed(2)}h).`
-        );
-        return;
+    // --- NUEVO CANDADO DE VALIDACIÓN DE HORAS ---
+    const saldo = this.saldoFase();
+    if (saldo && saldo.desgloseEstimaciones) {
+      const estSeleccionada = saldo.desgloseEstimaciones.find(e => e.idEstimacion === v.idEstimacion);
+
+      if (estSeleccionada) {
+        let topeDisponible = estSeleccionada.disponible;
+
+        // Si estamos editando y NO cambiamos de estimación, el 'disponible' actual
+        // ya tiene descontadas las horas de este entregable. Debemos devolverlas al tope
+        // para saber el verdadero límite que tiene el usuario en este momento.
+        if (idEdicion !== null) {
+          const existentes = this.entregablesPorFase()[fase.id] ?? [];
+          const entregableOriginal = existentes.find(e => e.id === idEdicion);
+
+          if (entregableOriginal && entregableOriginal.idEstimacion === v.idEstimacion) {
+            topeDisponible += entregableOriginal.horasFacturables;
+          }
+        }
+
+        // Bloqueo estricto
+        if (v.horasFacturables > topeDisponible) {
+          this.toastError(
+            `No hay saldo suficiente. Intentas registrar ${v.horasFacturables}h, pero el tope disponible para esta estimación es de ${topeDisponible.toFixed(2)}h.`
+          );
+          return; // Aborta el guardado
+        }
       }
     }
+    // --- FIN DEL CANDADO ---
 
     this.guardandoEntregable.set(true);
 

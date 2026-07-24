@@ -58,6 +58,16 @@
         </div>
       </a>
 
+      <a routerLink="/maestros/gerencias" routerLinkActive="bg-slate-700 text-white"
+         class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 cursor-pointer group"
+         [title]="isSidebarCollapsed() ? 'Gerencias y Equipos' : ''">
+        <i class="pi pi-building text-lg min-w-5 text-center group-hover:text-blue-400"></i>
+        <div class="menu-text-container transition-opacity duration-300"
+             [ngClass]="isSidebarCollapsed() ? 'opacity-0 w-0' : 'opacity-100'">
+          <span class="text-sm font-medium">Gerencias y Equipos</span>
+        </div>
+      </a>
+
       <a routerLink="/maestros/catalogo-entregables" routerLinkActive="bg-slate-700 text-white"
          class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 cursor-pointer group"
          [title]="isSidebarCollapsed() ? 'Catálogo de Entregables' : ''">
