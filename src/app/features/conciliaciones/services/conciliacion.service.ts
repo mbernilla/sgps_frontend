@@ -113,4 +113,10 @@ export class ConciliacionService {
       `${this.base}/ciclos/${idCiclo}/conciliaciones/distribucion`
     );
   }
+
+  cerrarCiclo(idCiclo: number): Observable<ApiResponse<void>> {
+    return this.http.patch<ApiResponse<void>>(
+      `${this.base}/ciclos/${idCiclo}/conciliaciones/cerrar`, {}
+    );
+  }
 }

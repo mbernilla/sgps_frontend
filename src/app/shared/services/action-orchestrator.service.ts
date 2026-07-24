@@ -16,6 +16,7 @@ export interface ConfirmActionConfig<T = any> {
   onStart?: () => void;       // Ideal para encender Signals (ej: eliminandoId.set(id))
   onComplete?: () => void;    // Ideal para apagar Signals vía finalize()
   onSuccess?: (res: T) => void; // Para recargar tablas u otra lógica
+  onError?: (err: any) => void; // Para manejo personalizado de errores
 }
 
 @Injectable({ providedIn: 'root' })
@@ -61,12 +62,16 @@ export class ActionOrchestratorService {
           },
           error: (err) => {
             //console.error('[ActionOrchestrator] 4. Error HTTP:', err);
-            this.msg.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: err.error?.mensaje || 'No se pudo completar la operación.',
-              life: 5000
-            });
+            if (config.onError) {
+              config.onError(err);
+            } else {
+              this.msg.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: err.error?.mensaje || 'No se pudo completar la operación.',
+                life: 5000
+              });
+            }
           }
         });
       } catch (errorFatal) {

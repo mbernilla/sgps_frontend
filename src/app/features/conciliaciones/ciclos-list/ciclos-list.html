@@ -57,6 +57,11 @@
 
           <td class="text-center">
             <div class="flex gap-2 justify-center">
+              @if (!ciclo.esCerrado) {
+              <p-button icon="pi pi-lock" [rounded]="true" [text]="true" severity="danger" size="small"
+                pTooltip="Cerrar Ciclo" tooltipPosition="top" tooltipAppendTo="body" (click)="confirmarCierre(ciclo)" />
+              }
+
               <p-button icon="pi pi-arrow-right" [rounded]="true" [text]="true" severity="secondary" size="small"
                 pTooltip="Ver detalle" tooltipPosition="top" tooltipAppendTo="body" (click)="irADetalle(ciclo.id)" />
 

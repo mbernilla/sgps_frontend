@@ -11,6 +11,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { ContextoGlobalService } from '../../../core/services/contexto-global.service';
 import { ConciliacionService } from '../services/conciliacion.service';
+import { ActionOrchestratorService } from '../../../shared/services/action-orchestrator.service';
 import { CicloContratoDTO } from '../models/conciliacion.models';
 
 @Component({
@@ -34,6 +35,7 @@ export class CiclosListComponent implements OnInit {
   private readonly service = inject(ConciliacionService);
   private readonly msg     = inject(MessageService);
   private readonly contextoGlobal = inject(ContextoGlobalService);
+  private readonly orchestrator = inject(ActionOrchestratorService);
 
   readonly ciclos   = signal<CicloContratoDTO[]>([]);
   readonly cargando = signal(false);
@@ -82,5 +84,22 @@ export class CiclosListComponent implements OnInit {
 
   irACostosABC(idCiclo: number): void {
     this.router.navigate(['/conciliaciones/ciclos', idCiclo, 'costos-abc']);
+  }
+
+  confirmarCierre(ciclo: CicloContratoDTO): void {
+    this.orchestrator.ejecutar({
+      header: 'Cerrar Ciclo de Conciliación',
+      message: `¿Cerrar el ciclo "<b>${ciclo.nombreCiclo}</b>"? Esta acción bloqueará permanentemente todos los datos del ciclo. Esta operación <b>no puede revertirse</b>.`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptClass: 'p-button-danger',
+      action: () => this.service.cerrarCiclo(ciclo.id),
+      onSuccess: () => {
+        this.cargarCiclos();
+      },
+      onError: (err: any) => {
+        const msj = err.error?.mensaje || 'Existen validaciones pendientes que impiden el cierre.';
+        this.msg.add({ severity: 'error', summary: 'No se puede cerrar', detail: msj, life: 7000 });
+      },
+    });
   }
 }
