@@ -43,6 +43,7 @@
         <p-tab value="1" [disabled]="isNuevo()">Grupos Tecnológicos</p-tab>
         <p-tab value="2" [disabled]="isNuevo()">Modificadores</p-tab>
         <p-tab value="3" [disabled]="isNuevo()">Ciclos de Facturación</p-tab>
+        <p-tab value="4" [disabled]="isNuevo()">Personal</p-tab>
     </p-tablist>
 
     <!-- 2. EL CONTENIDO DE LAS PESTAÑAS -->
@@ -205,6 +206,21 @@
               <i class="pi pi-info-circle text-slate-400 text-4xl mb-3"></i>
               <p class="text-slate-600 font-medium">Disponible después de crear</p>
               <p class="text-slate-400 text-sm mt-1">Primero guarda el contrato para administrar sus ciclos de facturación</p>
+            </div>
+          }
+        </p-tabpanel>
+
+        <!-- CONTENIDO TAB 5: PERSONAL -->
+        <p-tabpanel value="4">
+          @if (!isNuevo()) {
+            <div class="p-4">
+              <app-contrato-personal-tab [contratoId]="contratoId()" />
+            </div>
+          } @else {
+            <div class="p-8 text-center">
+              <i class="pi pi-info-circle text-slate-400 text-4xl mb-3"></i>
+              <p class="text-slate-600 font-medium">Disponible después de crear</p>
+              <p class="text-slate-400 text-sm mt-1">Primero guarda el contrato para administrar su personal</p>
             </div>
           }
         </p-tabpanel>

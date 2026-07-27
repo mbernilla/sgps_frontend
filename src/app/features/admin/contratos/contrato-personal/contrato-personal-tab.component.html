@@ -1,0 +1,244 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- TABLA DE PERSONAL CON CAPTION (Buscador y Botón Nuevo) -->
+<p-table
+  [value]="personalFiltrado()"
+  [loading]="cargando()"
+  [rowHover]="true"
+  styleClass="p-datatable-sm"
+  responsiveLayout="scroll"
+  [tableStyle]="{ 'min-width': '100%' }">
+
+  <!-- CAPTION: Buscador y Botón Nuevo -->
+  <ng-template pTemplate="caption">
+    <div class="flex items-center justify-between gap-4">
+      <input
+        pInputText
+        type="text"
+        placeholder="Buscar personal (DNI, nombre, correo, rol)..."
+        [(ngModel)]="filtroGlobal"
+        class="flex-1" />
+
+      <p-button
+        label="Nuevo Personal"
+        icon="pi pi-plus"
+        size="small"
+        (click)="abrirNuevo()" />
+    </div>
+  </ng-template>
+
+  <!-- HEADER -->
+  <ng-template pTemplate="header">
+    <tr>
+      <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">DNI</th>
+      <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Nombres y Apellidos</th>
+      <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Correo</th>
+      <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Rol</th>
+      <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Fecha Alta</th>
+      <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Fecha Baja</th>
+      <th class="text-xs font-semibold text-slate-600 uppercase tracking-wide w-24 text-center">Acciones</th>
+    </tr>
+  </ng-template>
+
+  <!-- BODY -->
+  <ng-template pTemplate="body" let-p>
+    <tr class="transition-colors duration-100 hover:bg-slate-50">
+      <td>
+        <span class="text-sm font-medium text-slate-700 font-mono">{{ p.dni }}</span>
+      </td>
+
+      <td>
+        <span class="text-sm text-slate-700">{{ p.nombresApellidos }}</span>
+      </td>
+
+      <td>
+        <span class="text-sm text-slate-600">{{ p.correo }}</span>
+      </td>
+
+      <td>
+        <span class="text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+          {{ p.rolProyectoDescripcion }}
+        </span>
+      </td>
+
+      <td>
+        <span class="text-sm text-slate-600">{{ p.fechaAlta | date:'dd/MM/yyyy' }}</span>
+      </td>
+
+      <td>
+        <span *ngIf="p.fechaBaja" class="text-sm text-slate-600">
+          {{ p.fechaBaja | date:'dd/MM/yyyy' }}
+        </span>
+        <span *ngIf="!p.fechaBaja" class="text-xs text-slate-400">—</span>
+      </td>
+
+      <td>
+        <div class="flex items-center justify-center gap-1">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            styleClass="p-0 w-7 h-7"
+            title="Editar personal"
+            (click)="editar(p, $event)" />
+          <p-button
+            icon="pi pi-trash"
+            [text]="true"
+            severity="danger"
+            size="small"
+            styleClass="p-0 w-7 h-7"
+            title="Eliminar personal"
+            (click)="eliminarPersonal(p, $event)" />
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+  <!-- EMPTY MESSAGE -->
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7" class="text-center py-8 text-slate-400 text-sm">
+        <i class="pi pi-inbox text-3xl block mb-2 opacity-30"></i>
+        No hay personal registrado para este contrato.
+      </td>
+    </tr>
+  </ng-template>
+
+</p-table>
+
+<!-- MODAL: CREAR/EDITAR PERSONAL -->
+<p-dialog
+  [header]="tituloModal()"
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '600px' }">
+
+  <form [formGroup]="form" class="flex flex-col gap-4 pt-2">
+
+    <!-- Usuario (Combo) -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Usuario (Opcional)</label>
+      <p-select
+        formControlName="idUsuario"
+        [options]="usuariosFabrica()"
+        optionLabel="nombreCompleto"
+        optionValue="id"
+        placeholder="Selecciona un usuario..."
+        [showClear]="true"
+        styleClass="w-full"
+        appendTo="body" />
+      <small class="text-slate-400 text-xs">Si seleccionas un usuario, se autocompletarán sus datos.</small>
+    </div>
+
+    <!-- DNI -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">DNI <span class="text-red-500">*</span></label>
+      <input
+        pInputText
+        formControlName="dni"
+        placeholder="Ej: 12345678"
+        class="w-full" />
+      @if (form.controls.dni.invalid && form.controls.dni.touched) {
+      <small class="text-red-500 text-xs">El DNI es requerido</small>
+      }
+    </div>
+
+    <!-- Nombres y Apellidos -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Nombres y Apellidos <span class="text-red-500">*</span></label>
+      <input
+        pInputText
+        formControlName="nombresApellidos"
+        placeholder="Ej: Juan Pérez García"
+        class="w-full" />
+      @if (form.controls.nombresApellidos.invalid && form.controls.nombresApellidos.touched) {
+      <small class="text-red-500 text-xs">El nombre es requerido</small>
+      }
+    </div>
+
+    <!-- Correo -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Correo <span class="text-red-500">*</span></label>
+      <input
+        pInputText
+        type="email"
+        formControlName="correo"
+        placeholder="Ej: juan@empresa.com"
+        class="w-full" />
+      @if (form.controls.correo.invalid && form.controls.correo.touched) {
+      <small class="text-red-500 text-xs">
+        @if (form.controls.correo.hasError('required')) {
+          El correo es requerido
+        }
+        @if (form.controls.correo.hasError('email')) {
+          El correo debe ser válido
+        }
+      </small>
+      }
+    </div>
+
+    <!-- Rol del Proyecto -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Rol del Proyecto <span class="text-red-500">*</span></label>
+      <p-select
+        formControlName="codRolProyecto"
+        [options]="rolesProyecto()"
+        optionLabel="nombre"
+        optionValue="id"
+        placeholder="Selecciona un rol..."
+        styleClass="w-full"
+        appendTo="body" />
+      @if (form.controls.codRolProyecto.invalid && form.controls.codRolProyecto.touched) {
+      <small class="text-red-500 text-xs">El rol es requerido</small>
+      }
+    </div>
+
+    <!-- Fecha Alta -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Fecha de Alta <span class="text-red-500">*</span></label>
+      <p-datepicker
+        formControlName="fechaAlta"
+        dateFormat="dd/mm/yy"
+        placeholder="dd/mm/yyyy"
+        styleClass="w-full"
+        appendTo="body" />
+      @if (form.controls.fechaAlta.invalid && form.controls.fechaAlta.touched) {
+      <small class="text-red-500 text-xs">La fecha de alta es requerida</small>
+      }
+    </div>
+
+    <!-- Fecha Baja -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600">Fecha de Baja (Opcional)</label>
+      <p-datepicker
+        formControlName="fechaBaja"
+        dateFormat="dd/mm/yy"
+        placeholder="dd/mm/yyyy"
+        styleClass="w-full"
+        appendTo="body" />
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2 pt-1">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        icon="pi pi-times"
+        [disabled]="guardando()"
+        (click)="dialogVisible.set(false)" />
+      <p-button
+        [label]="labelBtn()"
+        icon="pi pi-save"
+        [loading]="guardando()"
+        (click)="guardarPersonal()" />
+    </div>
+  </ng-template>
+
+</p-dialog>

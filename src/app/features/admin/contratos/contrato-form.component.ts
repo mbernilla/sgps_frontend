@@ -21,6 +21,7 @@ import { ContratoAdminService } from './contrato-admin.service';
 import { ContratoGtTabComponent } from './contrato-gt-tab.component';
 import { ContratoModificadoresTabComponent } from './contrato-modificadores-tab.component';
 import { ContratoCiclosTabComponent } from './contrato-ciclos-tab.component';
+import { ContratoPersonalTabComponent } from './contrato-personal/contrato-personal-tab.component';
 import {
   ContratoResponse,
   ContratoRequest,
@@ -46,6 +47,7 @@ import {
     ContratoGtTabComponent,
     ContratoModificadoresTabComponent,
     ContratoCiclosTabComponent,
+    ContratoPersonalTabComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './contrato-form.component.html',
