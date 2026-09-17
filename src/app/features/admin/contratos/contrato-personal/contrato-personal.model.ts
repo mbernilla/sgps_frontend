@@ -15,6 +15,7 @@ export interface PersonalDTO {
 }
 
 export interface PersonalRequestDTO {
+  idEmpresa: number;
   idUsuario: number | null;
   dni: string;
   nombresApellidos: string;

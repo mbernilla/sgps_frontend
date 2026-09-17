@@ -84,6 +84,10 @@ export const routes: Routes = [
         path: 'maestros/contratos-slas',
         loadComponent: () => import('./features/maestros/contratos-slas/contratos-slas.component').then(m => m.ContratosSlasComponent),
       },
+      {
+        path: 'maestros/personal-interno',
+        loadComponent: () => import('./features/maestros/personal-interno/personal-interno.component').then(m => m.PersonalInternoComponent),
+      },
 
       // Administración
       {

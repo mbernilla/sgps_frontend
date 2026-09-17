@@ -214,7 +214,7 @@
         <p-tabpanel value="4">
           @if (!isNuevo()) {
             <div class="p-4">
-              <app-contrato-personal-tab [contratoId]="contratoId()" />
+              <app-contrato-personal-tab [contratoId]="contratoId()" [idFabrica]="contratoEnEdicion()!.idFabrica" />
             </div>
           } @else {
             <div class="p-8 text-center">

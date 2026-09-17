@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -52,6 +53,7 @@ export class ContratoPersonalTabComponent implements OnInit {
   // ── Input Signal ───────────────────────────────────────────────────────────
 
   readonly contratoId = input.required<number>();
+  readonly idFabrica = input.required<number>();
 
   // ── Estado reactivo ───────────────────────────────────────────────────────
 
@@ -235,6 +237,7 @@ export class ContratoPersonalTabComponent implements OnInit {
     const rawValue = this.form.getRawValue();
 
     const payload: PersonalRequestDTO = {
+      idEmpresa: this.idFabrica(),
       idUsuario: rawValue.idUsuario,
       dni: rawValue.dni,
       nombresApellidos: rawValue.nombresApellidos,
@@ -265,16 +268,15 @@ export class ContratoPersonalTabComponent implements OnInit {
           'No se pudo guardar el personal.';
         this.toast('error', 'Error de Validación', mensaje);
       },
-      complete: () => this.guardando.set(false),
     };
 
-    if (enEdicion) {
-      this.svc
-        .updatePersonal(enEdicion.id, this.contratoId(), payload)
-        .subscribe(observer);
-    } else {
-      this.svc.createPersonal(this.contratoId(), payload).subscribe(observer);
-    }
+    const request = enEdicion
+      ? this.svc.updatePersonal(enEdicion.id, this.contratoId(), payload)
+      : this.svc.createPersonal(this.contratoId(), payload);
+
+    request
+      .pipe(finalize(() => this.guardando.set(false)))
+      .subscribe(observer);
   }
 
   eliminarPersonal(p: PersonalDTO, event: Event): void {
